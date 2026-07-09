@@ -332,13 +332,13 @@
     <div
       bind:this={panel}
       id={menuId}
-      class="action-menu-panel"
+      class="popover-menu action-menu-panel"
       role="menu"
       aria-label={label}
     >
       {#each items as item, index (item.id)}
         <button
-          class="action-menu-item app-btn"
+          class="popover-menu-item app-btn"
           class:destructive={item.destructive}
           type="button"
           role="menuitem"
@@ -386,15 +386,8 @@
     top: calc(100% + 0.375rem);
     left: 0;
     z-index: 50;
-    display: flex;
-    flex-direction: column;
     width: 100%;
     min-width: 100%;
-    padding: 0.25rem;
-    background: var(--surface-menu);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-control);
-    box-shadow: var(--shadow-elevated);
   }
 
   .action-menu-item {
