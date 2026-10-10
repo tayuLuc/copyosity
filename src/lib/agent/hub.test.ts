@@ -20,22 +20,22 @@ describe("hubAgentBlockReason", () => {
   it("blocks when hub is disabled", () => {
     assert.equal(
       hubAgentBlockReason({ hub_enabled: false, hub_url: "https://hub", hub_token: "tok" }),
-      "NeuralDeep hub is disabled in Settings",
+      "AI hub is disabled in Settings",
     );
   });
 
   it("blocks when url or token is missing", () => {
     assert.equal(
       hubAgentBlockReason({ hub_enabled: true, hub_url: "", hub_token: "tok" }),
-      "Set the NeuralDeep hub URL and token in Settings",
+      "Set the AI hub URL and API key in Settings",
     );
     assert.equal(
       hubAgentBlockReason({ hub_enabled: true, hub_url: "https://hub", hub_token: "  " }),
-      "Set the NeuralDeep hub URL and token in Settings",
+      "Set the AI hub URL and API key in Settings",
     );
     assert.equal(
       hubAgentBlockReason({ hub_enabled: true, hub_url: "   ", hub_token: "tok" }),
-      "Set the NeuralDeep hub URL and token in Settings",
+      "Set the AI hub URL and API key in Settings",
     );
   });
 

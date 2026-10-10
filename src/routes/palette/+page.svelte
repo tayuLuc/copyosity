@@ -69,7 +69,6 @@
   let hubUrl = $state("");
   let hubToken = $state("");
   let hubChatModel = $state("");
-  const MODEL_FALLBACKS = ["qwen3.6-35b-a3b", "gpt-oss-120b", "gemma-4-31b"] as const;
   let attachScreenshot = $state(false);
   let translucent = $state(localStorage.getItem(TRANSLUCENT_KEY) === "1");
 
@@ -225,9 +224,10 @@
   }
   function modelOptions(): string[] {
     if (!hubEnabled) return [];
-    const chat = models.filter(isChatModel);
-    const base = chat.length ? chat : [...MODEL_FALLBACKS];
-    return agentModel && !base.includes(agentModel) ? [agentModel, ...base] : base;
+    const chatModels = models.filter(isChatModel);
+    return agentModel && !chatModels.includes(agentModel)
+      ? [agentModel, ...chatModels]
+      : chatModels;
   }
   function syncAgentModelSelection() {
     if (!hubEnabled) return;
@@ -643,7 +643,7 @@
             <select
               class="form-select model-select"
               class:is-unavailable={!hubEnabled}
-              title={hubEnabled ? "Agent model" : "Enable NeuralDeep hub in Settings to choose a model"}
+              title={hubEnabled ? "Agent model" : "Enable the AI hub in Settings to choose a model"}
               aria-label="Agent model"
               disabled={!hubEnabled}
               value={hubEnabled ? agentModel : ""}

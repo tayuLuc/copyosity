@@ -1,15 +1,18 @@
-//! NeuralDeep hub integration — an OpenAI-compatible LLM proxy.
+//! OpenAI-compatible hub integration — an OpenAI-compatible LLM proxy.
 //!
-//! The hub exposes standard OpenAI routes (`/v1/models`, `/v1/chat/completions`,
-//! `/v1/audio/transcriptions`). Each user configures their own base URL + Bearer
-//! token in Settings. This module provides a connection test and chat-based
+//! Calls use the standard OpenAI routes (`models`, `chat/completions`,
+//! `audio/transcriptions`) appended to whatever base URL the user configured in
+//! Settings. The URL is taken **verbatim**: if the server lives behind `/v1`, the
+//! `/v1` belongs in the setting, not in this module. Only whitespace and a trailing
+//! slash are trimmed. This module provides a connection test and chat-based
 //! clipboard tagging that mirrors the local Ollama tagging behaviour.
 
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
-/// Trim a trailing slash so we can safely append `/v1/...`.
-fn normalize_base(url: &str) -> String {
+/// Trim whitespace and a trailing slash so a route can be appended with one `/`.
+/// Shared with the transcription path so the two cannot drift apart.
+pub(crate) fn normalize_base(url: &str) -> String {
     url.trim().trim_end_matches('/').to_string()
 }
 
@@ -31,7 +34,7 @@ pub fn test_connection(base_url: &str, token: &str) -> Result<usize, String> {
         return Err("Hub token is empty".to_string());
     }
 
-    let url = format!("{}/v1/models", base);
+    let url = format!("{}/models", base);
     let response = agent()
         .get(&url)
         .set("Authorization", &format!("Bearer {}", token.trim()))
@@ -56,7 +59,7 @@ pub fn list_models(base_url: &str, token: &str) -> Result<Vec<String>, String> {
     if token.trim().is_empty() {
         return Err("Hub token is empty".to_string());
     }
-    let url = format!("{}/v1/models", base);
+    let url = format!("{}/models", base);
     let response = agent()
         .get(&url)
         .set("Authorization", &format!("Bearer {}", token.trim()))
@@ -123,9 +126,10 @@ fn no_think_suffix(model: &str) -> &'static str {
     }
 }
 
-/// Turn a hub HTTP error into a user-facing message. A 429 means the user's
-/// NeuralDeep plan limit (session / week / parallel / rpm) is exhausted, so we
-/// tell them to raise their tariff rather than showing a bare status code.
+/// Turn a hub HTTP error into a user-facing message. A 429 means the configured
+/// provider rate-limited us (per-minute, per-day or plan quota — every
+/// OpenAI-compatible vendor has its own flavour), so the message names the plan
+/// rather than a bare status code and keeps `Retry-After` when the server sends one.
 pub fn format_hub_error(e: ureq::Error) -> String {
     match e {
         ureq::Error::Status(429, resp) => {
@@ -134,9 +138,9 @@ pub fn format_hub_error(e: ureq::Error) -> String {
                 .and_then(|v| v.trim().parse::<u64>().ok());
             match retry {
                 Some(secs) => format!(
-                    "NeuralDeep Hub limit reached (429). Your plan's quota is used up — raise your tariff at hub.neuraldeep.ru/app, or retry in {secs}s."
+                    "AI hub limit reached (429). Your provider's quota is used up — retry in {secs}s or raise your plan."
                 ),
-                None => "NeuralDeep Hub limit reached (429). Your plan's quota is used up — raise your tariff at hub.neuraldeep.ru/app.".to_string(),
+                None => "AI hub limit reached (429). Your provider's quota is used up — check your plan limits.".to_string(),
             }
         }
         ureq::Error::Status(code, _) => format!("Hub returned HTTP {}", code),
@@ -176,7 +180,7 @@ pub fn tag_text(base_url: &str, token: &str, model: &str, text: &str) -> Option<
         ],
     };
 
-    let url = format!("{}/v1/chat/completions", base);
+    let url = format!("{}/chat/completions", base);
     let response = agent()
         .post(&url)
         .set("Authorization", &format!("Bearer {}", token.trim()))
@@ -214,7 +218,7 @@ pub fn web_search(base_url: &str, token: &str, query: &str, limit: u32) -> Resul
         return Err("Empty query".to_string());
     }
 
-    let url = format!("{}/v1/search/web", base);
+    let url = format!("{}/search/web", base);
     let response = agent()
         .post(&url)
         .set("Authorization", &format!("Bearer {}", token.trim()))
@@ -316,7 +320,7 @@ pub fn agent_search(
         ],
     };
 
-    let url = format!("{}/v1/chat/completions", base);
+    let url = format!("{}/chat/completions", base);
     let response = agent()
         .post(&url)
         .set("Authorization", &format!("Bearer {}", token.trim()))
@@ -361,7 +365,7 @@ pub fn tag_image(base_url: &str, token: &str, model: &str, image_b64: &str) -> O
         ]
     });
 
-    let url = format!("{}/v1/chat/completions", base);
+    let url = format!("{}/chat/completions", base);
     let response = agent()
         .post(&url)
         .set("Authorization", &format!("Bearer {}", token.trim()))
@@ -564,7 +568,7 @@ pub fn polish_text(
         ]
     });
 
-    let url = format!("{}/v1/chat/completions", base);
+    let url = format!("{}/chat/completions", base);
     let response = agent()
         .post(&url)
         .set("Authorization", &format!("Bearer {}", token.trim()))

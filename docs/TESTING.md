@@ -77,7 +77,7 @@ Legend: ✅ automated · 👁 manual only (native / OS-integration).
   (`voice-transcribing`).
 - 👁 The transcript also lands in clipboard history (source "Voice"), even if the
   paste into the target fails (3 clipboard-write retries).
-- 👁 Toggle **Transcribe with NeuralDeep Hub** in Voice settings; a hub 429 shows
+- 👁 Toggle **Transcribe with the AI hub** in Voice settings; a hub 429 shows
   the "raise your tariff" message rather than a raw error.
 - 👁 Context-aware polishing cleans filler/punctuation for the target app.
 
@@ -92,7 +92,7 @@ Legend: ✅ automated · 👁 manual only (native / OS-integration).
 - ✅ `palette-window` (restore size/position), backend `palette_window`, `agent`,
   `macos_window::snapped_position` (edge-snap geometry).
 - 👁 **Configurable shortcut:** default `⌘⇧Space`; change it in Settings →
-  NeuralDeep → palette hotkey and confirm the new combo opens the palette (and the
+  AI Hub → palette hotkey and confirm the new combo opens the palette (and the
   old one no longer does). Hub must be enabled.
 - 👁 Web mode returns search results; Agent mode streams progress then a markdown answer.
 - 👁 **Model dropdown** in the palette top bar (Agent mode) — pick a model; it
@@ -158,7 +158,7 @@ Legend: ✅ automated · 👁 manual only (native / OS-integration).
 - 👁 **Icon + persistence fix:** opening Settings switches the app to `Regular`
   activation → a Dock icon appears and the window no longer vanishes when focus
   changes; closing Settings reverts to `Accessory` (menu-bar-only, no Dock icon).
-- 👁 Every pane loads: NeuralDeep, Voice, Quick Menu, Local AI, History, Permissions, Updates.
+- 👁 Every pane loads: AI Hub, Voice, Quick Menu, Local AI, History, Permissions, Updates.
 
 ## 16. Updates / auto-update ⚠️ regression-fixed area
 

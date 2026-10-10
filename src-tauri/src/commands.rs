@@ -1016,7 +1016,7 @@ pub fn list_microphones() -> Result<Vec<crate::whisper::AudioInputDevice>, Strin
     Ok(crate::whisper::list_input_devices())
 }
 
-/// Test connectivity to the NeuralDeep hub. Uses provided url/token when given,
+/// Test connectivity to the AI hub. Uses provided url/token when given,
 /// otherwise falls back to the saved settings. Returns the number of models.
 #[tauri::command(async)]
 pub fn hub_test_connection(
@@ -1076,7 +1076,7 @@ pub fn agent_web_search(
 ) -> Result<String, String> {
     let s = db.get_app_settings().map_err(|e| e.to_string())?;
     if !s.hub_enabled {
-        return Err("NeuralDeep hub is disabled in Settings".to_string());
+        return Err("AI hub is disabled in Settings".to_string());
     }
     crate::hub::web_search(&s.hub_url, &s.hub_token, &query, limit.unwrap_or(5))
 }

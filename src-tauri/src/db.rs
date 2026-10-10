@@ -22,10 +22,13 @@ pub struct AppSettings {
     pub ai_tagging_enabled: bool,
     /// When false, hide the footer shortcut strip on the clipboard overlay (default on).
     pub overlay_shortcut_hints_enabled: bool,
-    // --- NeuralDeep hub integration ---
+    // --- OpenAI-compatible hub integration ---
     /// When false, hub API calls and the agent-search shortcut are disabled (default off).
     pub hub_enabled: bool,
-    /// Base URL of the NeuralDeep hub (OpenAI-compatible), e.g. https://neuraldeep.ru
+    /// API root of the AI hub — any OpenAI-compatible server, used verbatim: routes are
+    /// appended to it, so a server behind a version prefix wants it here
+    /// (`http://localhost:8000/v1`, `https://api.openai.com/v1`). Empty by default: no
+    /// provider is assumed.
     pub hub_url: String,
     /// Per-user API token for the hub (Bearer).
     pub hub_token: String,
@@ -702,13 +705,11 @@ impl Database {
             .map(|v| matches!(v.to_lowercase().as_str(), "true" | "1" | "yes"))
             .unwrap_or(false);
 
-        let hub_url = self
-            .get_setting("hub_url")?
-            .unwrap_or_else(|| "https://api.neuraldeep.ru".to_string());
+        // No provider is assumed: an empty URL means the hub stays off until the user
+        // points it at their own OpenAI-compatible endpoint.
+        let hub_url = self.get_setting("hub_url")?.unwrap_or_default();
         let hub_token = self.get_setting("hub_token")?.unwrap_or_default();
-        let hub_chat_model = self
-            .get_setting("hub_chat_model")?
-            .unwrap_or_else(|| "qwen3.6-35b-a3b".to_string());
+        let hub_chat_model = self.get_setting("hub_chat_model")?.unwrap_or_default();
         let hub_tagging_enabled = self
             .get_setting("hub_tagging_enabled")?
             .map(|v| v == "true")

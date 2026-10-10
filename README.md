@@ -38,7 +38,7 @@ Built with Tauri 2, Svelte 5, Rust, and SQLite.
 - [Keyboard shortcuts](#keyboard-shortcuts)
 - [Privacy](#privacy)
 - [Build from source](#build-from-source)
-- [NeuralDeep hub (optional)](#neuraldeep-hub)
+- [AI hub (optional, bring your own endpoint)](#ai-hub)
 - [Development workflow](#development-workflow)
 
 <a id="screenshots"></a>
@@ -75,7 +75,7 @@ Image entries with recognised text get an **Image / Recognised text** toggle:
 
 ### Command / agent palette
 
-Web search and a multi-turn streaming research agent when NeuralDeep Hub is enabled
+Web search and a multi-turn streaming research agent when the AI hub is enabled
 (`⌘⇧Space`, tray menu, or the sparkles button in the overlay):
 
 <img src="docs/screenshots/command-palette-agent.png" alt="Command palette in Agent mode with streaming chat" width="640">
@@ -90,10 +90,10 @@ Minimize-to-blob — drag the palette out of the way without closing the session
 
 ### Settings
 
-NeuralDeep Hub settings — one master switch for tagging, transcription, web
+AI hub settings — one master switch for tagging, transcription, web
 search, and voice polishing; optional fallback to local Ollama for tagging:
 
-<img src="docs/screenshots/settings-neuraldeep.png" alt="Hub settings with master switch" width="640">
+<img src="docs/screenshots/settings-ai-hub.png" alt="AI hub settings with master switch" width="640">
 
 Context-aware voice polishing — hold a shortcut to dictate; the hub LLM cleans
 the transcription (punctuation, filler, lists) and adapts it to the app
@@ -172,7 +172,7 @@ Shipped capabilities, grouped by area:
   framework (`VNRecognizeTextRequest`) so the text inside screenshots and photos
   becomes searchable. No image ever leaves your Mac for OCR.
 - **Automatic tagging** — clipboard entries (and images) are tagged with short,
-  practical labels via NeuralDeep Hub or local Ollama; manual **Retag** when
+  practical labels via the AI hub or local Ollama; manual **Retag** when
   tagging is ready.
 - **Local AI option** — optional Ollama integration for fully local tagging,
   with in‑app onboarding (install / start server / download‑model / test
@@ -206,7 +206,7 @@ Shipped capabilities, grouped by area:
   Calendar, screenshot), optional **Reasoning** blocks, **Stop** while streaming,
   voice input, and session history that restores whole conversations. **Web** mode
   stays single-shot search. Configurable hotkey (default `⌘⇧Space` in **Settings →
-  NeuralDeep**); in-palette model picker (chat models only); attach a screenshot
+  AI Hub**); in-palette model picker (chat models only); attach a screenshot
   of the frontmost app; draggable, resizable window with sticky-to-edges,
   transparency (glass) toggle, and minimize-to-blob.
 
@@ -373,20 +373,27 @@ npm run tauri build
 The Tauri config (`src-tauri/tauri.conf.json`) drives the bundle. The frontend
 is SvelteKit (static adapter); the backend is Rust via Tauri 2.
 
-<a id="neuraldeep-hub"></a>
+<a id="ai-hub"></a>
 
-## ☁️ NeuralDeep hub (optional)
+## ☁️ AI hub (optional, bring your own endpoint)
 
 Several cloud‑assisted features — model‑based tagging, web search, the research
-agent, and transcription / polishing — can be powered by a **NeuralDeep hub**
-endpoint. This is **entirely optional** and disabled until you configure it.
+agent, and transcription / polishing — can be powered by **any OpenAI-compatible
+endpoint** (a hosted hub, or a server you run yourself). This is **entirely optional** and disabled until you configure it.
 
-To enable it, open **Settings → NeuralDeep** and provide:
+To enable it, open **Settings → AI Hub** and provide:
 
 - your **own** hub **base URL**, and
 - your **own** API token (an `sk-...` style key).
 
-Turn on the **NeuralDeep Hub** master switch to enable hub tagging,
+The base URL is the **API root, used exactly as you type it** — the app appends the
+route (`chat/completions`, `models`, `audio/transcriptions`) to whatever is in the box,
+so a server behind a version prefix wants it here: `http://localhost:8000/v1`,
+`https://api.openai.com/v1`. Whitespace and a trailing `/` are trimmed; nothing else is
+rewritten. Plain `http://` is allowed for a server you run yourself — over `http://` the
+bearer token travels unencrypted, so use it where you control the wire.
+
+Turn on the **AI hub** master switch to enable hub tagging,
 transcription, web search, voice polishing, and the `⌘⇧Space` agent chat shortcut.
 
 The agent runs a client-side streaming chat loop (Vercel AI SDK) against your hub;

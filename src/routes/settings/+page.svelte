@@ -95,13 +95,13 @@
     voice_shortcut: "option+space",
     selected_microphone: "",
     hub_enabled: false,
-    hub_url: "https://api.neuraldeep.ru",
+    hub_url: "",
     hub_token: "",
-    hub_chat_model: "qwen3.6-35b-a3b",
+    hub_chat_model: "",
     hub_tagging_enabled: false,
     hub_transcribe_enabled: false,
     voice_polish_enabled: false,
-    voice_polish_model: "qwen3.6-35b-a3b",
+    voice_polish_model: "",
     voice_polish_screenshot: true,
     voice_polish_prompt: "",
     voice_translate_lang: "",
@@ -1050,8 +1050,8 @@
   <main class="settings-content">
     {#if activePane === "hub"}
       <div class="pane-head">
-        <div class="pane-title">NeuralDeep Hub</div>
-        <div class="pane-subtitle">Cloud models for tagging, transcription, web search and the research agent.</div>
+        <div class="pane-title">AI Hub</div>
+        <div class="pane-subtitle">Cloud models for tagging, transcription, web search and the research agent — any OpenAI-compatible endpoint.</div>
       </div>
 
       <section class="form-section">
@@ -1061,7 +1061,7 @@
             <input
               type="checkbox"
               role="switch"
-              aria-label="Enable NeuralDeep hub"
+              aria-label="Enable the AI hub"
               checked={settings.hub_enabled}
               onchange={(e) => handleHubToggle((e.currentTarget as HTMLInputElement).checked)}
             />
@@ -1083,7 +1083,7 @@
               <div class="form-field">
                 <span class="form-label">3 steps</span>
                 <ol class="form-instruction-list">
-                  <li><button class="link-btn app-btn" type="button" onclick={() => openUrl("https://hub.neuraldeep.ru/app")}>Open the hub</button> → copy your <code>sk-…</code> key</li>
+                  <li>Get an API key from your OpenAI-compatible provider (the app ships no default)</li>
                   <li>Paste it into <strong>API Token</strong> below</li>
                   <li>Click <strong>Test connection</strong> → then <strong>Save</strong></li>
                 </ol>
@@ -1095,8 +1095,14 @@
                   class="form-input"
                   type="text"
                   bind:value={settings.hub_url}
-                  placeholder="https://api.neuraldeep.ru"
+                  placeholder="http://localhost:8000/v1"
                 />
+                <div class="form-hint">
+                  Any OpenAI-compatible server. The URL is used exactly as written and the
+                  route is appended to it — if your server expects <code>/v1</code>, put
+                  <code>/v1</code> here. Plain <code>http://</code> is allowed for a local
+                  or LAN server.
+                </div>
               </label>
               <label class="form-field">
                 <span class="form-label">API Token</span>
@@ -1127,7 +1133,7 @@
                 <span class="form-label">Chat / agent model (tagging & search)</span>
                 <div class="form-inline">
                   <select class="form-select" bind:value={settings.hub_chat_model}>
-                    {#each withCurrent(hubModels.length ? hubModels : ["gpt-oss-120b", "qwen3.6-35b-a3b", "gemma-4-31b"], settings.hub_chat_model) as m}
+                    {#each withCurrent(hubModels, settings.hub_chat_model) as m}
                       <option value={m}>{m}</option>
                     {/each}
                   </select>
@@ -1250,14 +1256,14 @@
                   />
                   <span class="form-checkbox-box" aria-hidden="true"></span>
                 </span>
-                <span class="form-checkbox-label ui-selectable-text">Transcribe with NeuralDeep Hub</span>
+                <span class="form-checkbox-label ui-selectable-text">Transcribe with the AI hub</span>
               </label>
             </div>
             <div class="form-hint">
               {#if settings.hub_enabled}
                 On → hub <code>/v1/audio/transcriptions</code>; off → your local Whisper server.
               {:else}
-                Enable the <strong>NeuralDeep Hub</strong> (Hub tab) to transcribe via the hub.
+                Enable the <strong>AI hub</strong> (AI Hub tab) to transcribe via the hub.
               {/if}
             </div>
           </div>
@@ -1289,7 +1295,7 @@
           <div class="form-subsection">
             <div class="form-subsection-title form-subsection-title--with-icon"><SectionIcon name="ollama-model" />Transcription model</div>
             <div class="form-hint">
-              With <strong>hub transcription</strong> on (NeuralDeep tab), audio goes to the hub model below.
+              With <strong>hub transcription</strong> on (AI hub tab), audio goes to the hub model below.
               Otherwise it uses the custom Whisper server.
             </div>
             <div class="inset-list">
@@ -1337,7 +1343,7 @@
             <div class="form-hint">
               After transcription, run the text through the hub LLM to add punctuation,
               remove filler, format lists, and match the app you're pasting into.
-              Returns only the cleaned text. Requires the NeuralDeep hub.
+              Returns only the cleaned text. Requires the AI hub.
             </div>
             <div class="inset-list">
               <label class="form-checkbox">
@@ -1383,7 +1389,7 @@
                   <span class="form-label">Polish model (multimodal for screenshots)</span>
                   <div class="form-inline">
                     <select class="form-select" bind:value={settings.voice_polish_model}>
-                      {#each withCurrent(hubModels.length ? hubModels : ["qwen3.6-35b-a3b", "gemma-4-31b"], settings.voice_polish_model) as m}
+                      {#each withCurrent(hubModels, settings.voice_polish_model) as m}
                         <option value={m}>{m}</option>
                       {/each}
                     </select>
@@ -1391,7 +1397,7 @@
                       {modelsLoading ? "…" : "↻"}
                     </button>
                   </div>
-                  <div class="form-hint">Use a multimodal model (e.g. <code>qwen3.6-35b-a3b</code>) when screenshots are on.</div>
+                  <div class="form-hint">Use a multimodal model when screenshots are on.</div>
                 </label>
 
                 <label class="form-field">
@@ -1420,7 +1426,7 @@
                     class="form-textarea"
                     rows="3"
                     bind:value={settings.voice_dictionary}
-                    placeholder={"NeuralDeep\nCopyosity\nKubernetes"}
+                    placeholder={"bash\nssh\ndocker"}
                   ></textarea>
                   <div class="form-hint">The model will keep these terms spelled exactly as written.</div>
                 </label>
