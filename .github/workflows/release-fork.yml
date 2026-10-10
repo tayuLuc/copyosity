@@ -33,6 +33,27 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Config gate (parse the files the Tauri build script reads)
+        run: |
+          # Cheap guard for the failure that cost a whole cold-cache build: a
+          # malformed capability file is only reported by cargo's build script,
+          # minutes after the expensive steps have started.
+          for f in src-tauri/tauri.conf.json src-tauri/capabilities/*.json; do
+            python3 -m json.tool "$f" > /dev/null || { echo "invalid JSON: $f" >&2; exit 1; }
+          done
+          python3 - <<'PY'
+          import json
+          caps = json.load(open("src-tauri/capabilities/main.json"))
+          assert caps["permissions"], "main window has no permissions"
+          conf = json.load(open("src-tauri/tauri.conf.json"))
+          assert conf["bundle"]["macOS"]["signingIdentity"] == "-", \
+              "a fork build must not point at someone else's Developer ID"
+          assert conf["bundle"]["createUpdaterArtifacts"] is False, \
+              "unsigned builds cannot mint updater artifacts"
+          assert conf["plugins"]["updater"]["endpoints"] == [], \
+              "the fork must not self-update from the upstream channel"
+          PY
+
       - uses: actions/setup-node@v4
         with:
           node-version: "24" # matches .github/workflows/ci.yml
