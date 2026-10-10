@@ -7,13 +7,13 @@ depend on the author's Apple credentials.
 
 ## What "unsigned" means here
 
-| Property                | Upstream release                                                            | This fork's release                           |
-| ----------------------- | --------------------------------------------------------------------------- | --------------------------------------------- |
-| Code signature          | `Developer ID Application: Valeriy Kovalsky (A933C2TJXU)`, hardened runtime | ad-hoc (`codesign -s -`), no hardened runtime |
-| Notarization            | submitted with `notarytool`, ticket stapled                                 | none — no Apple ID, no team membership        |
-| Updater artifacts       | `.app.tar.gz` + `latest.json`, minisign key `9E3D3817251B2075`              | none — the private key belongs to upstream    |
-| Self-update in Settings | yes (GitHub endpoint)                                                       | disabled, `plugins.updater.endpoints = []`    |
-| Install path            | browser download → Gatekeeper → quarantine                                  | `brew install` → no quarantine attribute      |
+| Property                | Upstream release                                                            | This fork's release                                                                 |
+| ----------------------- | --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| Code signature          | `Developer ID Application: Valeriy Kovalsky (A933C2TJXU)`, hardened runtime | ad-hoc (`codesign -s -`), no hardened runtime                                       |
+| Notarization            | submitted with `notarytool`, ticket stapled                                 | none — no Apple ID, no team membership                                              |
+| Updater artifacts       | `.app.tar.gz` + `latest.json`, minisign key `9E3D3817251B2075`              | none — the private key belongs to upstream                                          |
+| Self-update in Settings | yes (GitHub endpoint)                                                       | disabled, `plugins.updater.endpoints = []`                                          |
+| Install path            | browser download → Gatekeeper prompt                                        | `brew install` → quarantined too, but launches (measured on 1.0.4-fork1, see below) |
 
 Ad-hoc signing is not optional on Apple Silicon: an arm64 binary with no
 signature at all is killed at exec time. The linker stamps one, but without
@@ -27,13 +27,28 @@ Developer ID` — expected, and worth knowing because upstream's README promises
 notarization that its own released DMGs do not carry either (see the
 `CreateUpdateArtifact`-free v1.0.3 asset).
 
-## Why the quarantine difference matters
+## What installing this build actually does (measured 2026-10-10)
 
-Gatekeeper only evaluates a bundled app that carries `com.apple.quarantine`,
-which a browser attaches. `curl`, and therefore `brew`, does not. So a cask
-install of an unnotarized app runs where the same app downloaded by hand would
-need a right-click Open override. This is the practical reason the fork ships
-through Homebrew instead of just publishing DMGs.
+An earlier draft of this page claimed a cask install arrives without
+`com.apple.quarantine` because `curl` does not set it. That was generalized from
+one probe (a plain `curl -o` download of the DMG: `com.apple.provenance` only) to
+a different object, and it is wrong. After `brew install --cask
+tayuLuc/copyosity/copyosity` on macOS 26.6.2:
+
+1. The DMG in `~/Library/Caches/Homebrew/downloads/` carries
+   `com.apple.quarantine` with flags `0281;<timestamp>;;<uuid>`.
+2. The installed bundle inherits the same record (flags `03c1`), so the attribute
+   propagates when the app is copied out of the image.
+3. `spctl -a -t install /Applications/Copyosity.app` still answers `rejected`.
+4. `open -a` launched it with no dialog and the record gained the user-approved
+   bit `0x0040` — most likely because this bundle id at this path had already been
+   approved on this machine (upstream 1.0.3 ran here first). On a clean machine,
+   expect one right-click → Open.
+
+What the cask genuinely buys instead: a SHA-256 pinned per architecture and
+verified on download, `livecheck` against our own releases, `brew upgrade --cask`
+as the update channel, and no reliance on the vendor mirror. Signature-wise it buys
+nothing: this build is ad-hoc signed and unnotarized, and says so.
 
 ## Updating
 
