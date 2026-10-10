@@ -1,47 +1,78 @@
-# Auto-update — how it works & how to release
+# Auto-update — how it works & how to release (fork)
 
 Copyosity uses `tauri-plugin-updater`. On launch (and via **Settings → Updates**)
-the app fetches a manifest from GitHub Releases, and if a newer, **signed**
-version exists it downloads and installs it, then relaunches.
+the app fetches a manifest from GitHub Releases, and if a newer, **signed** version
+exists it downloads and installs it, then relaunches.
 
-- **Update source:** `https://github.com/vakovalskii/copyosity/releases/latest/download/latest.json`
-  (configured in `src-tauri/tauri.conf.json → plugins.updater.endpoints`).
-- **Signature:** every update artifact is signed with the updater private key;
-  the app verifies it against the public key in `tauri.conf.json → plugins.updater.pubkey`.
-  This is **separate** from Apple Developer ID / notarization.
+This fork changed three things about that story: the channel, the key and the
+platform coverage. Everything about the mechanism is upstream's.
 
-## Keys (one-time, already done)
+- **Update source:** `https://github.com/tayuLuc/copyosity/releases/latest/download/latest.json`
+  (configured in `src-tauri/tauri.conf.json → plugins.updater.endpoints`, one endpoint —
+  upstream's mirror at `vkovalskii.com` is not ours to serve).
+- **Signature:** every update artifact is signed with the **fork's** minisign key;
+  the app verifies it against the public key in `tauri.conf.json → plugins.updater.pubkey`
+  (key id `1F02BEF343E06964`). Upstream's key id `9E3D3817251B2075` must never appear in
+  a fork build; `.github/workflows/release-fork.yml` → _Config gate_ asserts both the key
+  id and that the endpoint belongs to the repository the workflow runs in.
+  This signature is **separate** from Apple Developer ID / notarization, which this fork
+  does not have — see [FORK-NOTARIZATION.md](FORK-NOTARIZATION.md).
+- **Platforms:** `latest.json` carries `darwin-aarch64` **and** `darwin-x86_64`. Upstream's
+  generator emitted the Apple Silicon entry only, so Intel installs were never offered an
+  update; `scripts/make-latest-json.sh` now refuses to write a manifest with a platform
+  missing.
 
-- Private key: `.tauri/copyosity-updater.key` — **git-ignored, back it up somewhere safe.**
-  If lost, you can never ship another auto-update (users must reinstall manually).
-- Public key: `.tauri/copyosity-updater.key.pub` — embedded in `tauri.conf.json`.
-- For CI, add the private key contents as the repo secret **`TAURI_SIGNING_PRIVATE_KEY`**
-  (the key has an empty password). Both `release.yml` and `windows-build.yml` already
-  reference it.
+## Keys
 
-> Auto-update only works **from** a version that already ships the updater plugin
-> (0.5.2+). Older installs (0.5.1 and earlier) must be updated manually once.
+- Private key: `../../secrets/copyosity-fork-updater.key` (outside the repository, `chmod 600`),
+  password in the sibling `copyosity-fork-updater.pass`. Unlike upstream's key this one is
+  password-protected.
+- Public key: `../../secrets/copyosity-fork-updater.key.pub`, embedded in `tauri.conf.json`.
+- CI secrets: `TAURI_SIGNING_PRIVATE_KEY` (key contents) and
+  `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`, both set on `tayuLuc/copyosity`.
+- **No backup of the private key exists, on purpose.** Losing it means every installed copy
+  rejects all future updates (signature verification is not degradable); recovery is a new
+  key pair plus a manual reinstall through Homebrew.
 
-## Releasing an update (macOS, local)
+## Releasing an update
+
+The chain is: commit on `main` → bump the version in all four manifests
+(`src-tauri/tauri.conf.json`, `package.json`, `src-tauri/Cargo.toml`, `src-tauri/Cargo.lock`)
+→ push an annotated tag `v<version>` → CI builds both arches, re-signs ad-hoc, repacks the
+updater tarball, publishes the release with `--latest`, assembles `latest.json` and finally
+re-reads the published manifest to assert version, both platforms and both URLs.
 
 ```bash
-# 1. bump version in package.json + src-tauri/tauri.conf.json, commit
-# 2. build WITH the signing key so .app.tar.gz(.sig) are produced
-export TAURI_SIGNING_PRIVATE_KEY="$(cat .tauri/copyosity-updater.key)"
-export TAURI_SIGNING_PRIVATE_KEY_PASSWORD=""
-npm run tauri build            # DMG bundling may fail (known) — the .app + .app.tar.gz are still made
-
-# 3. notarize the .app + build/notarize the DMG (see docs/NOTARIZATION.md)
-# 4. generate the manifest
-./scripts/make-latest-json.sh "Release notes here"
-
-# 5. publish: attach the DMG, the *.app.tar.gz, AND latest.json to the release
-gh release create vX.Y.Z \
-  src-tauri/target/release/bundle/dmg/*.dmg \
-  src-tauri/target/release/bundle/macos/*.app.tar.gz \
-  latest.json \
-  --title "Copyosity X.Y.Z" --notes "..."
+git tag -a v1.0.4-fork4 -m "notes become the release body" && git push origin v1.0.4-fork4
 ```
 
-`latest.json` must be a release asset so the `latest/download/latest.json` URL
-resolves. Adding a `windows-x86_64` entry (from the CI `.sig`) is optional.
+Nothing in that list needs Apple credentials, which is the point of the fork. Locally:
+
+```bash
+export TAURI_SIGNING_PRIVATE_KEY="$(cat ../../secrets/copyosity-fork-updater.key)"
+export TAURI_SIGNING_PRIVATE_KEY_PASSWORD="$(cat ../../secrets/copyosity-fork-updater.pass)"
+npm run tauri build -- --bundles app
+ART_DIR=src-tauri/target/release/bundle/macos ./scripts/make-latest-json.sh "notes"
+```
+
+`latest.json` must be a release asset so the `latest/download/latest.json` URL resolves, and
+the release must be marked latest — every tag here carries a `-forkN` suffix, which GitHub's
+semver ordering does not treat as newer than the bare number, so `--latest` is passed
+explicitly in CI.
+
+## Homebrew and the updater coexist
+
+`brew install --cask tayuLuc/copyosity/copyosity` pins a version and its sha256; the in-app
+updater floats to whatever the release channel says. After a self-update Homebrew still
+believes the pinned version is installed, so `brew upgrade --cask copyosity` will put the
+older build back. `Casks/copyosity.rb` declares `auto_updates true` for exactly that reason:
+brew stops reporting the cask as outdated and the two channels stop fighting.
+
+## Upstream invariants kept
+
+- Updater tarballs carry **0 AppleDouble (`._*`) entries**; the CI repacks with
+  `COPYFILE_DISABLE=1 tar --no-mac-metadata --no-xattrs` and asserts the entry list in Python
+  (`tar tzf` hides them). The signature is made **after** the repack, over those exact bytes.
+- Install must run with `TMPDIR` on the app's own volume or `rename()` fails with EXDEV;
+  upstream's fix lives in the Rust `install_update` command and the menu-bar exit guard that
+  lets the updater relaunch through. Both are inherited unchanged.

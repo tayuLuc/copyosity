@@ -1,37 +1,58 @@
 #!/usr/bin/env bash
-# Generate the Tauri updater manifest (latest.json) from the built macOS updater
-# artifact. Upload the resulting latest.json to the GitHub release so installed
-# copies can auto-update. Optionally pass release notes as $1.
+# Generate the Tauri updater manifest (latest.json) from built macOS updater
+# artifacts. Upload the result to the GitHub release so installed copies can
+# auto-update. Optionally pass release notes as $1.
 #
-# Prereq: `npm run tauri build` was run with TAURI_SIGNING_PRIVATE_KEY set, so
-# src-tauri/target/release/bundle/macos/*.app.tar.gz(.sig) exist.
+# Fork changes, both of them behavioural:
+#   * the release base URL is this repository (upstream's copy pointed at
+#     vakovalskii/copyosity, i.e. a fork manifest would advertise someone
+#     else's binaries), overridable with GH_REPO;
+#   * both Mac platforms are emitted. Upstream only ever wrote darwin-aarch64,
+#     so an Intel install was never offered an update at all.
+# CI assembles the same document inline in .github/workflows/release-fork.yml;
+# this script is the local path.
+#
+# Prereq: artifacts as <name>.app.tar.gz + <name>.app.tar.gz.sig with the arch
+# (aarch64|x64) in the file name. Point ART_DIR at the directory holding them.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
 VERSION=$(python3 -c "import json;print(json.load(open('src-tauri/tauri.conf.json'))['version'])")
 NOTES="${1:-Copyosity $VERSION}"
-BASE="https://github.com/vakovalskii/copyosity/releases/download/v$VERSION"
-MAC_DIR="src-tauri/target/release/bundle/macos"
+GH_REPO="${GH_REPO:-tayuLuc/copyosity}"
+BASE="https://github.com/$GH_REPO/releases/download/v$VERSION"
+ART_DIR="${ART_DIR:-src-tauri/target/release/bundle/macos}"
 
-SIG_FILE=$(ls "$MAC_DIR"/*.app.tar.gz.sig 2>/dev/null | head -n1 || true)
-TARGZ_FILE=$(ls "$MAC_DIR"/*.app.tar.gz 2>/dev/null | head -n1 || true)
-if [ -z "$SIG_FILE" ] || [ -z "$TARGZ_FILE" ]; then
-  echo "ERROR: no updater artifacts in $MAC_DIR (build with TAURI_SIGNING_PRIVATE_KEY set)" >&2
-  exit 1
-fi
-MAC_SIG=$(cat "$SIG_FILE")
-TARGZ_NAME=$(basename "$TARGZ_FILE")
+python3 - "$VERSION" "$NOTES" "$BASE" "$ART_DIR" > latest.json <<'PY'
+import glob, json, os, sys
+from datetime import datetime, timezone
 
-python3 - "$VERSION" "$NOTES" "$MAC_SIG" "$BASE/$TARGZ_NAME" > latest.json <<'PY'
-import json, sys
-version, notes, sig, url = sys.argv[1:5]
-print(json.dumps({
-    "version": version,
-    "notes": notes,
-    "platforms": {
-        "darwin-aarch64": {"signature": sig, "url": url},
+version, notes, base, art = sys.argv[1:5]
+keys = {"aarch64": "darwin-aarch64", "x64": "darwin-x86_64"}
+platforms = {}
+for path in sorted(glob.glob(os.path.join(art, "*.app.tar.gz"))):
+    name = os.path.basename(path)
+    arch = "aarch64" if "aarch64" in name else "x64"
+    sig_path = f"{path}.sig"
+    if not os.path.exists(sig_path):
+        sys.exit(f"ERROR: {name} has no {os.path.basename(sig_path)} (build with TAURI_SIGNING_PRIVATE_KEY set)")
+    signature = open(sig_path).read().strip()
+    if not signature:
+        sys.exit(f"ERROR: {os.path.basename(sig_path)} is empty")
+    platforms[keys[arch]] = {"url": f"{base}/{name}", "signature": signature}
+missing = set(keys.values()) - set(platforms)
+if missing:
+    sys.exit(f"ERROR: no updater artifact for {sorted(missing)} in {art}")
+json.dump(
+    {
+        "version": version,
+        "notes": notes,
+        "pub_date": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "platforms": platforms,
     },
-}, indent=2))
+    sys.stdout,
+    indent=2,
+)
 PY
 
-echo "wrote latest.json for v$VERSION -> $TARGZ_NAME"
+echo "wrote latest.json for v$VERSION, platforms: $(python3 -c "import json;print(', '.join(json.load(open('latest.json'))['platforms']))")" >&2
