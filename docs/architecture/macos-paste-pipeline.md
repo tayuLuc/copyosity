@@ -192,6 +192,8 @@ When the focused element cannot be read, the AX tree walk picks the best editabl
 
 `accessibility_trusted` uses `AXIsProcessTrusted` (TCC). A live AX probe on Copyosity's own element is not used for the Settings check because it can return `kAXErrorCannotComplete` while trust is already granted.
 
+`accessibility_show_prompt` shows the system dialog only and must **never** open System Settings itself. `check_accessibility(prompt: true)` is reached from paths that run whenever the Settings window is shown, so a jump to the Privacy pane there hijacks the user's screen mid-task. The only door to System Settings is the Permissions pane's **Request** button (`open_accessibility_settings`), which the user pressed on purpose.
+
 ## Extending keyboard-paste apps
 
 Add bundle IDs to `KEYBOARD_PASTE_BUNDLE_IDS` in `accessibility.rs`:
