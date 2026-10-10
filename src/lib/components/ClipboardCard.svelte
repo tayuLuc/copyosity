@@ -44,6 +44,7 @@
     retagAvailable = false,
     aiTaggingEnabled = false,
     compactVertical = false,
+    quickDigit = null,
   }: {
     entry: ClipboardEntry;
     selected?: boolean;
@@ -55,6 +56,7 @@
     retagAvailable?: boolean;
     aiTaggingEnabled?: boolean;
     compactVertical?: boolean;
+    quickDigit?: number | null;
   } = $props();
 
   /** Collapse blank lines so line-clamp counts real content rows in compact vertical cards. */
@@ -625,6 +627,9 @@
   >
   <span class="sr-only" role="status" aria-live="polite">{copyAnnouncement}</span>
   <div class="card-header">
+    {#if quickDigit !== null}
+      <kbd class="quick-digit" aria-hidden="true">{quickDigit}</kbd>
+    {/if}
     <div class="card-type">
       {#if canPreview && smartAction}
         <div class="type-smart-row">
@@ -1090,6 +1095,26 @@
     min-width: 0;
     flex: 1 1 auto;
     padding-right: 0;
+  }
+
+  .quick-digit {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    height: var(--size-card-action-hit);
+    min-width: var(--size-card-action-hit);
+    padding: 0 var(--space-segment-inset);
+    font-family: inherit;
+    font-size: var(--font-size-2xs);
+    font-weight: 500;
+    line-height: 1;
+    color: var(--color-text-subtle);
+    background: var(--surface-kbd);
+    border: 1px solid var(--border-kbd);
+    border-radius: var(--radius-control-sm);
+    box-shadow: var(--shadow-kbd);
   }
 
   .type-label-wrap {

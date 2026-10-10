@@ -38,6 +38,7 @@
   } from "$lib/overlay-filters";
   import { createOverlayEntriesStore } from "$lib/overlay-entries.svelte";
   import { shouldShowOverlayEntryGrid } from "$lib/overlay-entries-logic";
+  import { badgeDigitForIndex, entryIdForDigit, quickSelectDigit } from "$lib/overlay-quick-select";
   import { closeAllCardContextMenus, isCardContextMenuOpen } from "$lib/overlay-card-context-menu";
   import {
     canToggleQuickLook,
@@ -964,6 +965,23 @@
         return;
       }
 
+      const digit = quickSelectDigit(e.key, {
+        searchFocused,
+        typingInField,
+        hasModifier: e.metaKey || e.ctrlKey || e.altKey || e.shiftKey,
+      });
+      if (digit !== null) {
+        if (quickLookOpen) return;
+        if (overlay.displayListPending || overlay.displayFetchFailed) return;
+        const entryId = entryIdForDigit(digit, filteredEntries);
+        if (entryId === null) return;
+        e.preventDefault();
+        e.stopPropagation();
+        setInputModality("keyboard");
+        void activateSelectedEntry(entryId);
+        return;
+      }
+
       if (e.key === "Enter") {
         if (quickLookOpen) return;
         if (overlay.displayListPending || overlay.displayFetchFailed) return;
@@ -1545,6 +1563,7 @@
           <ClipboardCard
             {entry}
             compactVertical={boardVertical}
+            quickDigit={overlay.overlayShortcutHintsEnabled ? badgeDigitForIndex(i) : null}
             retagAvailable={overlay.retagAvailable}
             aiTaggingEnabled={overlay.aiTaggingEnabled}
             selected={i === selectedIndex}
