@@ -60,6 +60,34 @@ the release must be marked latest — every tag here carries a `-forkN` suffix, 
 semver ordering does not treat as newer than the bare number, so `--latest` is passed
 explicitly in CI.
 
+## Measured on a live install (fork3 → fork4, 10.10.2026)
+
+Installed from the cask at `1.0.4-fork3`, restarted, updated itself:
+
+```
+[19:17:28] launch: running 1.0.4-fork3, checking for updates…
+[19:17:29] launch: update 1.0.4-fork4 found — downloading + installing…
+[19:17:31] launch: installed 1.0.4-fork4 — restart to apply
+```
+
+Four things that measurement settles:
+
+1. Download plus install took 2.1 s for a 7 MB tarball, and `codesign --verify --deep
+--strict` passes on the result — the signature CI made over the repacked tarball
+   survives the plugin's install.
+2. The on-launch path **installs and waits**: the log says "restart to apply" and the old
+   process keeps running the previous code until it is quit. The Settings button uses the
+   Rust `install_update` command, which restarts through `RESTART_EXIT_CODE`; making the
+   launch path restart by itself is open work, not a defect of the channel.
+3. `com.apple.quarantine` is **absent** on the self-updated bundle (`com.apple.provenance`
+   is the only xattr left), while a cask install leaves the quarantine flag on. The updater
+   writes the file itself rather than going through a browser download, so Gatekeeper never
+   sees something to flag. That is a property of the channel, not a gain in trust: what
+   protects an update is the minisign signature, checked before install.
+4. Homebrew kept reporting `1.0.4-fork3` (`brew list --cask --versions`) while the disk held
+   fork4, and `brew outdated` did not name the cask — `auto_updates true` doing its job, not
+   a stale meter.
+
 ## Homebrew and the updater coexist
 
 `brew install --cask tayuLuc/copyosity/copyosity` pins a version and its sha256; the in-app

@@ -103,7 +103,7 @@ pub fn detect(text: &str) -> Option<SmartMatch> {
         }
         t if t == NSTextCheckingType::Address => {
             let range = dominant.range();
-            let value = utf16_substring(trimmed, range.location as usize, range.length as usize)?;
+            let value = utf16_substring(trimmed, range.location, range.length)?;
             Some(SmartMatch {
                 kind: SmartKind::Address,
                 value,
