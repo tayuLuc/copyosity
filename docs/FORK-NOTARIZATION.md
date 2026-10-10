@@ -11,8 +11,8 @@ depend on the author's Apple credentials.
 | ----------------------- | --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
 | Code signature          | `Developer ID Application: Valeriy Kovalsky (A933C2TJXU)`, hardened runtime | ad-hoc (`codesign -s -`), no hardened runtime                                       |
 | Notarization            | submitted with `notarytool`, ticket stapled                                 | none — no Apple ID, no team membership                                              |
-| Updater artifacts       | `.app.tar.gz` + `latest.json`, minisign key `9E3D3817251B2075`              | none — the private key belongs to upstream                                          |
-| Self-update in Settings | yes (GitHub endpoint)                                                       | disabled, `plugins.updater.endpoints = []`                                          |
+| Updater artifacts       | `.app.tar.gz` + `latest.json`, minisign key `9E3D3817251B2075`              | `.app.tar.gz` + `.sig` per arch + `latest.json`, fork key `1F02BEF343E06964`        |
+| Self-update in Settings | yes (upstream releases + vkovalskii.com mirror)                             | yes — this repository's channel only, enforced by the Config gate                   |
 | Install path            | browser download → Gatekeeper prompt                                        | `brew install` → quarantined too, but launches (measured on 1.0.4-fork1, see below) |
 
 Ad-hoc signing is not optional on Apple Silicon: an arm64 binary with no
@@ -46,20 +46,31 @@ tayuLuc/copyosity/copyosity` on macOS 26.6.2:
    expect one right-click → Open.
 
 What the cask genuinely buys instead: a SHA-256 pinned per architecture and
-verified on download, `livecheck` against our own releases, `brew upgrade --cask`
-as the update channel, and no reliance on the vendor mirror. Signature-wise it buys
-nothing: this build is ad-hoc signed and unnotarized, and says so.
+verified on download, and a repeatable install line for a machine that has never
+seen this repository. It is a _pinned_ channel, not the update channel — the app
+updates itself, see below. Signature-wise it buys nothing: this build is ad-hoc
+signed and unnotarized, and says so.
 
 ## Updating
 
+Two channels, deliberately different:
+
 ```sh
-brew update
-brew upgrade --cask copyosity
+# rolling: the app checks releases/latest/download/latest.json on launch
+# and installs what our own minisign key vouches for
+open -a Copyosity
+
+# pinned: brew installs exactly the artifact whose sha256 is in the cask
+brew tap tayuLuc/copyosity
+brew install --cask tayuLuc/copyosity/copyosity
+brew reinstall --cask copyosity   # deliberately return to the pinned build
 ```
 
-There is no in-app path: the fork cannot produce artifacts the upstream pubkey
-would accept, and pointing the fork at the upstream channel would silently
-replace this build with upstream's and drop the fork's changes.
+The cask declares `auto_updates true`, so `brew upgrade --cask` leaves a
+self-updated install alone instead of rolling it back to the pin. Because the
+updater endpoint and the pubkey are this repository's, an upstream build can no
+longer replace a fork install over anyone's channel but its own — which is the
+reason the fork mints its key at all.
 
 ## What is in this fork
 
@@ -67,8 +78,14 @@ replace this build with upstream's and drop the fork's changes.
    no license file; the standard text is added with both copyright lines.
 2. `smart-actions` cherry-picked from `ed-would/copyosity@0aebfdf0` and
    `97b5aeb6`, rebased onto current upstream main.
-3. `build(fork)`: ad-hoc signing identity, updater artifacts and endpoints off,
-   version `1.0.4-fork1`.
+3. `build(fork)`: ad-hoc signing identity, updater channel pointed at this
+   repository with the fork's own key, version suffix `-forkN` carried in all
+   four manifests (`tauri.conf.json`, `package.json`, `Cargo.toml`, `Cargo.lock`),
+   which the Config gate cross-checks.
 4. `.github/workflows/release-fork.yml` — tag-triggered matrix build
-   (aarch64 + x64) publishing UDZO DMGs, in place of upstream's notarized
-   pipeline.
+   (aarch64 + x64): ad-hoc re-sign, DMG, AppleDouble-clean updater tarball,
+   minisign signature made after the repack, one release with `--latest`,
+   `latest.json` for both Mac platforms, and a final step that re-reads the
+   published manifest over HTTPS and checks both URLs answer 200.
+5. Release lineage runs off `main`: feature branch → merge → annotated tag on
+   `main` → CI → the tap's `scripts/sync-cask.sh` picks up the new digests.

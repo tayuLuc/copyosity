@@ -20,6 +20,15 @@
 #     latest.json                     (the GitHub manifest; used for version/notes/sigs)
 set -euo pipefail
 
+# Fork guard: this mirror is upstream's infrastructure (their ssh alias, their
+# nginx container, their volume), and the fork's updater has exactly one endpoint —
+# this repository's releases. The file stays for merge-ability but refuses to run
+# unless every variable above is deliberately pointed at a server you own.
+if [ "${ALLOW_UPSTREAM_MIRROR_PUBLISH:-}" != "1" ]; then
+  echo "publish-mirrors.sh: disabled in this fork — the mirror is upstream's, our channel is GitHub Releases" >&2
+  exit 1
+fi
+
 REL="${1:?usage: publish-mirrors.sh <release-dir>}"
 [ -d "$REL" ] || { echo "ERROR: release dir not found: $REL" >&2; exit 1; }
 

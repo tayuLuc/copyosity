@@ -124,14 +124,16 @@ gh release create "v$VERSION" \
   "$OUT/Copyosity_x64.app.tar.gz.sig" \
   "$OUT/latest.json"
 
-echo "==> [9/10] publish to vkovalskii.com mirror"
-bash scripts/publish-mirrors.sh "$OUT"
+echo "==> [9/10] mirror publish — skipped in this fork"
+echo "  the mirror is upstream's server; this fork's single endpoint is"
+echo "  https://github.com/$GH_REPO/releases/latest/download/latest.json,"
+echo "  published by .github/workflows/release-fork.yml (see docs/AUTOUPDATE.md)."
 
-echo "==> [10/10] verify both updater endpoints"
+echo "==> [10/10] verify the updater endpoint"
 gh_ver=$(gh release view "v$VERSION" --repo "$GH_REPO" --json tagName -q .tagName)
-mir_ver=$(curl -s --noproxy '*' https://vkovalskii.com/copyosity/latest.json | python3 -c "import sys,json;print(json.load(sys.stdin)['version'])")
+chan_ver=$(curl -fsSL --noproxy '*' "https://github.com/$GH_REPO/releases/latest/download/latest.json" | python3 -c "import sys,json;print(json.load(sys.stdin)['version'])")
 ad=$(python3 -c "import tarfile;print(len([x for x in tarfile.open('$OUT/Copyosity_aarch64.app.tar.gz').getnames() if x.rsplit('/',1)[-1].startswith('._')]))")
-echo "  github tag : $gh_ver"
-echo "  mirror ver : $mir_ver"
+echo "  github tag  : $gh_ver"
+echo "  channel ver : $chan_ver"
 echo "  tarball AppleDouble entries (must be 0): $ad"
-[ "$mir_ver" = "$VERSION" ] && [ "$ad" = "0" ] && echo "RELEASE $VERSION OK" || { echo "RELEASE VERIFY FAILED" >&2; exit 1; }
+[ "$chan_ver" = "$VERSION" ] && [ "$ad" = "0" ] && echo "RELEASE $VERSION OK" || { echo "RELEASE VERIFY FAILED" >&2; exit 1; }

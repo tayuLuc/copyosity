@@ -43,6 +43,13 @@ After macOS tray, overlay, or activation-policy changes, also run `make verify-t
 
 ## Releasing (macOS only)
 
+**In this fork the section below describes upstream's pipeline, which we cannot
+run** (it needs their Developer ID, their notary profile and their mirror). The
+fork's release path is: commit on `main` → bump the version in all four manifests
+→ annotated tag → `.github/workflows/release-fork.yml`, which publishes the DMGs,
+the signed updater tarballs and `latest.json` from this repository. Details:
+[docs/AUTOUPDATE.md](docs/AUTOUPDATE.md), [docs/FORK-NOTARIZATION.md](docs/FORK-NOTARIZATION.md).
+
 - One command: `scripts/release.sh <version> "notes"` — bump → fix+check →
   commit+push → build both arches (signed) → notarize+staple+clean tarballs →
   GitHub `latest.json` → tag → GitHub release → vkovalskii.com mirror → verify.

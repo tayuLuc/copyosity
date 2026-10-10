@@ -67,11 +67,14 @@ Windows/Linux are inert stubs — do not ship them. "Notarization" is Apple-only
 - `gh`'s HTTPS API needs `HTTPS_PROXY` exported in the shell on this network;
   `git push`, notarytool, and the mirror do not.
 
-**Updater delivery.** `tauri.conf.json → plugins.updater.endpoints` is tried in
-order: (1) `https://vkovalskii.com/copyosity/latest.json` (mirror, static, no
-redirects), (2) GitHub `releases/latest/download/latest.json` (fallback). The
-mirror origin is ssh `srv-rnd-demos-mcp` (DNS → Yandex Cloud, **not** the Hetzner
-box); reload its nginx with `docker kill -s HUP vkovalskii-nginx`.
+**Updater delivery (fork).** One endpoint:
+`https://github.com/tayuLuc/copyosity/releases/latest/download/latest.json`, verified
+against the fork's own minisign key `1F02BEF343E06964` (private key outside the repo,
+in the workspace's `secrets/`, password-protected; the CI secret pair is
+`TAURI_SIGNING_PRIVATE_KEY` + `..._PASSWORD`). `scripts/publish-mirrors.sh` is guarded
+off — upstream's mirror is their server (`srv-rnd-demos-mcp`, `vkovalskii-nginx`), not
+ours to write to, and the release workflow publishes GitHub `latest.json` for both Mac
+platforms instead.
 
 **Hard-won updater invariants (do not regress):**
 

@@ -226,8 +226,9 @@ Shipped capabilities, grouped by area:
   the overlay, command palette, and settings.
 - **Launch at login** — optional **Settings → General** toggle starts Copyosity
   when you log in (macOS LaunchAgent).
-- **Auto-updates** — checks [vkovalskii.com](https://vkovalskii.com/copyosity/latest.json)
-  first, then GitHub Releases; downloads signed builds in the background on
+- **Auto-updates** — checks [this repository's release channel](https://github.com/tayuLuc/copyosity/releases/latest/download/latest.json)
+  (no second mirror: upstream's mirror is upstream's server); downloads signed builds in the
+  background on
   launch and notifies you when a new version is ready. **Settings → Updates**
   offers manual check, **Download & install**, and an **Update log** (every
   step + errors, with Copy/Clear). Copyosity must run from **Applications**, not
