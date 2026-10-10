@@ -1,12 +1,21 @@
 # Copyosity
 
-[![Latest release](https://img.shields.io/github/v/release/vakovalskii/copyosity)](https://github.com/vakovalskii/copyosity/releases/latest)
-[![CI](https://github.com/vakovalskii/copyosity/actions/workflows/ci.yml/badge.svg)](https://github.com/vakovalskii/copyosity/actions/workflows/ci.yml)
+> **Unsigned fork, distributed through Homebrew.** This tree builds ad-hoc-signed,
+> non-notarized macOS bundles and serves them from its own releases:
+> `brew tap tayuLuc/copyosity && brew install --cask tayuLuc/copyosity/copyosity`.
+> Self-update stays inside the fork too — the app reads
+> `tayuLuc/copyosity/releases/latest/download/latest.json` and verifies it against this
+> fork's own minisign key, never upstream's. What that costs and why it is wired this
+> way: [docs/FORK-NOTARIZATION.md](docs/FORK-NOTARIZATION.md). Fork of
+> `vakovalskii/copyosity`, upstream code and MIT attribution unchanged.
+
+[![Latest release](https://img.shields.io/github/v/release/tayuLuc/copyosity)](https://github.com/tayuLuc/copyosity/releases/latest)
+[![CI](https://github.com/tayuLuc/copyosity/actions/workflows/ci.yml/badge.svg)](https://github.com/tayuLuc/copyosity/actions/workflows/ci.yml)
 [![Tauri](https://img.shields.io/badge/Tauri-2-FFC131?logo=tauri&logoColor=black)](https://tauri.app/)
 [![Svelte](https://img.shields.io/badge/Svelte-5-FF3E00?logo=svelte&logoColor=white)](https://svelte.dev/)
 [![Rust](https://img.shields.io/badge/Rust-000000?logo=rust&logoColor=white)](https://www.rust-lang.org/)
 
-**Website: [vakovalskii.github.io/copyosity](https://vakovalskii.github.io/copyosity/)** · [Download the latest release](https://github.com/vakovalskii/copyosity/releases/latest)
+**Website: [vakovalskii.github.io/copyosity](https://vakovalskii.github.io/copyosity/)** · [Download the latest release](https://github.com/tayuLuc/copyosity/releases/latest)
 
 A fast, native macOS clipboard manager with on-device intelligence.
 
@@ -232,11 +241,11 @@ Shipped capabilities, grouped by area:
 
 ## Platform support
 
-| Platform                             | Status           | Install / builds                                                                                                                                                                                  |
-| ------------------------------------ | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 🍎 **macOS** (Apple Silicon & Intel) | ✅ Supported     | Signed, notarized DMGs + `*.app.tar.gz` updater bundles on [Releases](https://github.com/vakovalskii/copyosity/releases/latest)                                                                   |
-| 🪟 **Windows** (x64)                 | ⚠️ Experimental  | `*_x64_en-US.msi` and `*_x64-setup.exe` on the same [Releases](https://github.com/vakovalskii/copyosity/releases/latest) page; built via [windows-build.yml](.github/workflows/windows-build.yml) |
-| 🐧 **Linux**                         | ❌ Not supported | No CI builds or releases                                                                                                                                                                          |
+| Platform                             | Status           | Install / builds                                                                                                                                                                              |
+| ------------------------------------ | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 🍎 **macOS** (Apple Silicon & Intel) | ✅ Supported     | Signed, notarized DMGs + `*.app.tar.gz` updater bundles on [Releases](https://github.com/tayuLuc/copyosity/releases/latest)                                                                   |
+| 🪟 **Windows** (x64)                 | ⚠️ Experimental  | `*_x64_en-US.msi` and `*_x64-setup.exe` on the same [Releases](https://github.com/tayuLuc/copyosity/releases/latest) page; built via [windows-build.yml](.github/workflows/windows-build.yml) |
+| 🐧 **Linux**                         | ❌ Not supported | No CI builds or releases                                                                                                                                                                      |
 
 Copyosity is a **macOS-native** app: `NSPanel` overlay, pasteboard monitoring,
 `CGEvent` paste injection, Vision OCR, Apple Events, and menu-bar tray behavior
@@ -265,7 +274,7 @@ Expected onboarding states: `Ollama not installed` → `Ollama installed, server
 
 ## ⬇️ Install
 
-Downloads are on the [latest release](https://github.com/vakovalskii/copyosity/releases/latest) page. See [CHANGELOG.md](CHANGELOG.md) for release notes.
+Downloads are on the [latest release](https://github.com/tayuLuc/copyosity/releases/latest) page. See [CHANGELOG.md](CHANGELOG.md) for release notes.
 
 ### 🍎 macOS
 

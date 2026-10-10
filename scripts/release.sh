@@ -24,7 +24,7 @@ export LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
 VERSION="${1:?usage: release.sh <version> [notes]}"
 NOTES="${2:-Copyosity $VERSION}"
 OUT="$PWD/dist/updater/$VERSION"
-GH_REPO="vakovalskii/copyosity"
+GH_REPO="tayuLuc/copyosity"
 DL_BASE="https://github.com/$GH_REPO/releases/download/v$VERSION"
 
 echo "==> [1/10] bump version to $VERSION"
