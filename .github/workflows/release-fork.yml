@@ -52,6 +52,25 @@ jobs:
               "unsigned builds cannot mint updater artifacts"
           assert conf["plugins"]["updater"]["endpoints"] == [], \
               "the fork must not self-update from the upstream channel"
+
+          # Version is stored in four files and upstream's release.sh bumps them in
+          # one line. A fork that edits only tauri.conf.json leaves the other three
+          # lying (measured on v1.0.4-fork1: 1.0.4-fork1 vs 1.0.4 in three places),
+          # and a merge of an upstream release commit would silently drop the fork
+          # suffix. Catch the disagreement here instead of in the tag check below,
+          # which only ever compares one of the four.
+          import tomllib
+          with open("src-tauri/Cargo.toml", "rb") as f:
+              cargo = tomllib.load(f)["package"]["version"]
+          with open("src-tauri/Cargo.lock", "rb") as f:
+              lock = next(p["version"] for p in tomllib.load(f)["package"]
+                          if p.get("name") == "copyosity")
+          pkg = json.load(open("package.json"))["version"]
+          versions = {"tauri.conf.json": conf["version"], "package.json": pkg,
+                      "Cargo.toml": cargo, "Cargo.lock (copyosity)": lock}
+          assert len(set(versions.values())) == 1, \
+              "version manifests disagree: " + ", ".join(f"{k}={v}" for k, v in versions.items())
+          print("version manifests agree on " + conf["version"])
           PY
 
       - uses: actions/setup-node@v4
