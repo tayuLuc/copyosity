@@ -1,0 +1,186 @@
+name: Fork release (unsigned)
+
+# This fork is distributed as a Homebrew cask, so it needs release artifacts it
+# can produce without Apple credentials. Upstream's release.yml signs with a
+# Developer ID identity and notarizes via notarytool; this fork has neither the
+# certificate nor the .p12 secrets, so it builds ad-hoc-signed bundles and ships
+# them as-is. Consequences are spelled out in docs/FORK-NOTARIZATION.md.
+#
+# Pipeline: check (types, tests, lint) -> build per arch -> one release with both
+# DMGs. The Homebrew cask in tayuLuc/homebrew-copyosity points at the DMG names
+# produced here: Copyosity-<aarch64|x64>_<version>.dmg
+#
+# Trigger by pushing an annotated tag whose message becomes the release notes:
+#   git tag -a v1.0.4-fork1 -m "notes" && git push origin v1.0.4-fork1
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  PRODUCT: Copyosity
+
+jobs:
+  check:
+    name: Type, test, lint
+    runs-on: macos-14
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"   # matches .github/workflows/ci.yml
+          cache: npm
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: "./src-tauri -> target"
+
+      - run: npm ci
+
+      - name: Frontend gate (svelte-check, node --test, lint)
+        run: npm run check
+
+      - name: Rust gate (crate tests, incl. smart_actions and qr_code)
+        run: cargo test --manifest-path src-tauri/Cargo.toml --lib
+
+  build:
+    name: Build ${{ matrix.arch_label }}
+    needs: check
+    runs-on: macos-14
+    timeout-minutes: 50
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - rust_target: aarch64-apple-darwin
+            arch_label: aarch64
+          - rust_target: x86_64-apple-darwin
+            arch_label: x64
+    env:
+      CC_target_x86_64_apple_darwin: clang -arch x86_64
+      CXX_target_x86_64_apple_darwin: clang++ -arch x86_64
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Resolve version from tag
+        id: version
+        run: |
+          CONF=$(node -p "require('./src-tauri/tauri.conf.json').version")
+          case "$GITHUB_REF_NAME" in
+            v*)
+              VERSION="${GITHUB_REF_NAME#v}"
+              if [ "$VERSION" != "$CONF" ]; then
+                echo "tag $GITHUB_REF_NAME disagrees with tauri.conf.json version $CONF" >&2
+                exit 1
+              fi
+              ;;
+            *)
+              # workflow_dispatch on a branch: build whatever the config says
+              VERSION="$CONF"
+              ;;
+          esac
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"   # matches .github/workflows/ci.yml
+          cache: npm
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.rust_target }}
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: "./src-tauri -> target"
+          key: ${{ matrix.rust_target }}
+
+      - run: npm ci
+
+      - name: Build .app (ad-hoc signed, no notarization)
+        run: npm run tauri build -- --bundles app --target ${{ matrix.rust_target }}
+
+      - name: Locate bundle
+        id: app
+        run: |
+          APP=$(find "src-tauri/target/${{ matrix.rust_target }}/release/bundle" -maxdepth 3 -name "*.app" -type d | head -1)
+          test -n "$APP"
+          echo "path=$APP" >> "$GITHUB_OUTPUT"
+
+      - name: Re-sign ad-hoc so the resource manifest exists
+        run: |
+          # Without a Developer ID, Tauri leaves the signature the Rust linker
+          # stamped: ad-hoc, but with no _CodeSignature/CodeResources, which
+          # Gatekeeper rejects as "code has no resources but signature indicates
+          # they must be present". Re-signing with the codesign tool generates
+          # the manifest. Lesson taken from superbereza/copyosity release.yml.
+          codesign --force --deep --sign - "${{ steps.app.outputs.path }}"
+          codesign --verify --verbose=2 "${{ steps.app.outputs.path }}"
+          echo "--- signature ---"
+          codesign -dvv "${{ steps.app.outputs.path }}" 2>&1 | grep -E "Identifier|CDHash|flags|Authority" || true
+          echo "--- gatekeeper (expected: rejected, unnotarized) ---"
+          spctl -a -vv -t install "${{ steps.app.outputs.path }}" 2>&1 || true
+
+      - name: Package UDZO DMG
+        run: |
+          set -euo pipefail
+          STAGE=$(mktemp -d "$RUNNER_TEMP/dmg.XXXXXX")
+          mkdir -p "$STAGE/${PRODUCT}"
+          cp -R "${{ steps.app.outputs.path }}" "$STAGE/${PRODUCT}/"
+          ln -s /Applications "$STAGE/${PRODUCT}/Applications"
+          DMG="${PRODUCT}-${{ matrix.arch_label }}_${{ steps.version.outputs.version }}.dmg"
+          hdiutil create -volname "$PRODUCT" -srcfolder "$STAGE/${PRODUCT}" -ov -format UDZO "$DMG"
+          shasum -a 256 "$DMG" | tee "$DMG.sha256"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.PRODUCT }}-${{ matrix.arch_label }}
+          path: "*.dmg"
+          if-no-files-found: error
+
+  release:
+    name: Publish GitHub Release
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Notes from the annotated tag
+        run: |
+          git for-each-ref "refs/tags/${GITHUB_REF_NAME}" --format='%(contents)' \
+            | sed '/^-----BEGIN PGP SIGNATURE-----$/,$d' > notes.md
+          if [ ! -s notes.md ]; then
+            printf 'Unsigned fork build of Copyosity. See %s for what this fork changes.\n' \
+              "https://github.com/${GITHUB_REPOSITORY}" > notes.md
+          fi
+          printf '\n## Unsigned build\n\nThis artifact is ad-hoc signed and **not notarized**.\n' >> notes.md
+
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" artifacts/*.dmg \
+            --title "$GITHUB_REF_NAME (unsigned fork build)" \
+            --notes-file notes.md
+          gh release view "$GITHUB_REF_NAME" --json assets --jq '.assets[].name'
