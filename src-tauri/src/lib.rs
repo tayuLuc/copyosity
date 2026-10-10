@@ -1700,7 +1700,7 @@ fn palette_search(app: tauri::AppHandle, query: String) -> Result<String, String
     let db = app.state::<std::sync::Arc<db::Database>>();
     let s = db.get_app_settings().map_err(|e| e.to_string())?;
     if !s.hub_enabled {
-        return Err("NeuralDeep hub is disabled in Settings".to_string());
+        return Err("AI hub is disabled in Settings".to_string());
     }
     hub::web_search(&s.hub_url, &s.hub_token, &query, 5)
 }
@@ -1723,11 +1723,16 @@ fn palette_agent(
     let db = app.state::<std::sync::Arc<db::Database>>();
     let s = db.get_app_settings().map_err(|e| e.to_string())?;
     if !s.hub_enabled {
-        return Err("NeuralDeep hub is disabled in Settings".to_string());
+        return Err("AI hub is disabled in Settings".to_string());
     }
     let model = model
         .filter(|m| !m.trim().is_empty())
         .unwrap_or_else(|| s.hub_chat_model.clone());
+    // No model is assumed on behalf of an unknown provider: an empty id would reach the
+    // endpoint as `""` and come back as an opaque 400, so we ask for it where it belongs.
+    if model.trim().is_empty() {
+        return Err("Choose a chat model in Settings → AI hub".to_string());
+    }
 
     // Optionally attach a screenshot of the app that was frontmost when the
     // palette opened, so the agent can reason about the current screen.

@@ -11,8 +11,8 @@ pub(crate) fn transcription_endpoint(settings: &AppSettings) -> Result<(String, 
     let (url, tok) = if use_hub {
         (
             format!(
-                "{}/v1/audio/transcriptions",
-                settings.hub_url.trim_end_matches('/')
+                "{}/audio/transcriptions",
+                crate::hub::normalize_base(&settings.hub_url)
             ),
             settings.hub_token.clone(),
         )
@@ -75,7 +75,9 @@ mod tests {
         let mut s = base_settings();
         s.hub_enabled = true;
         s.hub_transcribe_enabled = true;
-        s.hub_url = "https://hub.example/".into();
+        // The version segment belongs to the configured URL: it is used verbatim, and
+        // only the trailing slash is trimmed.
+        s.hub_url = "https://hub.example/v1/".into();
         s.hub_token = "tok".into();
         let (url, tok) = transcription_endpoint(&s).unwrap();
         assert_eq!(url, "https://hub.example/v1/audio/transcriptions");

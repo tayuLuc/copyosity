@@ -1,7 +1,7 @@
 // Client-side ReAct agent for the command palette, built on the Vercel AI SDK.
 //
 // The loop runs in the webview: `streamText` drives a multi-step tool loop
-// against the NeuralDeep hub (OpenAI-compatible), and native tools call back
+// against the AI hub (OpenAI-compatible), and native tools call back
 // into Rust via Tauri `invoke`. The hub base URL + token are read from app
 // settings (already exposed to the frontend for the model list).
 //
@@ -86,13 +86,19 @@ async function resolveModel(model: string) {
   const s = await getAppSettings();
   const block = hubAgentBlockReason(s);
   if (block) throw new Error(block);
+  // The configured URL is the API root, used verbatim: the SDK appends
+  // `chat/completions` to it, so a server that lives behind `/v1` gets `/v1` from
+  // the setting, not from here.
   const base = s.hub_url.trim().replace(/\/+$/, "");
   const provider = createOpenAICompatible({
-    name: "neuraldeep",
-    baseURL: `${base}/v1`,
+    name: "ai-hub",
+    baseURL: base,
     apiKey: s.hub_token.trim(),
   });
-  const id = model.trim() || s.hub_chat_model || "qwen3.6-35b-a3b";
+  // No vendor model id is assumed: an unknown provider has no model we could pick on the
+  // user's behalf, so an empty id is reported where it can be fixed instead of sent as `""`.
+  const id = model.trim() || s.hub_chat_model.trim();
+  if (!id) throw new Error("Choose a chat model in Settings → AI hub");
   return provider.chatModel(id);
 }
 

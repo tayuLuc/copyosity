@@ -18,10 +18,15 @@ stay in Rust behind `invoke` commands.
     user-only threads are never written to history.
 - **`src/lib/agent/index.ts`** — the whole agent wiring:
   - `createAgentTransport(getModel)` returns a custom AI SDK `ChatTransport`
-    whose `sendMessages` runs `streamText(...)` against the NeuralDeep hub
-    (`@ai-sdk/openai-compatible`, `baseURL = <hub_url>/v1`, `apiKey = hub_token`
+    whose `sendMessages` runs `streamText(...)` against the configured OpenAI-compatible hub
+    (`@ai-sdk/openai-compatible`, `baseURL = <hub_url>` verbatim — the version prefix is the
+    user's, not ours; `apiKey = hub_token`
     from `getAppSettings`) with `stopWhen: stepCountIs(12)` and returns
-    `toUIMessageStream({ stream, sendReasoning: true })`.
+    `toUIMessageStream({ stream, sendReasoning: true })`. The loop runs in the webview, so
+    the endpoint is governed by `app.security.csp` in `tauri.conf.json` (`connect-src`
+    carries `http: https:`). Narrowing it back to a host allow-list would break
+    bring-your-own-endpoint, which is the point of the hub; Rust-side hub calls (`ureq`)
+    are not CSP-bound.
   - Uses `hubAgentBlockReason` inside `resolveModel` before building the provider.
   - `tools` — five AI SDK tools whose `execute` calls Rust commands:
     `web_search`, `create_note`, `create_reminder`, `list_reminders`,
