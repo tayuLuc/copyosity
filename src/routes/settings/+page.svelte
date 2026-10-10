@@ -139,8 +139,6 @@
   let accessibilityNotice = $state("");
   /** User was sent to System Settings; keep enable hint until access is granted. */
   let a11yEnablePending = $state(false);
-  /** macOS trust prompt already shown this settings-window visit. */
-  let a11yPromptedThisVisit = false;
 
   let ollamaStatus = $state<OllamaStatus | null>(null);
   let ollamaLoading = $state(false);
@@ -353,24 +351,9 @@
     return granted;
   }
 
-  /** One macOS prompt per settings visit when access is still missing. */
-  async function promptAccessibilityIfNeeded() {
-    let granted = await checkAccessibility(false);
-    if (!granted && !a11yPromptedThisVisit) {
-      await checkAccessibility(true);
-      a11yPromptedThisVisit = true;
-      a11yEnablePending = true;
-      granted = await checkAccessibility(false);
-    }
-    accessibilityGranted = granted;
-    syncA11yNotice(granted);
-    return granted;
-  }
-
   async function handleRequestAccessibility() {
     await openAccessibilitySettings();
     await checkAccessibility(true);
-    a11yPromptedThisVisit = true;
     a11yEnablePending = true;
     accessibilityGranted = await checkAccessibility(false);
     syncA11yNotice(accessibilityGranted, true);
@@ -384,7 +367,6 @@
       return;
     }
     await checkAccessibility(true);
-    a11yPromptedThisVisit = true;
     a11yEnablePending = true;
     accessibilityGranted = await checkAccessibility(false);
     syncA11yNotice(accessibilityGranted);
@@ -425,7 +407,9 @@
     });
 
     const win = getCurrentWindow();
-    void promptAccessibilityIfNeeded();
+    // Status only: a check must not reach for the system prompt, let alone open System
+    // Settings on the user. The Permissions pane's "Request" button is the only door.
+    void updateAccessibilityStatus();
 
     const unlistenPull = listen<string>("ollama-pull-progress", (event) => {
       pullProgress = event.payload;
@@ -438,8 +422,7 @@
     });
 
     const unlistenShown = listen("settings-shown", () => {
-      a11yPromptedThisVisit = false;
-      void promptAccessibilityIfNeeded();
+      void updateAccessibilityStatus();
       void refreshExcludedAppsSection();
       void refreshHistoryCounts();
     });
