@@ -3,11 +3,10 @@ name: Lint Actions
 # MegaLinter over the one class of files `make check` never reaches: the workflow
 # YAML itself. `ENABLE_LINTERS` picks three of its 133 linters.
 #
-#  - ACTION_ACTIONLINT blocks: it reports nothing on the current tree, so a finding
-#    here is always introduced by the change under review.
-#  - ACTION_ZIZMOR and YAML_YAMLLINT run through DISABLE_ERRORS_LINTERS, so they
-#    report without failing the job: zizmor counts 49 findings on files that predate
-#    this workflow, and yamllint has never run on this repository. Drop a name from
+#  - ACTION_ACTIONLINT and YAML_YAMLLINT block: the first reports nothing on the current
+#    tree, the second ran over 5 YAML files with 0 errors and 0 warnings.
+#  - ACTION_ZIZMOR runs through DISABLE_ERRORS_LINTERS, so it reports without failing the
+#    job: it counts 49 findings on files that predate this workflow. Drop the name from
 #    that list once its count is zero.
 
 on:
@@ -45,7 +44,8 @@ jobs:
           VALIDATE_ALL_CODEBASE: "true"
           APPLY_FIXES: "none"
           ENABLE_LINTERS: ACTION_ACTIONLINT,ACTION_ZIZMOR,YAML_YAMLLINT
-          DISABLE_ERRORS_LINTERS: ACTION_ZIZMOR,YAML_YAMLLINT
+          DISABLE_ERRORS_LINTERS: ACTION_ZIZMOR
+          ACTION_ZIZMOR_UNSECURED_ENV_VARIABLES: GITHUB_TOKEN
 
       - name: Upload the reports
         if: success() || failure()
