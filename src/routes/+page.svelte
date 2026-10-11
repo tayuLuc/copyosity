@@ -8,6 +8,7 @@
     getAppSettings,
     hideMainWindow,
     openSettingsWindow,
+    checkAccessibility,
     activateEntry,
     getExcludableAppCandidate,
     addExcludableAppCandidate,
@@ -39,6 +40,14 @@
   import { createOverlayEntriesStore } from "$lib/overlay-entries.svelte";
   import { shouldShowOverlayEntryGrid } from "$lib/overlay-entries-logic";
   import { badgeDigitForIndex, entryIdForDigit, quickSelectDigit } from "$lib/overlay-quick-select";
+  import {
+    A11Y_NOTICE_SETTINGS_PANE,
+    A11Y_POLL_INTERVAL_MS,
+    a11yNoticeState,
+    a11yNoticeStatusFromProbe,
+    beginA11yNoticeSession,
+    type A11yNoticeSession,
+  } from "$lib/a11y-notice";
   import { closeAllCardContextMenus, isCardContextMenuOpen } from "$lib/overlay-card-context-menu";
   import {
     canToggleQuickLook,
@@ -189,6 +198,31 @@
   const settingsSyncNotice = $derived(
     overlay.settingsLoadError !== null ? SETTINGS_SYNC_USER_NOTICE : null,
   );
+
+  let a11ySession = $state<A11yNoticeSession>(beginA11yNoticeSession());
+  const a11yNotice = $derived(a11yNoticeState({ ...a11ySession, windowVisible: visible }));
+  const a11yNoticeShows = $derived(a11yNotice.show);
+  const a11yNoticeShouldPoll = $derived(a11yNotice.poll);
+
+  async function refreshA11yNotice(): Promise<void> {
+    const granted = await checkAccessibility(false).catch(() => null);
+    a11ySession = { ...a11ySession, status: a11yNoticeStatusFromProbe(granted) };
+  }
+
+  function dismissA11yNotice(): void {
+    a11ySession = { ...a11ySession, dismissedThisSession: true };
+  }
+
+  function openA11ySettingsPane(): void {
+    void openSettingsWindow(A11Y_NOTICE_SETTINGS_PANE);
+  }
+
+  $effect(() => {
+    if (!a11yNoticeShouldPoll) return;
+    void refreshA11yNotice();
+    const timer = setInterval(() => void refreshA11yNotice(), A11Y_POLL_INTERVAL_MS);
+    return () => clearInterval(timer);
+  });
 
   const tagBarModel = $derived(
     buildTagBarModel({
@@ -584,6 +618,7 @@
     overlay.clearSearch({ reload: false });
     overlay.resetOverlayFilters();
     resetOverlayResizeState();
+    a11ySession = beginA11yNoticeSession();
 
     isRevealing = true;
     const hadPendingReload = pendingReload;
@@ -1577,6 +1612,24 @@
       {/each}
     {/if}
   </div>
+  {#if a11yNoticeShows}
+    <div class="a11y-notice overlay-footer-strip" role="status" aria-live="polite">
+      <button class="a11y-notice-cta app-btn" type="button" onclick={openA11ySettingsPane}>
+        <span class="status-dot warn" aria-hidden="true"></span>
+        <span class="a11y-notice-text">{$t("overlay.a11y.banner")}</span>
+      </button>
+      <button
+        class="a11y-notice-dismiss app-btn"
+        type="button"
+        aria-label={$t("overlay.a11y.dismiss")}
+        onclick={dismissA11yNotice}
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M5 5 19 19M19 5 5 19" />
+        </svg>
+      </button>
+    </div>
+  {/if}
   {#if showEntryGrid && overlay.loadMoreFailed}
     <div class="load-more-banner overlay-footer-strip" role="status" aria-live="polite">
       <p class="hint">Couldn't load more entries</p>
@@ -1955,6 +2008,64 @@
 
   .load-more-banner .hint {
     margin: 0;
+  }
+
+  .a11y-notice {
+    display: flex;
+    align-items: center;
+    gap: var(--space-chip-gap);
+    padding: var(--space-row) var(--overlay-grid-pad-x);
+    border-top: 1px solid var(--border-warning);
+    background: var(--surface-warning-subtle);
+  }
+
+  .a11y-notice-cta {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    gap: var(--space-chip-gap);
+    min-width: 0;
+    padding: 0;
+    border: none;
+    background: none;
+    color: var(--color-warning-text);
+    font: inherit;
+    font-size: var(--font-size-2xs);
+    line-height: var(--line-height-hint);
+    text-align: start;
+  }
+
+  .a11y-notice-text {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .a11y-notice-cta:hover .a11y-notice-text {
+    text-decoration: underline;
+  }
+
+  .a11y-notice-dismiss {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    padding: 0 var(--space-chip-gap);
+    border: none;
+    background: none;
+    color: var(--color-text-faint);
+  }
+
+  .a11y-notice-dismiss:hover {
+    color: var(--color-warning-text);
+  }
+
+  .a11y-notice-dismiss svg {
+    width: var(--icon-size-chip);
+    height: var(--icon-size-chip);
+    fill: none;
+    stroke: currentcolor;
+    stroke-width: 1.75;
+    stroke-linecap: round;
   }
 
 </style>
