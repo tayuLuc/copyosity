@@ -4,6 +4,7 @@
 mod activation_macos; // docs/architecture/macos-tray-menu.md §9
 mod agent;
 mod app_exclusion;
+mod app_menu; // docs/architecture/macos-tray-menu.md §14 — app menu exists only while Settings is open
 mod clipboard_macos;
 mod clipboard_monitor;
 mod clipboard_write;
@@ -512,6 +513,7 @@ pub fn run() {
     };
 
     builder
+        .on_menu_event(|app, event| app_menu::handle_event(app, event.id().as_ref()))
         .setup(|app| {
             let app_dir = app
                 .path()
@@ -519,6 +521,8 @@ pub fn run() {
                 .expect("Failed to get app data dir");
             let db = Arc::new(Database::new(app_dir).expect("Failed to initialize database"));
             app.manage(db.clone());
+            // Menu strings pushed from src/lib/i18n/dict.ts by the webview.
+            app.manage(app_menu::NativeMenuState::default());
 
             // --- TRAY STARTUP ---
             // Agent guardrail: docs/architecture/macos-tray-menu.md — read before editing.
@@ -704,6 +708,7 @@ pub fn run() {
             commands::get_quick_menu_shortcut,
             commands::set_quick_menu_shortcut,
             commands::set_ui_locale,
+            commands::set_native_menu_labels,
             commands::get_snippet_folders,
             commands::get_snippets,
             commands::create_snippet_folder,
@@ -1121,7 +1126,7 @@ fn tray_labels(locale: &str) -> TrayLabels {
     }
 }
 
-fn normalize_tray_locale(raw: &str) -> String {
+pub(crate) fn normalize_tray_locale(raw: &str) -> String {
     raw.trim()
         .to_ascii_lowercase()
         .chars()
@@ -1130,7 +1135,7 @@ fn normalize_tray_locale(raw: &str) -> String {
         .collect()
 }
 
-fn tray_locale(app: &tauri::AppHandle) -> String {
+pub(crate) fn tray_locale(app: &tauri::AppHandle) -> String {
     app.try_state::<std::sync::Arc<db::Database>>()
         .and_then(|db| db.get_setting("ui_locale").ok().flatten())
         .unwrap_or_else(|| "en".to_string())

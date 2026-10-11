@@ -549,6 +549,15 @@ const en: Dict = {
   "time.short.hours": "{count}h ago",
   "time.short.days": "{count}d ago",
   "quicklook.msg.characters-count": "{count} character|{count} characters",
+
+  // native application menu
+  "menu.app.about": "About Copyosity",
+  "menu.app.settings": "Settings…",
+  "menu.app.quit": "Quit Copyosity",
+  "menu.edit": "Edit",
+  "menu.window": "Window",
+  "menu.help": "Help",
+  "menu.help.docs": "Copyosity Documentation",
 };
 
 const ru: Dict = {
@@ -1095,6 +1104,15 @@ const ru: Dict = {
   "time.short.hours": "{count} ч назад",
   "time.short.days": "{count} дн. назад",
   "quicklook.msg.characters-count": "{count} символ|{count} символа|{count} символов",
+
+  // native application menu
+  "menu.app.about": "О программе Copyosity",
+  "menu.app.settings": "Настройки…",
+  "menu.app.quit": "Завершить Copyosity",
+  "menu.edit": "Правка",
+  "menu.window": "Окно",
+  "menu.help": "Справка",
+  "menu.help.docs": "Документация Copyosity",
 };
 
 const es: Dict = {
@@ -1642,6 +1660,15 @@ const es: Dict = {
   "time.short.hours": "hace {count} h",
   "time.short.days": "hace {count} d",
   "quicklook.msg.characters-count": "{count} carácter|{count} caracteres",
+
+  // native application menu
+  "menu.app.about": "Acerca de Copyosity",
+  "menu.app.settings": "Ajustes…",
+  "menu.app.quit": "Salir de Copyosity",
+  "menu.edit": "Edición",
+  "menu.window": "Ventana",
+  "menu.help": "Ayuda",
+  "menu.help.docs": "Documentación de Copyosity",
 };
 
 const zh: Dict = {
@@ -2154,6 +2181,15 @@ const zh: Dict = {
   "time.short.hours": "{count} 小时前",
   "time.short.days": "{count} 天前",
   "quicklook.msg.characters-count": "{count} 个字符",
+
+  // native application menu
+  "menu.app.about": "关于 Copyosity",
+  "menu.app.settings": "设置…",
+  "menu.app.quit": "退出 Copyosity",
+  "menu.edit": "编辑",
+  "menu.window": "窗口",
+  "menu.help": "帮助",
+  "menu.help.docs": "Copyosity 文档",
 };
 
 const de: Dict = {
@@ -2706,6 +2742,15 @@ const de: Dict = {
   "time.short.hours": "vor {count} Std.",
   "time.short.days": "vor {count} T.",
   "quicklook.msg.characters-count": "{count} Zeichen|{count} Zeichen",
+
+  // native application menu
+  "menu.app.about": "Über Copyosity",
+  "menu.app.settings": "Einstellungen…",
+  "menu.app.quit": "Copyosity beenden",
+  "menu.edit": "Bearbeiten",
+  "menu.window": "Fenster",
+  "menu.help": "Hilfe",
+  "menu.help.docs": "Copyosity-Dokumentation",
 };
 
 const fr: Dict = {
@@ -3261,6 +3306,15 @@ const fr: Dict = {
   "time.short.hours": "il y a {count} h",
   "time.short.days": "il y a {count} j",
   "quicklook.msg.characters-count": "{count} caractère|{count} caractères",
+
+  // native application menu
+  "menu.app.about": "À propos de Copyosity",
+  "menu.app.settings": "Réglages…",
+  "menu.app.quit": "Quitter Copyosity",
+  "menu.edit": "Édition",
+  "menu.window": "Fenêtre",
+  "menu.help": "Aide",
+  "menu.help.docs": "Documentation de Copyosity",
 };
 
 const ja: Dict = {
@@ -3799,6 +3853,15 @@ const ja: Dict = {
   "time.short.hours": "{count} 時間前",
   "time.short.days": "{count} 日前",
   "quicklook.msg.characters-count": "{count} 文字",
+
+  // native application menu
+  "menu.app.about": "Copyosity について",
+  "menu.app.settings": "設定…",
+  "menu.app.quit": "Copyosity を終了",
+  "menu.edit": "編集",
+  "menu.window": "ウインドウ",
+  "menu.help": "ヘルプ",
+  "menu.help.docs": "Copyosity ドキュメント",
 };
 
 export const dict: Record<LocaleCode, Dict> = { en, ru, es, zh, de, fr, ja };
