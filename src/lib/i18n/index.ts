@@ -4,6 +4,7 @@
 
 import { derived, get, writable } from "svelte/store";
 
+import { pushNativeMenuLabels } from "../nativeMenu.ts";
 import { dict, LOCALES, type LocaleCode } from "./dict.ts";
 
 export { LOCALES, type LocaleCode };
@@ -37,6 +38,9 @@ export function publishLocale(code: LocaleCode): void {
   void import("@tauri-apps/api/core")
     .then(({ invoke }) => invoke("set_ui_locale", { locale: code }))
     .catch(() => undefined);
+  // Same store value the tray menu follows, but pushed as ready strings: the native application
+  // menu has no store access, and dict.ts must stay its only source of translations.
+  pushNativeMenuLabels((key) => lookup(code, key));
 }
 
 /** Tell every window of this app which locale is now active. */

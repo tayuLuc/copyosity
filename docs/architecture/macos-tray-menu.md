@@ -205,8 +205,11 @@ therefore starts with **no** `mainMenu` — the state that passed 5 tray clicks 
 Copyosity's items only while the Settings window is on screen. Edit and Window entries are
 `PredefinedMenuItem`s with `None` titles, so AppKit supplies the standard localized titles and key
 equivalents (⌘Z ⇧⌘Z ⌘X ⌘C ⌘V ⌘A ⌘M ⌘W); ⌘Q is a local item routed to `commands::quit_app`, the same
-exit path as the tray's Quit. Labels come from `app_menu_labels(locale)` through the §13 lookup, and
-`commands::set_ui_locale` calls `app_menu::refresh`, which rebuilds only while Settings exists.
+exit path as the tray's Quit. Labels are **not** stored here: the webview resolves them from
+`src/lib/i18n/dict.ts` (`menu.*` keys) and pushes them through `commands::set_native_menu_labels`,
+which stores them in `NativeMenuState` and rebuilds the menu while Settings exists. English defaults
+in `NativeMenuLabels::default()` cover the window before the first push. The tray menu keeps its own
+`tray_labels` table (§13) — it is read before any window exists, and this menu is not.
 
 **If the menu is installed at startup:** the menubar of the hidden clipboard webview returns, which is
 the §1 blink class — `make verify-tray` decides, not reasoning.

@@ -880,6 +880,21 @@ pub fn set_ui_locale(
     Ok(())
 }
 
+/// Store the menu strings resolved from `src/lib/i18n/dict.ts` by the webview and rebuild the
+/// native menu if it is installed. The dictionary stays the only copy of these translations.
+#[tauri::command]
+pub fn set_native_menu_labels(app: tauri::AppHandle, labels: crate::app_menu::NativeMenuLabels) {
+    use tauri::Manager;
+
+    if let Some(state) = app.try_state::<crate::app_menu::NativeMenuState>() {
+        match state.0.lock() {
+            Ok(mut guard) => *guard = Some(labels),
+            Err(_) => eprintln!("[app-menu] labels lock poisoned"),
+        }
+    }
+    crate::app_menu::refresh(&app);
+}
+
 // ---- Command/agent palette shortcut (stored under its own settings key) ----
 
 #[tauri::command]

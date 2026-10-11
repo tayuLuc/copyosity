@@ -6,18 +6,22 @@
 //! (Settings visible) and removed by [`remove`] when it falls back to `Accessory`, so the
 //! tray-only state keeps exactly the startup state that passed 5 tray clicks.
 //!
-//! Edit and Window entries are `PredefinedMenuItem`s built with `None` titles: AppKit supplies
-//! the standard localized titles and the standard key equivalents (⌘Z ⇧⌘Z ⌘X ⌘C ⌘V ⌘A ⌘M ⌘W).
+//! Edit and Window entries are `PredefinedMenuItem`s built with `None` titles: AppKit supplies the
+//! standard localized titles and the standard key equivalents (⌘Z ⇧⌘Z ⌘X ⌘C ⌘V ⌘A ⌘M ⌘W).
 //! Quit is a local item instead of the predefined one so that it goes through
 //! `commands::quit_app` — the same exit path as the tray's Quit item.
 //!
-//! Labels follow the stored `ui_locale` through the same lookup as the tray menu
-//! (docs/architecture/macos-tray-menu.md §13).
+//! Labels do not live here. The webview resolves them from `src/lib/i18n/dict.ts` and pushes them
+//! through `commands::set_native_menu_labels`, so the dictionary stays the only place the app keeps
+//! its translations. Before the first push (app start, menu opened immediately) the English
+//! defaults below are used.
 
 #[cfg(target_os = "macos")]
 use tauri::menu::{MenuBuilder, MenuItemBuilder, PredefinedMenuItem, SubmenuBuilder};
 #[cfg(target_os = "macos")]
 use tauri::AppHandle;
+#[cfg(target_os = "macos")]
+use tauri::Manager;
 
 #[cfg(target_os = "macos")]
 pub const ID_SETTINGS: &str = "app-menu-settings";
@@ -29,102 +33,57 @@ pub const ID_DOCS: &str = "app-menu-docs";
 #[cfg(target_os = "macos")]
 const DOCS_URL: &str = "https://github.com/tayuLuc/copyosity#readme";
 
-#[cfg(target_os = "macos")]
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct AppMenuLabels {
-    pub about: &'static str,
-    pub settings: &'static str,
-    pub quit: &'static str,
-    pub edit: &'static str,
-    pub window: &'static str,
-    pub help: &'static str,
-    pub docs: &'static str,
+/// Menu strings as pushed by the webview (field names match the TS payload in
+/// `src/lib/i18n/index.ts`).
+#[derive(Debug, Clone, serde::Deserialize)]
+pub struct NativeMenuLabels {
+    pub about: String,
+    pub settings: String,
+    pub quit: String,
+    pub edit: String,
+    pub window: String,
+    pub help: String,
+    pub docs: String,
 }
 
-#[cfg(target_os = "macos")]
-const APP_MENU_LABELS_EN: AppMenuLabels = AppMenuLabels {
-    about: "About Copyosity",
-    settings: "Settings…",
-    quit: "Quit Copyosity",
-    edit: "Edit",
-    window: "Window",
-    help: "Help",
-    docs: "Copyosity Documentation",
-};
-
-#[cfg(target_os = "macos")]
-fn app_menu_labels(locale: &str) -> AppMenuLabels {
-    match locale {
-        "ru" => AppMenuLabels {
-            about: "О программе Copyosity",
-            settings: "Настройки…",
-            quit: "Завершить Copyosity",
-            edit: "Правка",
-            window: "Окно",
-            help: "Справка",
-            docs: "Документация Copyosity",
-        },
-        "es" => AppMenuLabels {
-            about: "Acerca de Copyosity",
-            settings: "Ajustes…",
-            quit: "Salir de Copyosity",
-            edit: "Edición",
-            window: "Ventana",
-            help: "Ayuda",
-            docs: "Documentación de Copyosity",
-        },
-        "de" => AppMenuLabels {
-            about: "Über Copyosity",
-            settings: "Einstellungen…",
-            quit: "Copyosity beenden",
-            edit: "Bearbeiten",
-            window: "Fenster",
-            help: "Hilfe",
-            docs: "Copyosity-Dokumentation",
-        },
-        "fr" => AppMenuLabels {
-            about: "À propos de Copyosity",
-            settings: "Réglages…",
-            quit: "Quitter Copyosity",
-            edit: "Édition",
-            window: "Fenêtre",
-            help: "Aide",
-            docs: "Documentation de Copyosity",
-        },
-        "zh" => AppMenuLabels {
-            about: "关于 Copyosity",
-            settings: "设置…",
-            quit: "退出 Copyosity",
-            edit: "编辑",
-            window: "窗口",
-            help: "帮助",
-            docs: "Copyosity 文档",
-        },
-        "ja" => AppMenuLabels {
-            about: "Copyosity について",
-            settings: "設定…",
-            quit: "Copyosity を終了",
-            edit: "編集",
-            window: "ウインドウ",
-            help: "ヘルプ",
-            docs: "Copyosity ドキュメント",
-        },
-        _ => APP_MENU_LABELS_EN,
+impl Default for NativeMenuLabels {
+    fn default() -> Self {
+        Self {
+            about: "About Copyosity".to_string(),
+            settings: "Settings…".to_string(),
+            quit: "Quit Copyosity".to_string(),
+            edit: "Edit".to_string(),
+            window: "Window".to_string(),
+            help: "Help".to_string(),
+            docs: "Copyosity Documentation".to_string(),
+        }
     }
 }
 
-/// Build and install the application menu. Idempotent: rebuilds from the stored locale, so a
-/// locale change reuses it instead of accumulating menus.
+/// Latest labels pushed by the webview; `None` until the first push.
+#[derive(Default)]
+pub struct NativeMenuState(pub std::sync::Mutex<Option<NativeMenuLabels>>);
+
+/// Labels currently known to the core, falling back to English before the first push.
+#[cfg(target_os = "macos")]
+pub fn labels(app: &AppHandle) -> NativeMenuLabels {
+    app.try_state::<NativeMenuState>()
+        .and_then(|state| state.0.lock().ok().and_then(|guard| guard.clone()))
+        .unwrap_or_default()
+}
+
+/// Build and install the application menu from the labels the webview last pushed.
+/// Idempotent: `set_menu` replaces, so rebuilding never accumulates menus.
 #[cfg(target_os = "macos")]
 pub fn install(app: &AppHandle) -> tauri::Result<()> {
-    let labels = app_menu_labels(&crate::normalize_tray_locale(&crate::tray_locale(app)));
+    let labels = labels(app);
 
-    let about = PredefinedMenuItem::about(app, Some(labels.about), None)?;
-    let settings = MenuItemBuilder::with_id(ID_SETTINGS, labels.settings)
+    let about = PredefinedMenuItem::about(app, Some(&labels.about), None)?;
+    let settings = MenuItemBuilder::with_id(ID_SETTINGS, labels.settings.clone())
         .accelerator("CmdOrCtrl+,")
         .build(app)?;
     let hide = PredefinedMenuItem::hide(app, None)?;
-    let quit = MenuItemBuilder::with_id(ID_QUIT, labels.quit)
+    let quit = MenuItemBuilder::with_id(ID_QUIT, labels.quit.clone())
         .accelerator("CmdOrCtrl+Q")
         .build(app)?;
     let app_sep_1 = PredefinedMenuItem::separator(app)?;
@@ -145,14 +104,14 @@ pub fn install(app: &AppHandle) -> tauri::Result<()> {
     let close = PredefinedMenuItem::close_window(app, None)?;
     let window_sep = PredefinedMenuItem::separator(app)?;
 
-    let docs = MenuItemBuilder::with_id(ID_DOCS, labels.docs).build(app)?;
+    let docs = MenuItemBuilder::with_id(ID_DOCS, labels.docs.clone()).build(app)?;
 
     let app_menu = SubmenuBuilder::new(app, "Copyosity")
         .items(&[
             &about, &app_sep_1, &settings, &app_sep_2, &hide, &app_sep_3, &quit,
         ])
         .build()?;
-    let edit_menu = SubmenuBuilder::new(app, labels.edit)
+    let edit_menu = SubmenuBuilder::new(app, &labels.edit)
         .items(&[
             &undo,
             &redo,
@@ -164,10 +123,10 @@ pub fn install(app: &AppHandle) -> tauri::Result<()> {
             &select_all,
         ])
         .build()?;
-    let window_menu = SubmenuBuilder::new(app, labels.window)
+    let window_menu = SubmenuBuilder::new(app, &labels.window)
         .items(&[&minimize, &maximize, &window_sep, &close])
         .build()?;
-    let help_menu = SubmenuBuilder::new(app, labels.help)
+    let help_menu = SubmenuBuilder::new(app, &labels.help)
         .items(&[&docs])
         .build()?;
 
@@ -191,15 +150,17 @@ pub fn remove(app: &AppHandle) {
     eprintln!("[app-menu] removed");
 }
 
-/// Rebuild the menu after a locale change, but only while Settings is open — tray-only mode
-/// must keep the pre-Settings state (no menu installed).
-#[cfg(target_os = "macos")]
-pub fn refresh(app: &AppHandle) {
+/// Rebuild the menu after new labels arrive, but only while Settings is open — tray-only mode must
+/// keep the pre-Settings state (no menu installed).
+pub fn refresh(app: &tauri::AppHandle) {
+    #[cfg(target_os = "macos")]
     if crate::activation_macos::settings_window_open(app) {
         if let Err(e) = install(app) {
             eprintln!("[app-menu] install failed: {e}");
         }
     }
+    #[cfg(not(target_os = "macos"))]
+    let _ = app;
 }
 
 #[cfg(target_os = "macos")]
@@ -232,48 +193,28 @@ pub fn install(_app: &tauri::AppHandle) {}
 pub fn remove(_app: &tauri::AppHandle) {}
 
 #[cfg(not(target_os = "macos"))]
-pub fn refresh(_app: &tauri::AppHandle) {}
-
-#[cfg(not(target_os = "macos"))]
 pub fn handle_event(_app: &tauri::AppHandle, _id: &str) {}
 
 #[cfg(all(test, target_os = "macos"))]
 mod tests {
-    use super::{app_menu_labels, APP_MENU_LABELS_EN};
+    use super::NativeMenuLabels;
 
     #[test]
-    fn seven_locales_are_localized() {
-        assert_eq!(app_menu_labels("ru").quit, "Завершить Copyosity");
-        assert_eq!(app_menu_labels("es").window, "Ventana");
-        assert_eq!(app_menu_labels("de").edit, "Bearbeiten");
-        assert_eq!(app_menu_labels("fr").about, "À propos de Copyosity");
-        assert_eq!(app_menu_labels("zh").settings, "设置…");
-        assert_eq!(app_menu_labels("ja").help, "ヘルプ");
-        assert_eq!(app_menu_labels("en").edit, "Edit");
+    fn fallback_labels_keep_the_brand_untranslated() {
+        let labels = NativeMenuLabels::default();
+        assert_eq!(labels.quit, "Quit Copyosity");
+        assert_eq!(labels.about, "About Copyosity");
+        assert_eq!(labels.docs, "Copyosity Documentation");
+        assert!(labels.settings.ends_with('…'));
     }
 
     #[test]
-    fn unknown_locale_falls_back_to_english() {
-        for code in ["", "xx", "russian", "zz-ZZ"] {
-            assert_eq!(app_menu_labels(code), APP_MENU_LABELS_EN, "{code}");
-        }
-    }
-
-    #[test]
-    fn stored_code_is_normalized_before_lookup() {
-        assert_eq!(
-            app_menu_labels(&crate::normalize_tray_locale("  RU ")),
-            app_menu_labels("ru")
-        );
-    }
-
-    #[test]
-    fn brand_stays_untranslated() {
-        for code in ["en", "ru", "es", "de", "fr", "zh", "ja"] {
-            let labels = app_menu_labels(code);
-            assert!(labels.quit.contains("Copyosity"), "{code}");
-            assert!(labels.about.contains("Copyosity"), "{code}");
-            assert!(labels.docs.contains("Copyosity"), "{code}");
-        }
+    fn labels_deserialize_from_the_webview_payload() {
+        let labels: NativeMenuLabels = serde_json::from_str(
+            r#"{"about":"О программе Copyosity","settings":"Настройки…","quit":"Завершить Copyosity","edit":"Правка","window":"Окно","help":"Справка","docs":"Документация Copyosity"}"#,
+        )
+        .expect("payload from src/lib/i18n/index.ts");
+        assert_eq!(labels.edit, "Правка");
+        assert_eq!(labels.window, "Окно");
     }
 }
