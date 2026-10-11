@@ -1,0 +1,58 @@
+name: Lint Actions
+
+# MegaLinter over the one class of files `make check` never reaches: the workflow
+# YAML itself. `ENABLE_LINTERS` picks three of its 133 linters.
+#
+#  - ACTION_ACTIONLINT and YAML_YAMLLINT block: the first reports nothing on the current
+#    tree, the second ran over 5 YAML files with 0 errors and 0 warnings.
+#  - ACTION_ZIZMOR runs through DISABLE_ERRORS_LINTERS, so it reports without failing the
+#    job: it counts 49 findings on files that predate this workflow. Drop the name from
+#    that list once its count is zero.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.ref }}-${{ github.workflow }}
+  cancel-in-progress: true
+
+jobs:
+  actions-yaml:
+    name: Lint (Actions YAML)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      statuses: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: MegaLinter
+        id: ml
+        uses: oxsecurity/megalinter@v10
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VALIDATE_ALL_CODEBASE: "true"
+          APPLY_FIXES: "none"
+          ENABLE_LINTERS: ACTION_ACTIONLINT,ACTION_ZIZMOR,YAML_YAMLLINT
+          DISABLE_ERRORS_LINTERS: ACTION_ZIZMOR
+          ACTION_ZIZMOR_UNSECURED_ENV_VARIABLES: GITHUB_TOKEN
+
+      - name: Upload the reports
+        if: success() || failure()
+        uses: actions/upload-artifact@v5
+        with:
+          name: megalinter-reports
+          include-hidden-files: "true"
+          path: |
+            megalinter-reports
+            mega-linter.log
