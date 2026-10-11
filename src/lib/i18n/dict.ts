@@ -558,6 +558,9 @@ const en: Dict = {
   "menu.window": "Window",
   "menu.help": "Help",
   "menu.help.docs": "Copyosity Documentation",
+  "settings.text.refresh-m": "Refresh list",
+  "settings.text.mic-list-hint":
+    "macOS only asks for the microphone when you record. Load the list when you need to choose a device.",
 };
 
 const ru: Dict = {
@@ -1107,6 +1110,9 @@ const ru: Dict = {
 
   // native application menu
   "menu.app.about": "О программе Copyosity",
+  "settings.text.refresh-m": "Обновить список",
+  "settings.text.mic-list-hint":
+    "macOS спрашивает доступ к микрофону только при записи. Загрузите список, когда нужно выбрать устройство.",
   "menu.app.settings": "Настройки…",
   "menu.app.quit": "Завершить Copyosity",
   "menu.edit": "Правка",
@@ -1658,6 +1664,9 @@ const es: Dict = {
   "time.days-ago": "hace {count} día|hace {count} días",
   "time.short.minutes": "hace {count} min",
   "time.short.hours": "hace {count} h",
+  "settings.text.refresh-m": "Actualizar lista",
+  "settings.text.mic-list-hint":
+    "macOS solo pide el micrófono al grabar. Carga la lista cuando necesites elegir un dispositivo.",
   "time.short.days": "hace {count} d",
   "quicklook.msg.characters-count": "{count} carácter|{count} caracteres",
 
@@ -2172,6 +2181,8 @@ const zh: Dict = {
   "snippets.text.add": "添加",
 
   "overlay.msg.couldn-t-load-images": "无法加载图片",
+  "settings.text.refresh-m": "刷新列表",
+  "settings.text.mic-list-hint": "只有录音时 macOS 才会请求麦克风权限。需要选择设备时再加载列表。",
   "overlay.msg.couldn-t-load-text": "无法加载文本",
   "time.just-now": "刚刚",
   "time.minutes-ago": "{count} 分钟前",
@@ -2734,6 +2745,9 @@ const de: Dict = {
 
   "overlay.msg.couldn-t-load-images": "Bilder konnten nicht geladen werden",
   "overlay.msg.couldn-t-load-text": "Text konnte nicht geladen werden",
+  "settings.text.refresh-m": "Liste aktualisieren",
+  "settings.text.mic-list-hint":
+    "macOS fragt das Mikrofon nur beim Aufnehmen. Lade die Liste, wenn du ein Gerät auswählen willst.",
   "time.just-now": "gerade eben",
   "time.minutes-ago": "vor {count} Minute|vor {count} Minuten",
   "time.hours-ago": "vor {count} Stunde|vor {count} Stunden",
@@ -3295,6 +3309,9 @@ const fr: Dict = {
   "snippets.aria-label.delete-folder-and-all":
     "Supprimer le dossier {name} et tous les snippets qu’il contient",
   "snippets.text.add": "Ajouter",
+  "settings.text.refresh-m": "Actualiser la liste",
+  "settings.text.mic-list-hint":
+    "macOS ne demande le micro que pendant l’enregistrement. Charge la liste pour choisir un appareil.",
 
   "overlay.msg.couldn-t-load-images": "Impossible de charger les images",
   "overlay.msg.couldn-t-load-text": "Impossible de charger le texte",
@@ -3834,6 +3851,9 @@ const ja: Dict = {
   "collections.aria-label.clipboard-view": "クリップボード表示",
   "snippets.msg.failed-to-load-snippets": "スニペットの読み込みに失敗しました: {error}",
   "snippets.title.delete-name": "「{name}」を削除しますか？",
+  "settings.text.refresh-m": "リストを更新",
+  "settings.text.mic-list-hint":
+    "macOS は録音時に만マイクへのアクセスを求めます。デバイスを選ぶときに読み込んでください。",
   "snippets.aria-label.collapse-folder": "{name} を折りたたむ",
   "snippets.aria-label.expand-folder": "{name} を展開",
   "snippets.aria-label.rename-folder": "フォルダ「{name}」の名前を変更",

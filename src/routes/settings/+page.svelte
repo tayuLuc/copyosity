@@ -362,6 +362,22 @@
     syncA11yNotice(accessibilityGranted, true);
   }
 
+  let microphonesLoading = $state(false);
+
+  async function handleLoadMicrophones() {
+    if (microphonesLoading) {
+      return;
+    }
+    microphonesLoading = true;
+    try {
+      microphones = await listMicrophones();
+    } catch {
+      microphones = [];
+    } finally {
+      microphonesLoading = false;
+    }
+  }
+
   async function handleRecheckAccessibility() {
     const granted = await checkAccessibility(false);
     accessibilityGranted = granted;
@@ -397,10 +413,6 @@
     });
     refreshUpdateLog();
     void checkUpdates();
-    listMicrophones().then((m) => {
-      microphones = m;
-      return undefined;
-    });
 
     const win = getCurrentWindow();
     // Status only: a check must not reach for the system prompt, let alone open System
@@ -1288,11 +1300,27 @@
                   bind:value={settings.selected_microphone}
                 >
                   <option value="">{$t("settings.text.system-default")}</option>
+                  {#if settings.selected_microphone && !microphones.some((m) => m.name === settings.selected_microphone)}
+                    <option value={settings.selected_microphone}>{settings.selected_microphone}</option>
+                  {/if}
                   {#each microphones as mic}
                     <option value={mic.name}>{mic.name}{mic.is_default ? $t("settings.text.default-suffix") : ""}</option>
                   {/each}
                 </select>
+                <button
+                  class="status-action app-btn"
+                  type="button"
+                  onclick={handleLoadMicrophones}
+                  disabled={microphonesLoading}
+                >
+                  {microphonesLoading ? $t("settings.text.checking") : $t("settings.text.refresh-m")}
+                </button>
               </div>
+              {#if microphones.length === 0 && !microphonesLoading}
+                <div class="status-hint">
+                  {$t("settings.text.mic-list-hint")}
+                </div>
+              {/if}
             </div>
           </div>
 
