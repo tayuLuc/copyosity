@@ -20,7 +20,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 env:
   PRODUCT: Copyosity
@@ -31,7 +31,9 @@ jobs:
     runs-on: macos-14
     timeout-minutes: 35
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
 
       - name: Config gate (parse the files the Tauri build script reads)
         env:
@@ -86,16 +88,17 @@ jobs:
           print("version manifests agree on " + conf["version"])
           PY
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
         with:
           node-version: "24" # matches .github/workflows/ci.yml
-          cache: npm
+          package-manager-cache: false
 
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@686976e191b89faba57d3206551f0f330d8cb249
 
-      - uses: Swatinem/rust-cache@v2
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6
         with:
           workspaces: "./src-tauri -> target"
+          lookup-only: true
 
       - run: npm ci
 
@@ -128,10 +131,11 @@ jobs:
       TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
       TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           fetch-depth: 0
           fetch-tags: true
+          persist-credentials: false
 
       - name: Resolve version from tag
         id: version
@@ -152,19 +156,20 @@ jobs:
           esac
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
         with:
           node-version: "24" # matches .github/workflows/ci.yml
-          cache: npm
+          package-manager-cache: false
 
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@686976e191b89faba57d3206551f0f330d8cb249
         with:
           targets: ${{ matrix.rust_target }}
 
-      - uses: Swatinem/rust-cache@v2
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6
         with:
           workspaces: "./src-tauri -> target"
           key: ${{ matrix.rust_target }}
+          lookup-only: true
 
       - run: npm ci
 
@@ -185,22 +190,26 @@ jobs:
           # Gatekeeper rejects as "code has no resources but signature indicates
           # they must be present". Re-signing with the codesign tool generates
           # the manifest. Lesson taken from superbereza/copyosity release.yml.
-          codesign --force --deep --sign - "${{ steps.app.outputs.path }}"
-          codesign --verify --verbose=2 "${{ steps.app.outputs.path }}"
+          codesign --force --deep --sign - "${STEPS_APP_OUTPUTS_PATH}"
+          codesign --verify --verbose=2 "${STEPS_APP_OUTPUTS_PATH}"
           echo "--- signature ---"
-          codesign -dvv "${{ steps.app.outputs.path }}" 2>&1 | grep -E "Identifier|CDHash|flags|Authority" || true
+          codesign -dvv "${STEPS_APP_OUTPUTS_PATH}" 2>&1 | grep -E "Identifier|CDHash|flags|Authority" || true
           echo "--- gatekeeper (expected: rejected, unnotarized) ---"
-          spctl -a -vv -t install "${{ steps.app.outputs.path }}" 2>&1 || true
+          spctl -a -vv -t install "${STEPS_APP_OUTPUTS_PATH}" 2>&1 || true
+        env:
+          STEPS_APP_OUTPUTS_PATH: ${{ steps.app.outputs.path }}
 
       - name: Rebuild the updater tarball without AppleDouble, then sign it
         env:
           KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           PASS: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          STEPS_VERSION_OUTPUTS_VERSION: ${{ steps.version.outputs.version }}
+          STEPS_APP_OUTPUTS_PATH: ${{ steps.app.outputs.path }}
         run: |
           set -euo pipefail
-          TARBALL="${PRODUCT}-${{ matrix.arch_label }}_${{ steps.version.outputs.version }}.app.tar.gz"
+          TARBALL="${PRODUCT}-${{ matrix.arch_label }}_${STEPS_VERSION_OUTPUTS_VERSION}.app.tar.gz"
           TDIR=$(mktemp -d "$RUNNER_TEMP/tar.XXXXXX")
-          cp -R "${{ steps.app.outputs.path }}" "$TDIR/Copyosity.app"
+          cp -R "${STEPS_APP_OUTPUTS_PATH}" "$TDIR/Copyosity.app"
           # Upstream's hard-won invariant (CLAUDE.md -> Updater delivery): macOS tar
           # embeds AppleDouble `._*` entries that the updater's Rust unpacker chokes
           # on, so the tarball is regenerated from the re-signed bundle with mac
@@ -230,13 +239,16 @@ jobs:
           set -euo pipefail
           STAGE=$(mktemp -d "$RUNNER_TEMP/dmg.XXXXXX")
           mkdir -p "$STAGE/${PRODUCT}"
-          cp -R "${{ steps.app.outputs.path }}" "$STAGE/${PRODUCT}/"
+          cp -R "${STEPS_APP_OUTPUTS_PATH}" "$STAGE/${PRODUCT}/"
           ln -s /Applications "$STAGE/${PRODUCT}/Applications"
-          DMG="${PRODUCT}-${{ matrix.arch_label }}_${{ steps.version.outputs.version }}.dmg"
+          DMG="${PRODUCT}-${{ matrix.arch_label }}_${STEPS_VERSION_OUTPUTS_VERSION}.dmg"
           hdiutil create -volname "$PRODUCT" -srcfolder "$STAGE/${PRODUCT}" -ov -format UDZO "$DMG"
           shasum -a 256 "$DMG" | tee "$DMG.sha256"
+        env:
+          STEPS_APP_OUTPUTS_PATH: ${{ steps.app.outputs.path }}
+          STEPS_VERSION_OUTPUTS_VERSION: ${{ steps.version.outputs.version }}
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: ${{ env.PRODUCT }}-${{ matrix.arch_label }}
           path: |
@@ -248,15 +260,18 @@ jobs:
   release:
     name: Publish GitHub Release
     needs: build
+    permissions:
+      contents: write
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           fetch-depth: 0
           fetch-tags: true
+          persist-credentials: false
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
           path: artifacts
           merge-multiple: true
