@@ -265,8 +265,6 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # A checked-out tag ref can arrive peeled to the commit, and then %(contents)
-          # prints the commit subject; the API ref always carries the annotation.
           OBJ=$(gh api "repos/${GITHUB_REPOSITORY}/git/ref/tags/${GITHUB_REF_NAME}" --jq '.object | "\(.type) \(.sha)"')
           case "$OBJ" in
             "tag "*) gh api "repos/${GITHUB_REPOSITORY}/git/tags/${OBJ#tag }" --jq .message > notes.md ;;
