@@ -190,10 +190,12 @@ jobs:
           # Gatekeeper rejects as "code has no resources but signature indicates
           # they must be present". Re-signing with the codesign tool generates
           # the manifest. Lesson taken from superbereza/copyosity release.yml.
-          codesign --force --deep --sign - "${STEPS_APP_OUTPUTS_PATH}"
-          codesign --verify --verbose=2 "${STEPS_APP_OUTPUTS_PATH}"
+          codesign --force --deep --strict --options runtime --sign - "${STEPS_APP_OUTPUTS_PATH}"
+          codesign --verify --deep --strict --verbose=2 "${STEPS_APP_OUTPUTS_PATH}"
           echo "--- signature ---"
           codesign -dvv "${STEPS_APP_OUTPUTS_PATH}" 2>&1 | grep -E "Identifier|CDHash|flags|Authority" || true
+          # Wrong identifier here would break the Accessibility and Automation TCC grants.
+          codesign -dv "${STEPS_APP_OUTPUTS_PATH}" 2>&1 | grep -qx "Identifier=com.vkovalskii.copyosity"
           echo "--- gatekeeper (expected: rejected, unnotarized) ---"
           spctl -a -vv -t install "${STEPS_APP_OUTPUTS_PATH}" 2>&1 || true
         env:
@@ -243,6 +245,10 @@ jobs:
           ln -s /Applications "$STAGE/${PRODUCT}/Applications"
           DMG="${PRODUCT}-${{ matrix.arch_label }}_${STEPS_VERSION_OUTPUTS_VERSION}.dmg"
           hdiutil create -volname "$PRODUCT" -srcfolder "$STAGE/${PRODUCT}" -ov -format UDZO "$DMG"
+          # Upstream signs the container too (scripts/release-macos.sh); the fork missed it.
+          # Signing must precede the digest: the cask pins exactly these bytes.
+          codesign --force --sign - "$DMG"
+          codesign --verify --strict --verbose=1 "$DMG"
           shasum -a 256 "$DMG" | tee "$DMG.sha256"
         env:
           STEPS_APP_OUTPUTS_PATH: ${{ steps.app.outputs.path }}

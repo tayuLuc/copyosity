@@ -22,6 +22,23 @@ resources but signature indicates they must be present", so the workflow
 re-signs with the `codesign` tool before packaging (lesson copied from
 `superbereza/copyosity`).
 
+The re-sign now carries upstream's flag set minus the identity
+([`release-fork.yml`](../../.github/workflows/release-fork.yml)): `--deep --strict
+--options runtime`, and the **DMG itself is signed too** — upstream signs the
+container in [`scripts/release-macos.sh`](../../scripts/release-macos.sh) and the
+fork had skipped that. Signing happens before `shasum`, because the tap pins
+exactly those bytes. The step fails if the bundle identifier is not
+`com.vkovalskii.copyosity` (a mismatch would silently break the Accessibility and
+Automation TCC grants) and if strict verification does not pass.
+
+None of this removes the Gatekeeper warning. Only notarization does, and that
+needs a Developer ID Application certificate plus notary credentials — a paid
+Apple Developer Program membership under the fork's own identity. Upstream's
+certificate belongs to the original author and cannot be used here. The quiet
+channel that exists without any of that is the self-updater: a bundle installed
+by the app itself carries no `com.apple.quarantine`, so only the first cask
+install pays the right-click → Open.
+
 `spctl -a -vv` on these artifacts answers `rejected, source=Unnotarized
 Developer ID` — expected, and worth knowing because upstream's README promises
 notarization that its own released DMGs do not carry either (see the
