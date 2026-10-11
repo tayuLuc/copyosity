@@ -25,19 +25,20 @@ re-signs with the `codesign` tool before packaging (lesson copied from
 The re-sign verifies strictly (`codesign --verify --deep --strict`) and fails the
 release unless the bundle identifier is exactly `com.vkovalskii.copyosity` — a
 mismatch would silently break the Accessibility and Automation TCC grants on every
-user's machine, and nothing else in the pipeline checks it (the Config gate
-compares versions, not the bundle id).
+user's machine, and nothing else in the pipeline checks it (the Config gate checks
+the four version manifests, the signing identity and the updater channel, not the
+bundle id).
 
 Hardened runtime, a Developer ID signature and notarization are all upstream's
 shape, and none of them are planned here: notarization needs a paid Apple
 Developer Program membership under the fork's own identity, and upstream's
 certificate belongs to the original author. Nothing in this repository should
 therefore add `--options runtime` or a DMG signature in anticipation of an
-identity this fork does not have — with an ad-hoc signature neither changes what
-Gatekeeper shows. The quiet channel that exists without any of that is the
-self-updater: a bundle installed by the app itself carries no
-`com.apple.quarantine`, so only the first cask install pays the right-click →
-Open.
+identity this fork does not have: neither has ever been built here, so neither is
+a measured improvement, and neither turns an ad-hoc build into a notarized one. The
+quiet channel that exists without any of that is the self-updater: a bundle
+installed by the app itself carries no `com.apple.quarantine`, so only the first
+cask install pays the right-click → Open.
 
 `spctl -a -vv` on these artifacts answers `rejected, source=Unnotarized
 Developer ID` — expected, and worth knowing because upstream's README promises
