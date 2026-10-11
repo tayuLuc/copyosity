@@ -262,9 +262,14 @@ jobs:
           merge-multiple: true
 
       - name: Notes from the annotated tag
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          git for-each-ref "refs/tags/${GITHUB_REF_NAME}" --format='%(contents)' \
-            | sed '/^-----BEGIN PGP SIGNATURE-----$/,$d' > notes.md
+          OBJ=$(gh api "repos/${GITHUB_REPOSITORY}/git/ref/tags/${GITHUB_REF_NAME}" --jq '.object | "\(.type) \(.sha)"')
+          case "$OBJ" in
+            "tag "*) gh api "repos/${GITHUB_REPOSITORY}/git/tags/${OBJ#tag }" --jq .message > notes.md ;;
+            *) git for-each-ref "refs/tags/${GITHUB_REF_NAME}" --format='%(contents)' > notes.md ;;
+          esac
           if [ ! -s notes.md ]; then
             printf 'Unsigned fork build of Copyosity. See %s for what this fork changes.\n' \
               "https://github.com/${GITHUB_REPOSITORY}" > notes.md

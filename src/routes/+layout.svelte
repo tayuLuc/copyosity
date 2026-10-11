@@ -19,10 +19,7 @@
     let unlisten: (() => void) | undefined;
     let stopped = false;
     void followLocaleChanges()
-      .then((fn) => {
-        if (stopped) fn();
-        else unlisten = fn;
-      })
+      .then((fn) => (stopped ? fn() : (unlisten = fn)))
       .catch(() => undefined);
     return () => {
       stopped = true;
