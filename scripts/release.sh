@@ -10,8 +10,7 @@
 # Requirements (this machine):
 #   - .tauri/copyosity-updater.key present (updater signing key, empty password)
 #   - notarytool keychain profile "copyosity" (override KEYCHAIN_PROFILE)
-#   - `gh` authenticated; GitHub reachable. If a call fails, check `scutil --proxy` first:
-#     this machine has no system proxy, so export HTTPS_PROXY only while one is listening.
+#   - `gh` authenticated; GitHub reachable
 #   - ssh alias srv-rnd-demos-mcp reachable for the mirror (publish-mirrors.sh)
 #   - run via the Bash tool with dangerouslyDisableSandbox (hdiutil/notarytool)
 #

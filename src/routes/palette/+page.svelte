@@ -760,7 +760,6 @@
         {:else if mode === "search"}
           {#if searchAnswerHtml}
             <div class="msg msg-assistant">
-              <!-- eslint-disable-next-line svelte/no-at-html-tags -->
               <div class="bubble markdown">{@html searchAnswerHtml}</div>
             </div>
           {:else if !searchLoading && showCenterPlaceholder}
@@ -811,7 +810,6 @@
                       {/if}
                     {:else if part.type === "text"}
                       {#if part.text.trim()}
-                        <!-- eslint-disable-next-line svelte/no-at-html-tags -->
                         <div class="bubble markdown">{@html md(part.text)}</div>
                       {/if}
                     {:else if part.type.startsWith("tool-")}
