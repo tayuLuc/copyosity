@@ -178,7 +178,7 @@
         gridEl.scrollTop = 0;
       }
     } catch (e) {
-      console.error(tr("overlay.msg.failed-to-load-layout"), e);
+      console.error("failed to load the saved layout", e);
     }
   }
 
