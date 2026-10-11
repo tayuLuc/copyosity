@@ -139,8 +139,6 @@
   let accessibilityGranted = $state<boolean | null>(null);
   let microphoneGranted = $state<boolean | null>(null);
   let micEnablePending = $state(false);
-  const MIC_NOTICE_MISSING = $derived($t("settings.msg.microphone-not-granted"));
-  const MIC_NOTICE_GRANTED = $derived($t("settings.msg.microphone-granted"));
   // check_accessibility — синхронная команда: без флага соседние тики могут наложиться
   // и более старый ответ перезапишет более новый.
   let a11yPollBusy = false;
@@ -378,7 +376,6 @@
   async function handleRequestMicrophone() {
     await checkMicrophone(true);
     micEnablePending = true;
-    microphoneGranted = await checkMicrophone(false);
   }
 
   async function handleRecheckMicrophone() {
@@ -1553,6 +1550,7 @@
                 <div class="status-hint">
                   {$t("settings.text.required-for-paste")}<br />
                   {$t("settings.text.click-request.1")}{$t("settings.text.request")}{$t("settings.text.click-request.2")}
+                  <strong>Copyocity</strong>
                   <button
                     class="status-action status-action--inline app-btn"
                     type="button"
@@ -1577,12 +1575,17 @@
           </div>
 
           <div class="form-section">
-            <div class="form-section-title form-section-title--with-icon"><SectionIcon name="voice" />
+            <div class="form-section-title form-section-title--with-icon"><SectionIcon name="voice" />{$t("settings.text.microphone-access")}</div>
             <div class="form-section-body">
               <div class="inset-list">
                 <div class="status-step">
                   <div class="status-row">
-                    <span class="status-dot" class:ok={microphoneGranted === true} class:fail={microphoneGranted === false} />
+                    <span
+                      class="status-dot"
+                      class:ok={microphoneGranted === true}
+                      class:fail={microphoneGranted === false}
+                      class:checking={microphoneGranted === null}
+                    ></span>
                     <span class="status-text">
                       {microphoneGranted === null ? $t("settings.text.checking") : microphoneGranted ? $t("settings.text.microphone-granted") : $t("settings.text.microphone-not-granted")}
                     </span>
@@ -1612,6 +1615,8 @@
                       {$t("settings.msg.microphone-granted")}
                     </div>
                   {/if}
+                </div>
+              </div>
             </div>
           </div>
         </div>

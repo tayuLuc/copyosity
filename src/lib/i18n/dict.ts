@@ -564,9 +564,9 @@ const en: Dict = {
     "macOS only asks for the microphone when you record. Load the list when you need to choose a device.",
   "settings.text.microphone-granted": "Microphone access granted",
   "settings.text.microphone-not-granted": "Microphone access not granted",
-  "settings.text.microphone-hint": "Needed to record voice notes and transcribe them.",
+  "settings.text.microphone-access": "Microphone",
   "settings.text.microphone-record-hint":
-    "macOS asks only when recording starts; a note needs the permission granted here.",
+    "macOS asks when a recording starts. If you denied it, allow Copyocity in System Settings › Privacy & Security › Microphone — the prompt does not return.",
   "settings.msg.microphone-not-granted":
     "Microphone not granted — voice notes will not record until you allow access.",
   "settings.msg.microphone-granted": "Microphone access confirmed — voice notes can record.",
@@ -1132,9 +1132,9 @@ const ru: Dict = {
   "menu.help.docs": "Документация Copyosity",
   "settings.text.microphone-granted": "Доступ к микрофону предоставлен",
   "settings.text.microphone-not-granted": "Доступ к микрофону не предоставлен",
-  "settings.text.microphone-hint": "Нужен для записи голосовых заметок и их расшифровки.",
+  "settings.text.microphone-access": "Микрофон",
   "settings.text.microphone-record-hint":
-    "macOS спрашивает только в момент записи: заметке нужно разрешение, выданное здесь.",
+    "macOS спрашивает в момент записи. Если вы отказали, разрешите Copyocity в «Системных настройках» → «Конфиденциальность и безопасность» → «Микрофон»: окно больше не появится.",
   "settings.msg.microphone-not-granted":
     "Микрофон не выдан — голосовые заметки не запишутся, пока вы не разрешите доступ.",
   "settings.msg.microphone-granted":
@@ -1702,9 +1702,9 @@ const es: Dict = {
   "menu.help.docs": "Documentación de Copyosity",
   "settings.text.microphone-granted": "Acceso al micrófono concedido",
   "settings.text.microphone-not-granted": "Acceso al micrófono no concedido",
-  "settings.text.microphone-hint": "Necesario para grabar notas de voz y transcribirlas.",
+  "settings.text.microphone-access": "Micrófono",
   "settings.text.microphone-record-hint":
-    "macOS pregunta solo al empezar a grabar; la nota necesita el permiso concedido aquí.",
+    "macOS pregunta al iniciar una grabación. Si lo denegaste, permite Copyocity en Ajustes del Sistema › Privacidad y seguridad › Micrófono: el aviso no volverá.",
   "settings.msg.microphone-not-granted":
     "Micrófono no concedido: las notas de voz no se grabarán hasta que concedas acceso.",
   "settings.msg.microphone-granted":
@@ -2236,9 +2236,9 @@ const zh: Dict = {
   "menu.help.docs": "Copyosity 文档",
   "settings.text.microphone-granted": "已授予麦克风访问权限",
   "settings.text.microphone-not-granted": "未授予麦克风访问权限",
-  "settings.text.microphone-hint": "用于录制语音笔记并进行转写。",
+  "settings.text.microphone-access": "麦克风",
   "settings.text.microphone-record-hint":
-    "只有开始录音时 macOS 才会询问；录音需要在这里授予的权限。",
+    "只有开始录音时 macOS 才会询问。如果你此前拒绝，请在「系统设置 › 隐私与安全性 › 麦克风」中允许 Copyocity：提示不会再出现。",
   "settings.msg.microphone-not-granted": "麦克风未授权 — 在你允许访问之前，语音笔记无法录制。",
   "settings.msg.microphone-granted": "麦克风访问已确认 — 可以录制语音笔记。",
   "settings.text.open-system-settings": "打开系统设置",
@@ -2809,9 +2809,9 @@ const de: Dict = {
   "menu.help.docs": "Copyosity-Dokumentation",
   "settings.text.microphone-granted": "Mikrofonzugriff erteilt",
   "settings.text.microphone-not-granted": "Mikrofonzugriff nicht erteilt",
-  "settings.text.microphone-hint": "Nötig, um Sprachnotizen aufzunehmen und zu transkribieren.",
+  "settings.text.microphone-access": "Mikrofon",
   "settings.text.microphone-record-hint":
-    "macOS fragt erst beim Aufnehmen; die Notiz braucht die hier erteilte Berechtigung.",
+    "macOS fragt beim Start einer Aufnahme. Hast du verweigert, erlaube Copyocity unter Systemeinstellungen › Datenschutz & Sicherheit › Mikrofon: die Abfrage kehrt nicht zurück.",
   "settings.msg.microphone-not-granted":
     "Mikrofon nicht erteilt — Sprachnotizen werden erst nach der Freigabe aufgenommen.",
   "settings.msg.microphone-granted":
@@ -3387,10 +3387,9 @@ const fr: Dict = {
   "menu.help.docs": "Documentation de Copyosity",
   "settings.text.microphone-granted": "Accès au micro accordé",
   "settings.text.microphone-not-granted": "Accès au micro non accordé",
-  "settings.text.microphone-hint":
-    "Nécessaire pour enregistrer des notes vocales et les transcrire.",
+  "settings.text.microphone-access": "Micro",
   "settings.text.microphone-record-hint":
-    "macOS ne demande qu’à l’enregistrement ; la note exige l’autorisation accordée ici.",
+    "macOS demande au démarrage d’un enregistrement. Si tu as refusé, autorise Copyocity dans Réglages Système › Confidentialité et sécurité › Micro : l’invite ne reviendra pas.",
   "settings.msg.microphone-not-granted":
     "Micro non accordé — les notes vocales ne s’enregistreront pas tant que tu n’auras pas autorisé l’accès.",
   "settings.msg.microphone-granted":
@@ -3949,9 +3948,9 @@ const ja: Dict = {
   "menu.help.docs": "Copyosity ドキュメント",
   "settings.text.microphone-granted": "マイクへのアクセスは許可済み",
   "settings.text.microphone-not-granted": "マイクへのアクセスは未許可",
-  "settings.text.microphone-hint": "ボイスメモの録音と文字起こしに必要です。",
+  "settings.text.microphone-access": "マイク",
   "settings.text.microphone-record-hint":
-    "macOS は録音開始時にだけ確認します。録音にはここで許可された権限が必要です。",
+    "macOS は録音開始時に確認します。拒否した場合は「システム設定 › プライバシーとセキュリティ › マイク」で Copyocity を許可してください。確認は再表示されません。",
   "settings.msg.microphone-not-granted":
     "マイクが未許可です。アクセスを許可するまでボイスメモは録音されません。",
   "settings.msg.microphone-granted": "マイクへのアクセスを確認しました。ボイスメモを録音できます。",
