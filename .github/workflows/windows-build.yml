@@ -36,17 +36,6 @@ jobs:
       - name: Setup Rust (stable)
         uses: dtolnay/rust-toolchain@686976e191b89faba57d3206551f0f330d8cb249
 
-      - name: Cache cargo
-        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            src-tauri/target
-          key: windows-build-${{ hashFiles('src-tauri/Cargo.lock') }}
-          restore-keys: windows-build-
-          lookup-only: true
-
       - name: Install frontend dependencies
         run: npm ci
 
