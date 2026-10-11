@@ -875,7 +875,9 @@ pub fn set_ui_locale(
     }
     db.set_setting("ui_locale", &code)
         .map_err(|e| e.to_string())?;
-    crate::refresh_tray_menu(&app)
+    crate::refresh_tray_menu(&app)?;
+    crate::app_menu::refresh(&app);
+    Ok(())
 }
 
 // ---- Command/agent palette shortcut (stored under its own settings key) ----

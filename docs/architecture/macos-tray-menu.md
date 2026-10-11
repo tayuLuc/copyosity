@@ -195,9 +195,28 @@ Shortcut suffixes (`⌘⇧Space`, `⌘⇧V`, `⌘⇧C`) and the version row stay
 locale-independent. Label building is outside the protected scheme above: it touches neither window
 levels, nor activation policy, nor the click path.
 
----
+### 14. Application menu exists only while Settings is open
 
-## Post-merge / upstream drift (repeated regressions)
+[`app_menu.rs`](../../src-tauri/src/app_menu.rs) builds the app menu (Copyosity / Edit / Window /
+Help) and it rides the activation-policy transition in
+[`activation_macos.rs`](../../src-tauri/src/activation_macos.rs): `promote_to_regular` installs it,
+`maybe_restore_accessory` removes it on the branch that actually restores `Accessory`. Tray-only mode
+therefore starts with **no** `mainMenu` — the state that passed 5 tray clicks — and the menu bar shows
+Copyosity's items only while the Settings window is on screen. Edit and Window entries are
+`PredefinedMenuItem`s with `None` titles, so AppKit supplies the standard localized titles and key
+equivalents (⌘Z ⇧⌘Z ⌘X ⌘C ⌘V ⌘A ⌘M ⌘W); ⌘Q is a local item routed to `commands::quit_app`, the same
+exit path as the tray's Quit. Labels come from `app_menu_labels(locale)` through the §13 lookup, and
+`commands::set_ui_locale` calls `app_menu::refresh`, which rebuilds only while Settings exists.
+
+**If the menu is installed at startup:** the menubar of the hidden clipboard webview returns, which is
+the §1 blink class — `make verify-tray` decides, not reasoning.
+
+**If `remove` is called while Settings still exists:** the menu bar loses its items while the window
+is visible.
+
+**If the app menu is dropped in favour of `enable_macos_default_menu(true)`:** same regression as §1.
+
+---
 
 When merging from upstream or App Store release branches, diff **`TRAY STARTUP`** in
 [`lib.rs`](../../src-tauri/src/lib.rs) first. These upstream patterns **fully break** the fix and
@@ -223,7 +242,8 @@ manual 5 clicks in `make dev` before shipping.
 | ---------------------------------------------------------------------- | --------------------------------------------------------------------- |
 | [`lib.rs`](../../src-tauri/src/lib.rs)                                 | `TRAY STARTUP` block, `ensure_main_overlay_window`, lazy panel        |
 | [`tray_macos.rs`](../../src-tauri/src/tray_macos.rs)                   | Deferred popup, highlight, warmup                                     |
-| [`activation_macos.rs`](../../src-tauri/src/activation_macos.rs)       | Accessory ↔ Regular                                                   |
+| [`activation_macos.rs`](../../src-tauri/src/activation_macos.rs)       | Accessory ↔ Regular, app-menu install/remove                          |
+| [`app_menu.rs`](../../src-tauri/src/app_menu.rs)                       | App menu (Copyosity/Edit/Window/Help), ⌘Q                             |
 | [`macos_window.rs`](../../src-tauri/src/macos_window.rs)               | `HIDDEN_AUXILIARY_LEVEL` (3) vs 24                                    |
 | [`clipboard_macos/mod.rs`](../../src-tauri/src/clipboard_macos/mod.rs) | `note_tray_menu_paste_target` (tray Down); full capture in quick menu |
 | [`Cargo.toml`](../../src-tauri/Cargo.toml)                             | `tray-icon` patch, `NSStatusItem` features                            |
@@ -245,6 +265,9 @@ manual 5 clicks in `make dev` before shipping.
 | Re-pin window level in a startup loop                                     | 1st click blink (touches window during click window) |
 | Tray-only startup (no hidden main)                                        | 2nd click blink                                      |
 | Remove `enable_macos_default_menu(false)`                                 | Menubar pollution / blink                            |
+| Install the app menu at startup instead of on `promote_to_regular`        | Menubar pollution / blink (§14)                      |
+| Remove the menu while Settings is still open                              | Menu bar without items under a visible window        |
+| Drop the `⌘Q` item or route it somewhere but `commands::quit_app`         | Standard Mac quit does nothing / exits dirty         |
 | Pre-create voice/palette NSPanels in `setup`                              | Tray z-order / 1st click                             |
 | Main → NSPanel at startup                                                 | 1st click blink                                      |
 | Remove `tray-icon` patch                                                  | Repeat-click `performClick` bug                      |
