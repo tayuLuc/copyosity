@@ -1277,6 +1277,9 @@
                   bind:value={settings.selected_microphone}
                 >
                   <option value="">{$t("settings.text.system-default")}</option>
+                  {#if settings.selected_microphone && !microphones.some((m) => m.name === settings.selected_microphone)}
+                    <option value={settings.selected_microphone}>{settings.selected_microphone}</option>
+                  {/if}
                   {#each microphones as mic}
                     <option value={mic.name}>{mic.name}{mic.is_default ? $t("settings.text.default-suffix") : ""}</option>
                   {/each}
