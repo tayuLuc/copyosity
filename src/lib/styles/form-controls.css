@@ -1086,6 +1086,11 @@
   white-space: nowrap;
 }
 
+/* Вторая кнопка в строке статуса: margin-left:auto у первой разрывает строку. */
+.status-action--inline {
+  margin-left: 0;
+}
+
 .status-action:hover:not(.is-busy, .is-locked, :disabled) {
   background: var(--surface-accent-strong);
   border-color: var(--border-accent-strong);
