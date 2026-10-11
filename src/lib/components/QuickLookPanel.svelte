@@ -18,6 +18,7 @@
     shouldApplyFullImageResult,
   } from "$lib/quick-look-image-fetch";
   import SegmentControl from "$lib/components/SegmentControl.svelte";
+import { t, tr } from "$lib/i18n";
 
   const {
     entry,
@@ -67,9 +68,9 @@
     entry.char_count ? `${entry.char_count.toLocaleString()} characters` : null,
   );
   const dialogLabel = $derived(
-    entry.content_type === "image" ? "Image entry preview" : "Text entry preview",
+    entry.content_type === "image" ? tr("quicklook.msg.image-entry-preview") : tr("quicklook.msg.text-entry-preview"),
   );
-  const typeLabel = $derived(entry.content_type === "image" ? "Image" : "Text");
+  const typeLabel = $derived(entry.content_type === "image" ? $t("overlay.text.image") : $t("overlay.text.kind-text"));
   /** Announced on open and whenever the previewed entry changes via arrow-key browsing. */
   const liveAnnouncement = $derived(
     `${typeLabel} preview${entry.source_app ? ` from ${entry.source_app}` : ""}`,
@@ -267,8 +268,8 @@
             ariaKind="selected"
             rootClass={compact ? "quicklook-mode-segment quicklook-mode-segment--compact" : "quicklook-mode-segment"}
             items={[
-              { id: "image", label: compact ? "IMG" : "Image", title: "Image preview" },
-              { id: "text", label: compact ? "OCR" : "Recognised text", title: "Recognised text" },
+              { id: "image", label: compact ? $t("overlay.text.kind-image-short") : $t("overlay.text.image"), title: $t("quicklook.msg.image-preview") },
+              { id: "text", label: compact ? "OCR" : $t("quicklook.msg.recognised-text"), title: $t("quicklook.msg.recognised-text") },
             ]}
             value={activeTab}
             compact={compact}
@@ -286,8 +287,8 @@
           bind:this={closeButtonEl}
           class="quicklook-close app-btn"
           type="button"
-          aria-label="Close preview"
-          title="Close preview · Space or Esc"
+          aria-label={$t("quicklook.aria-label.close-preview")}
+          title={$t("quicklook.title.close-preview-space-or")}
           onclick={onclose}
         >
           <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -315,7 +316,7 @@
             {#if imageSrc}
               <img src={imageSrc} alt="Copied content" />
             {:else}
-              <div class="quicklook-image-placeholder">Image</div>
+              <div class="quicklook-image-placeholder">{$t("overlay.text.image")}</div>
             {/if}
             {#if fullImageFetchFailed}
               <p class="quicklook-fetch-warning" role="status">
@@ -352,7 +353,7 @@
         <div class="quicklook-footer-hints">
           <p class="quicklook-tab-hint" aria-hidden="true">
             <kbd class="hint-kbd">Tab</kbd>
-            <span class="hint-action">switch view</span>
+            <span class="hint-action">{$t("quicklook.text.switch-view")}</span>
           </p>
         </div>
       {/if}

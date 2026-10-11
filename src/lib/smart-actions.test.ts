@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
+import { tr } from "./i18n/index.ts";
 import {
   detectColor,
   detectJson,
@@ -201,7 +202,7 @@ describe("smartSecondaryMenuItems", () => {
         host: "example.com",
       }),
       [
-        { id: "copy-clean-url", label: "Copy tracking-free URL" },
+        { id: "copy-clean-url", label: tr("smart.msg.copy-tracking-free-url") },
         { id: "make-qr", label: "Make QR code" },
       ],
     );
@@ -222,8 +223,8 @@ describe("smartContextMenuItems", () => {
         host: "example.com",
       }),
       [
-        { id: "smart-primary", label: "Open link" },
-        { id: "copy-clean-url", label: "Copy tracking-free URL" },
+        { id: "smart-primary", label: tr("smart.msg.open-link") },
+        { id: "copy-clean-url", label: tr("smart.msg.copy-tracking-free-url") },
         { id: "make-qr", label: "Make QR code" },
       ],
     );
@@ -231,7 +232,7 @@ describe("smartContextMenuItems", () => {
 
   it("still includes primary when there are no secondaries", () => {
     assert.deepEqual(smartContextMenuItems({ kind: "address", text: "1 Infinite Loop" }), [
-      { id: "smart-primary", label: "Open in Maps" },
+      { id: "smart-primary", label: tr("smart.msg.open-in-maps") },
     ]);
   });
 });
@@ -240,7 +241,7 @@ describe("smartPrimaryActionLabel", () => {
   it("returns labels for each kind", () => {
     assert.equal(
       smartPrimaryActionLabel({ kind: "link", url: "", cleanUrl: "", host: "" }),
-      "Open link",
+      tr("smart.msg.open-link"),
     );
     assert.equal(
       smartPrimaryActionLabel({ kind: "color", hex: "#fff", rgb: "", swiftUI: "" }),
@@ -248,7 +249,7 @@ describe("smartPrimaryActionLabel", () => {
     );
     assert.equal(
       smartPrimaryActionLabel({ kind: "math", expression: "1+1", result: "2" }),
-      "Copy result",
+      tr("smart.msg.copy-result"),
     );
   });
 });

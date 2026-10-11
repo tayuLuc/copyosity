@@ -2,9 +2,9 @@
 // English is the fallback for any missing key. Persisted in localStorage so it
 // applies across all windows (overlay, palette, settings) independently.
 
-import { derived, writable } from "svelte/store";
+import { derived, get, writable } from "svelte/store";
 
-import { dict, LOCALES, type LocaleCode } from "./dict";
+import { dict, LOCALES, type LocaleCode } from "./dict.ts";
 
 export { LOCALES, type LocaleCode };
 
@@ -47,15 +47,62 @@ function lookup(code: LocaleCode, key: string): string {
 
 export type Translate = (key: string, params?: Record<string, string | number>) => string;
 
+function applyParams(text: string, params?: Record<string, string | number>): string {
+  if (!params) return text;
+  let out = text;
+  for (const [name, value] of Object.entries(params)) {
+    out = out.split(`{${name}}`).join(String(value));
+  }
+  return out;
+}
+
+/** Grammatical number → index into the `|`-separated forms of a dictionary value. */
+const PLURAL_INDEX: Record<LocaleCode, (count: number) => number> = {
+  en: (count) => (count === 1 ? 0 : 1),
+  de: (count) => (count === 1 ? 0 : 1),
+  es: (count) => (count === 1 ? 0 : 1),
+  fr: (count) => (count === 1 ? 0 : 1),
+  ru: (count) =>
+    count % 10 === 1 && count % 100 !== 11
+      ? 0
+      : count % 10 >= 2 && count % 10 <= 4 && (count % 100 < 12 || count % 100 > 14)
+        ? 1
+        : 2,
+  zh: () => 0,
+  ja: () => 0,
+};
+
+function translate(
+  code: LocaleCode,
+  key: string,
+  params?: Record<string, string | number>,
+): string {
+  return applyParams(lookup(code, key), params);
+}
+
 /** Reactive translator: `$t("key")` re-renders when the locale changes. */
 export const t = derived<typeof locale, Translate>(locale, ($locale) => {
-  return (key: string, params?: Record<string, string | number>) => {
-    let out = lookup($locale, key);
-    if (params) {
-      for (const [name, value] of Object.entries(params)) {
-        out = out.split(`{${name}}`).join(String(value));
-      }
-    }
-    return out;
-  };
+  return (key: string, params?: Record<string, string | number>) => translate($locale, key, params);
 });
+
+/** One-shot translator for imperative code paths (status strings, toasts). */
+export function tr(key: string, params?: Record<string, string | number>): string {
+  return translate(get(locale), key, params);
+}
+
+/** The active locale code for callers that cannot subscribe to the store. */
+export function currentLocale(): LocaleCode {
+  return get(locale);
+}
+
+/**
+ * Count-aware translator for keys whose value holds `|`-separated plural forms.
+ * Forms beyond the locale's grammatical number are ignored, so one-form locales
+ * store a single string.
+ */
+export function trp(key: string, count: number, params?: Record<string, string | number>): string {
+  const code = get(locale);
+  const forms = lookup(code, key).split("|");
+  const index = Math.min(PLURAL_INDEX[code](count), forms.length - 1);
+  return applyParams(forms[index], { ...params, count });
+}

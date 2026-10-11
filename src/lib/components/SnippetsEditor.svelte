@@ -13,6 +13,7 @@
     renameSnippetFolder,
     updateSnippet,
   } from "$lib/api";
+  import { t, tr  } from "$lib/i18n";
   import {
     isSnippetFolderExpanded,
     loadCollapsedSnippetFolderIds,
@@ -154,8 +155,8 @@
   async function removeFolder(folder: SnippetFolder) {
     const confirmed = await confirmDestructive({
       title: `Delete "${folder.name}"?`,
-      message: "This deletes the folder and all snippets inside it.",
-      confirmLabel: "Delete",
+      message: tr("snippets.msg.this-deletes-the-folder"),
+      confirmLabel: tr("snippets.msg.delete"),
       destructiveConfirm: true,
     });
     if (!confirmed) return;
@@ -228,8 +229,8 @@
         <input
           class="form-input"
           type="text"
-          placeholder="New folder name (e.g. Addresses, Prompts)"
-          aria-label="New snippet folder name"
+          placeholder={$t("snippets.placeholder.new-folder-name-e")}
+          aria-label={$t("snippets.aria-label.new-snippet-folder-name")}
           bind:value={newFolderName}
           onkeydown={(e) => e.key === "Enter" && addFolder()}
         />
@@ -239,16 +240,15 @@
           onclick={addFolder}
           disabled={!newFolderName.trim()}
         >
-          Add folder
-        </button>
+          {$t("snippets.text.add-folder")}</button>
       </div>
     </div>
   </div>
 
   {#if loading}
-    <p class="form-hint">Loading…</p>
+    <p class="form-hint">{$t("snippets.text.loading")}</p>
   {:else if folders.length === 0}
-    <p class="form-hint">No folders yet. Create one above to start adding snippets.</p>
+    <p class="form-hint">{$t("snippets.text.no-folders-yet-create")}</p>
   {:else}
     <div class="snip-folders-list">
       {#each folders as folder (folder.id)}
@@ -277,7 +277,7 @@
             <input
               class="snip-folder-rename-input"
               type="text"
-              aria-label="Folder name"
+              aria-label={$t("snippets.aria-label.folder-name")}
               bind:value={renameDraft}
               bind:this={renameInputEl}
               onkeydown={(e) => handleRenameKeydown(e, folder)}
@@ -306,8 +306,8 @@
             <button
               class="action-btn app-btn snip-folder-rename-btn"
               type="button"
-              aria-label="Cancel rename"
-              title="Cancel"
+              aria-label={$t("snippets.aria-label.cancel-rename")}
+              title={$t("common.cancel")}
               onmousedown={(e) => {
                 e.preventDefault();
                 cancelRenameFolder();
@@ -332,7 +332,7 @@
               class="action-btn app-btn snip-folder-rename-btn"
               type="button"
               aria-label={`Rename folder ${folder.name}`}
-              title="Rename"
+              title={$t("snippets.title.rename")}
               onclick={(e) => {
                 e.stopPropagation();
                 startRenameFolder(folder);
@@ -363,14 +363,13 @@
         {#if expanded}
           {#if folderSnippets.length === 0}
             <p class="snip-folder-empty form-hint">
-              No snippets in this folder yet.
-            </p>
+              {$t("snippets.text.no-snippets-in-this")}</p>
           {/if}
 
           {#each folderSnippets as snippet (snippet.id)}
             {#if editing[snippet.id]}
               <div class="form-field">
-                    <span class="form-label">Edit snippet</span>
+                    <span class="form-label">{$t("snippets.text.edit-snippet")}</span>
                     <input class="form-input" type="text" bind:value={editing[snippet.id].title} />
                     <textarea
                       class="form-textarea"
@@ -383,15 +382,13 @@
                         type="button"
                         onclick={() => saveEdit(snippet.id)}
                       >
-                        Save
-                      </button>
+                        {$t("common.save")}</button>
                       <button
                         class="form-btn form-btn-ghost app-btn"
                         type="button"
                         onclick={() => cancelEdit(snippet.id)}
                       >
-                        Cancel
-                      </button>
+                        {$t("common.cancel")}</button>
                     </div>
               </div>
             {:else}
@@ -406,7 +403,7 @@
                         type="button"
                         onclick={() => startEdit(snippet)}
                         aria-label={`Edit snippet ${snippet.title}`}
-                        title="Edit"
+                        title={$t("common.edit")}
                       >
                         <svg
                           class="action-icon"
@@ -427,7 +424,7 @@
                         type="button"
                         onclick={() => removeSnippet(snippet)}
                         aria-label={`Delete snippet ${snippet.title}`}
-                        title="Delete"
+                        title={$t("common.delete")}
                       >
                         <svg
                           class="action-icon"
@@ -455,15 +452,15 @@
                   <input
                     class="form-input"
                     type="text"
-                    placeholder="Snippet title (e.g. Work email)"
-                    aria-label="Snippet title"
+                    placeholder={$t("snippets.placeholder.snippet-title-e-g")}
+                    aria-label={$t("snippets.aria-label.snippet-title")}
                     bind:value={drafts[folder.id].title}
                   />
                   <textarea
                     class="form-textarea"
                     rows="2"
-                    placeholder="Content to paste…"
-                    aria-label="Snippet content"
+                    placeholder={$t("snippets.placeholder.content-to-paste")}
+                    aria-label={$t("snippets.aria-label.snippet-content")}
                     bind:value={drafts[folder.id].content}
                   ></textarea>
                   <button
@@ -484,8 +481,7 @@
               onclick={() => removeFolder(folder)}
               aria-label={`Delete folder ${folder.name} and all snippets inside`}
             >
-              Delete folder…
-            </button>
+              {$t("snippets.text.delete-folder")}</button>
           </div>
         {/if}
         </div>

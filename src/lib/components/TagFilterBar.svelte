@@ -1,10 +1,11 @@
 <script lang="ts">
+import { tr } from "$lib/i18n";
   import { onMount } from "svelte";
   import { formatImageFormatBadge } from "$lib/image-meta";
   import type { TagChip } from "$lib/overlay-filters";
 
   const {
-    resetLabel = "All tags",
+    resetLabel = tr("tagfilter.msg.all-tags"),
     activeTag = null,
     formatChips = [] as TagChip[],
     semanticChips = [] as TagChip[],

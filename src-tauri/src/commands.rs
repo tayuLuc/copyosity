@@ -832,6 +832,50 @@ pub fn set_quick_menu_shortcut(
     Ok(stored)
 }
 
+/// Locale codes reach the native tray menu, so the input is clamped to `xx` / `xx-YY`.
+fn sanitize_ui_locale(input: &str) -> String {
+    input
+        .trim()
+        .chars()
+        .take(5)
+        .filter(|c| c.is_ascii_alphanumeric() || *c == '-')
+        .collect()
+}
+
+#[cfg(test)]
+mod ui_locale_tests {
+    use super::sanitize_ui_locale;
+
+    #[test]
+    fn keeps_a_plain_or_regional_tag() {
+        assert_eq!("ru", sanitize_ui_locale("ru"));
+        assert_eq!("pt-BR", sanitize_ui_locale("  pt-BR  "));
+    }
+
+    #[test]
+    fn clamps_length_and_drops_structural_characters() {
+        assert_eq!("ab-cd", sanitize_ui_locale("ab-cd-ef-gh"));
+        assert_eq!("ru", sanitize_ui_locale("ru/../x"));
+        assert_eq!("", sanitize_ui_locale("🌐"));
+    }
+}
+
+#[tauri::command]
+pub fn set_ui_locale(
+    app: tauri::AppHandle,
+    db: State<'_, Arc<Database>>,
+    locale: String,
+) -> Result<(), String> {
+    let code = sanitize_ui_locale(&locale);
+    let stored = db.get_setting("ui_locale").map_err(|e| e.to_string())?;
+    if stored.as_deref() == Some(code.as_str()) {
+        return Ok(());
+    }
+    db.set_setting("ui_locale", &code)
+        .map_err(|e| e.to_string())?;
+    crate::refresh_tray_menu(&app)
+}
+
 // ---- Command/agent palette shortcut (stored under its own settings key) ----
 
 #[tauri::command]

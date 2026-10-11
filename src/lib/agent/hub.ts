@@ -1,5 +1,7 @@
 import type { UIMessage } from "ai";
 
+import { tr } from "../i18n/index.ts";
+
 export type HubAgentSettings = {
   hub_enabled: boolean;
   hub_url: string;
@@ -11,7 +13,7 @@ export function hubAgentBlockReason(s: HubAgentSettings): string | null {
   if (!s.hub_enabled) return "AI hub is disabled in Settings";
   const base = s.hub_url.trim().replace(/\/+$/, "");
   if (!base || !s.hub_token.trim()) {
-    return "Set the AI hub URL and API key in Settings";
+    return tr("hub.msg.set-the-ai-hub");
   }
   return null;
 }

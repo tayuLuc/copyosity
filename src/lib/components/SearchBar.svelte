@@ -73,7 +73,7 @@
     type="button"
     class="clear-btn"
     class:hidden={!value}
-    aria-label="Clear search"
+    aria-label={$t("searchbar.aria-label.clear-search")}
     aria-hidden={!value}
     tabindex={value ? 0 : -1}
     disabled={!value}

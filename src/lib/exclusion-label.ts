@@ -1,4 +1,7 @@
 /** Visible copy for resolved app names (buttons, list rows, success notices). */
+
+import { tr } from "./i18n/index.ts";
+
 function formatAppNameForLabel(appName: string): string {
   const trimmed = appName.trim();
   if (!trimmed) return trimmed;
@@ -68,7 +71,7 @@ export function couldNotAddExcludedAppNotice(appName: string): string {
 
 /** Settings — add via native picker failed without a resolved app name. */
 export function couldNotAddSelectedAppNotice(): string {
-  return "Could not add the selected app. Try again.";
+  return tr("exclusion.msg.could-not-add-the");
 }
 
 export function invokeErrorMessage(err: unknown): string {
@@ -91,5 +94,5 @@ export function isAppNotFoundError(err: unknown): boolean {
 
 /** Settings candidate row when list and candidate are out of sync. */
 export function alreadyExcludedListMetaLabel(): string {
-  return "Already excluded";
+  return tr("exclusion.msg.already-excluded");
 }

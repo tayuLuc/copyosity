@@ -1,4 +1,6 @@
 <script lang="ts">
+import { tr } from "$lib/i18n";
+
   type SegmentItem = {
     id: string;
     label: string;
@@ -10,7 +12,7 @@
     value = null,
     onSelect,
     onButtonMount,
-    ariaLabel = "Segmented control",
+    ariaLabel = tr("segment.msg.segmented-control"),
     ariaKind = "selected",
     compact = false,
     rootClass = "",

@@ -1,6 +1,7 @@
 <script lang="ts">
   import FieldStatusFooter from "./FieldStatusFooter.svelte";
   import ShortcutModifierHint from "./ShortcutModifierHint.svelte";
+  import { t } from "$lib/i18n";
 
   let {
     value = $bindable(""),
@@ -11,7 +12,7 @@
     notice,
     noticeTone = "ok",
     onSave,
-    saveLabel = "Save",
+    saveLabel,
     saveDisabled = false,
   }: {
     value?: string;
@@ -51,7 +52,7 @@
           disabled={saveDisabled}
           onclick={() => void onSave()}
         >
-          {saveLabel}
+          {saveLabel ?? $t("settings.text.save")}
         </button>
       {/if}
     </div>

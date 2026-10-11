@@ -1,17 +1,10 @@
 import type { ConfirmMessageBody, ConfirmMessagePart } from "./confirm";
+import { tr, trp } from "./i18n/index.ts";
 import type { HistoryCounts } from "./types";
 
 export type ClearHistoryAction = "unpinned" | "all";
 
 const NBSP = "\u00A0";
-
-function itemsWord(count: number): string {
-  return count === 1 ? "item" : "items";
-}
-
-function pinnedWord(count: number): string {
-  return count === 1 ? "pinned item" : "pinned items";
-}
 
 /** Number + following words stay on one line when the dialog wraps. */
 function withCount(count: number, trailing: string): ConfirmMessagePart[] {
@@ -21,8 +14,8 @@ function withCount(count: number, trailing: string): ConfirmMessagePart[] {
 export function clearUnpinnedConfirmBody(counts: HistoryCounts): ConfirmMessageBody {
   const count = counts.unpinned;
   return {
-    primary: withCount(count, `unpinned ${itemsWord(count)} will be permanently deleted.`),
-    secondary: [{ text: "Pinned items will be kept." }],
+    primary: withCount(count, trp("destructive.msg.unpinned-deleted", count)),
+    secondary: [{ text: tr("destructive.msg.pinned-kept") }],
   };
 }
 
@@ -31,12 +24,15 @@ export function clearAllConfirmBody(counts: HistoryCounts): ConfirmMessageBody {
 
   if (pinned === 0) {
     return {
-      primary: withCount(total, `${itemsWord(total)} will be permanently deleted.`),
+      primary: withCount(total, trp("destructive.msg.items-deleted", total)),
     };
   }
 
   return {
-    primary: withCount(total, `${itemsWord(total)} will be permanently deleted.`),
-    secondary: [{ text: "This includes " }, ...withCount(pinned, `${pinnedWord(pinned)}.`)],
+    primary: withCount(total, trp("destructive.msg.items-deleted", total)),
+    secondary: [
+      { text: tr("destructive.msg.this-includes") },
+      ...withCount(pinned, trp("destructive.msg.pinned-count", pinned)),
+    ],
   };
 }

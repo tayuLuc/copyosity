@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { SmartKind } from "$lib/smart-actions";
+  import { t } from "$lib/i18n";
 
   const {
     contentType,
@@ -39,10 +40,10 @@
       (contentType === "image" && formatLabel
         ? formatLabel
         : contentType === "text"
-          ? "Text"
+          ? $t("overlay.text.kind-text")
           : contentType === "image"
-            ? "Image"
-            : "File"),
+            ? $t("overlay.text.image")
+            : $t("overlay.text.kind-file")),
   );
 
   const isFormatLabel = $derived(contentType === "image" && !!formatLabel && !labelOverride);

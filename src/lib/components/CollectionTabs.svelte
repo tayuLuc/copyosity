@@ -65,7 +65,7 @@
 
   <div
     role="group"
-    aria-label="Custom collections"
+    aria-label={$t("collections.aria-label.custom-collections")}
     class="collections-scroll"
     class:scrollable={collectionsScrollable}
   >
@@ -85,8 +85,8 @@
         <button
           type="button"
           class="tab-delete"
-          aria-label="Remove collection {col.name}"
-          title="Remove"
+          aria-label={$t("collections.aria-label.remove-collection", { name: col.name })}
+          title={$t("collections.title.remove")}
           onclick={(e) => handleDelete(e, col.id)}
         >
           <svg class="tab-delete-icon" viewBox="0 0 24 24" aria-hidden="true">
@@ -102,8 +102,8 @@
         <input
           class="form-input"
           bind:value={newName}
-          placeholder="Name..."
-          aria-label="Collection name"
+          placeholder={$t("collections.placeholder.name")}
+          aria-label={$t("collections.aria-label.collection-name")}
           autofocus
           onblur={() => { if (!newName) showAdd = false; }}
         />
@@ -112,8 +112,8 @@
       <button
         class="add-tab app-btn"
         type="button"
-        aria-label="Add collection"
-        title="Add collection"
+        aria-label={$t("collections.aria-label.add-collection")}
+        title={$t("collections.title.add-collection")}
         onclick={() => (showAdd = true)}
       >
         <svg class="add-tab-icon" viewBox="0 0 24 24" aria-hidden="true">

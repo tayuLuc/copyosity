@@ -1,6 +1,7 @@
 import type { ClipboardEntry, OverlayTagCounts } from "$lib/types";
 
 import { cardTagDisplayLabel } from "./card-tag-label.ts";
+import { tr } from "./i18n/index.ts";
 import { resolveImageFormatBadge } from "./image-meta.ts";
 
 export type ContentKind = "all" | "text" | "image";
@@ -111,26 +112,26 @@ function chipsFromServerCounts(
   const kindFilterActive = aiTaggingEnabled && showRowA;
   let formatChips = sortFormatChips(tagCountsToChips(counts.format));
   let semanticChips = mergeSemanticChipsByDisplayLabel(counts.semantic);
-  let resetLabel = "All tags";
+  let resetLabel = tr("overlay.text.all-tags");
 
   if (!aiTaggingEnabled) {
     semanticChips = [];
-    resetLabel = "All formats";
+    resetLabel = tr("filters.msg.all-formats");
   } else if (!showRowA) {
     if (counts.has_images && !counts.has_text) {
       semanticChips = [];
-      resetLabel = "All formats";
+      resetLabel = tr("filters.msg.all-formats");
     } else if (counts.has_text) {
       formatChips = [];
-      resetLabel = "All tags";
+      resetLabel = tr("overlay.text.all-tags");
     }
   } else if (kindFilterActive) {
     if (contentKind === "text") {
       formatChips = [];
-      resetLabel = "All tags";
+      resetLabel = tr("overlay.text.all-tags");
     } else if (contentKind === "image") {
       semanticChips = [];
-      resetLabel = "All formats";
+      resetLabel = tr("filters.msg.all-formats");
     }
   }
 
@@ -225,29 +226,29 @@ function tagBarChipsForPool(options: {
 
   let formatChips: TagChip[] = [];
   let semanticChips: TagChip[] = [];
-  let resetLabel = "All tags";
+  let resetLabel = tr("overlay.text.all-tags");
 
   if (!aiTaggingEnabled) {
     formatChips = countFormatTags(pool);
-    resetLabel = "All formats";
+    resetLabel = tr("filters.msg.all-formats");
   } else if (!showRowA) {
     if (imagesAvailable && !textAvailable) {
       formatChips = countFormatTags(pool);
-      resetLabel = "All formats";
+      resetLabel = tr("filters.msg.all-formats");
     } else if (textAvailable) {
       semanticChips = countSemanticTags(pool, true);
-      resetLabel = "All tags";
+      resetLabel = tr("overlay.text.all-tags");
     }
   } else if (contentKind === "text") {
     semanticChips = countSemanticTags(kindPool, true);
-    resetLabel = "All tags";
+    resetLabel = tr("overlay.text.all-tags");
   } else if (contentKind === "image") {
     formatChips = countFormatTags(kindPool);
-    resetLabel = "All formats";
+    resetLabel = tr("filters.msg.all-formats");
   } else {
     formatChips = countFormatTags(kindPool);
     semanticChips = countSemanticTags(kindPool, true);
-    resetLabel = "All tags";
+    resetLabel = tr("overlay.text.all-tags");
   }
 
   return {
@@ -378,8 +379,8 @@ export function formatTagEmptyLabel(tag: string): string {
 }
 
 export function contentKindEmptyLabel(kind: ContentKind): string | null {
-  if (kind === "image") return "No images in clipboard history";
-  if (kind === "text") return "No text entries in history";
+  if (kind === "image") return tr("filters.msg.no-images-in-clipboard");
+  if (kind === "text") return tr("filters.msg.no-text-entries-in");
   return null;
 }
 

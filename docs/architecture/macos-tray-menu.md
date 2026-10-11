@@ -183,6 +183,16 @@ merges.
 **If `main` reappears in `tauri.conf.json`:** unpredictable 1st/2nd click; remove it and rely on
 `ensure_main_overlay_window` only.
 
+### 13. Menu labels follow the UI locale
+
+`build_tray_menu` reads the stored `ui_locale` setting and takes its labels from `tray_labels(locale)`
+in `src-tauri/src/lib.rs`; an unknown code falls back to `TRAY_LABELS_EN`. The webview pushes the
+effective locale through `commands::set_ui_locale` on overlay mount and on language change; that
+command writes the setting and calls `refresh_tray_menu` (unchanged codes return early, so startup
+does not rebuild the menu). Shortcut suffixes (`⌘⇧Space`, `⌘⇧V`, `⌘⇧C`) and the version row stay
+locale-independent. Label building is outside the protected scheme above: it touches neither window
+levels, nor activation policy, nor the click path.
+
 ---
 
 ## Post-merge / upstream drift (repeated regressions)

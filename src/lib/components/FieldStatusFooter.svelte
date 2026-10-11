@@ -1,4 +1,5 @@
 <script lang="ts">
+
   let {
     message = "",
     tone = "ok",

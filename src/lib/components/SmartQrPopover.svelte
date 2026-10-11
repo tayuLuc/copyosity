@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
+import { t } from "$lib/i18n";
 
   const {
     open = false,
@@ -45,17 +46,16 @@
 <svelte:window onkeydown={handleKeydown} />
 
 {#if open}
-  <div class="smart-qr-popover" bind:this={root} role="dialog" aria-label="QR code">
+  <div class="smart-qr-popover" bind:this={root} role="dialog" aria-label={$t("qr.aria-label.qr-code")}>
     {#if loading}
-      <div class="smart-qr-state">Generating QR code…</div>
+      <div class="smart-qr-state">{$t("qr.text.generating-qr-code")}</div>
     {:else if error}
       <div class="smart-qr-state smart-qr-state--error">{error}</div>
     {:else if imageSrc}
       <img class="smart-qr-image" src={imageSrc} alt="QR code for link" />
     {/if}
     <button class="popover-menu-item app-btn smart-qr-dismiss" type="button" onclick={handleDismiss}>
-      Dismiss
-    </button>
+      {$t("qr.text.dismiss")}</button>
   </div>
 {/if}
 
