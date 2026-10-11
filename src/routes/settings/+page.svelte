@@ -2,7 +2,7 @@
   import { onMount } from "svelte";
   import { emit, listen } from "@tauri-apps/api/event";
   import { getCurrentWindow } from "@tauri-apps/api/window";
-  import { t, locale, setLocale, LOCALES, type LocaleCode } from "$lib/i18n";
+  import { LOCALES, locale, setLocale, t, tr, type LocaleCode } from "$lib/i18n";
   import { enable as enableAutostart, disable as disableAutostart, isEnabled as isAutostartEnabled } from "@tauri-apps/plugin-autostart";
   import type {
     AppSettings,
@@ -132,8 +132,8 @@
   let settingsNotice = $state("");
   let savedModel = $state("");
 
-  const A11Y_NOTICE_ENABLE = "Enable Copyosity in the list.";
-  const A11Y_NOTICE_VERIFIED = "Accessibility verified — paste automation is ready.";
+  const A11Y_NOTICE_ENABLE = $derived($t("settings.msg.enable-copyosity-in-the"));
+  const A11Y_NOTICE_VERIFIED = $derived($t("settings.msg.accessibility-verified-paste-automation"));
 
   let accessibilityGranted = $state<boolean | null>(null);
   let accessibilityNotice = $state("");
@@ -154,7 +154,7 @@
     hubTestResult = null;
     try {
       const count = await hubTestConnection(settings.hub_url, settings.hub_token);
-      hubTestResult = { ok: true, message: `Connected — ${count} model(s) available` };
+      hubTestResult = { ok: true, message: tr("settings.msg.connected-models-available", { count }) };
       loadHubModels();
     } catch (e) {
       hubTestResult = { ok: false, message: String(e) };
@@ -179,10 +179,10 @@
   ];
 
   const retentionOptions = [
-    { label: "1 day", value: 1 },
-    { label: "1 week", value: 7 },
-    { label: "1 month", value: 30 },
-    { label: "6 months", value: 180 },
+    { value: 1, labelKey: "settings.text.retention-1-day" },
+    { value: 7, labelKey: "settings.text.retention-1-week" },
+    { value: 30, labelKey: "settings.text.retention-1-month" },
+    { value: 180, labelKey: "settings.text.retention-6-months" },
   ];
 
   /** Text fields and selects — saved via the footer bar. Booleans apply immediately. */
@@ -312,7 +312,7 @@
 
   async function handlePullModel() {
     ollamaLoading = true;
-    pullProgress = "Starting download...";
+    pullProgress = tr("settings.msg.starting-download");
     await pullOllamaModel();
     // Command returns immediately, progress comes via events
     // ollama-pull-done will reset the state
@@ -462,7 +462,7 @@
       settings = await updateAppSettings(deferred);
       savedModel = settings.ollama_model;
       snapshotDeferred();
-      settingsNotice = "Saved";
+      settingsNotice = tr("settings.msg.saved");
       taggingResult = undefined;
       await Promise.all([
         rebindVoiceShortcut(),
@@ -513,7 +513,7 @@
         showExcludeAppNotice(result);
       } else {
         setExcludedAppsNotice(
-          "No active app detected. Switch to the app you want to exclude, or choose one below.",
+          tr("settings.msg.no-active-app-detected"),
           "warn",
         );
       }
@@ -541,7 +541,7 @@
     } catch (err) {
       const message = invokeErrorMessage(err);
       if (message.startsWith("main_thread_required:")) {
-        setExcludedAppsNotice("Could not open the app picker. Try again.", "warn");
+        setExcludedAppsNotice(tr("settings.msg.could-not-open-the"), "warn");
       } else {
         setExcludedAppsNotice(message || couldNotAddSelectedAppNotice(), "warn");
       }
@@ -559,7 +559,7 @@
       await refreshExcludedAppsSection();
     } catch (err) {
       setExcludedAppsNotice(
-        invokeErrorMessage(err) || "Could not update excluded apps. Try again.",
+        invokeErrorMessage(err) || tr("settings.msg.could-not-update-excluded"),
         "warn",
       );
     } finally {
@@ -574,22 +574,22 @@
     switch (action) {
       case "unpinned": {
         if (historyCounts.unpinned === 0) {
-          clearHistoryNotice = "No unpinned history to clear";
+          clearHistoryNotice = tr("settings.msg.no-unpinned-history-to");
           return;
         }
         const confirmed = await confirmDestructive({
-          title: "Clear unpinned history?",
+          title: tr("settings.msg.clear-unpinned-history"),
           messageBody: clearUnpinnedConfirmBody(historyCounts),
-          confirmLabel: "Clear unpinned",
+          confirmLabel: tr("settings.msg.clear-unpinned"),
         });
         if (!confirmed) return;
         clearHistoryActionInFlight = true;
         try {
           await clearHistory();
-          await finishClearHistoryAction("Unpinned history cleared");
+          await finishClearHistoryAction(tr("settings.msg.unpinned-history-cleared"));
         } catch (err) {
           await finishClearHistoryAction(
-            invokeErrorMessage(err) || "Could not clear history. Try again.",
+            invokeErrorMessage(err) || tr("settings.msg.could-not-clear-history"),
           );
         } finally {
           clearHistoryActionInFlight = false;
@@ -598,22 +598,22 @@
       }
       case "all": {
         if (historyCounts.total === 0) {
-          clearHistoryNotice = "History is already empty";
+          clearHistoryNotice = tr("settings.msg.history-is-already-empty");
           return;
         }
         const confirmed = await confirmDestructive({
-          title: "Clear all history?",
+          title: tr("settings.msg.clear-all-history"),
           messageBody: clearAllConfirmBody(historyCounts),
-          confirmLabel: "Clear all",
+          confirmLabel: tr("settings.msg.clear-all"),
         });
         if (!confirmed) return;
         clearHistoryActionInFlight = true;
         try {
           await clearAllHistory();
-          await finishClearHistoryAction("All history cleared");
+          await finishClearHistoryAction(tr("settings.msg.all-history-cleared"));
         } catch (err) {
           await finishClearHistoryAction(
-            invokeErrorMessage(err) || "Could not clear history. Try again.",
+            invokeErrorMessage(err) || tr("settings.msg.could-not-clear-history"),
           );
         } finally {
           clearHistoryActionInFlight = false;
@@ -633,12 +633,12 @@
   const clearHistoryMenuItems = $derived([
     {
       id: "unpinned",
-      label: "Clear unpinned history…",
+      label: $t("settings.msg.clear-unpinned-history"),
       disabled: historyCounts.unpinned === 0,
     },
     {
       id: "all",
-      label: "Clear all history…",
+      label: $t("settings.msg.clear-all-history"),
       disabled: historyCounts.total === 0,
       destructive: true,
     },
@@ -715,7 +715,7 @@
   async function handleRestoreOverlayBoardSizes() {
     try {
       await resetOverlayBoardSizes();
-      settingsNotice = "Panel size restored to default";
+      settingsNotice = tr("settings.msg.panel-size-restored-to");
     } catch (e) {
       settingsNotice = String(e);
     }
@@ -779,7 +779,7 @@
     quickMenuNotice = "";
     try {
       quickMenuShortcut = await setQuickMenuShortcut(quickMenuShortcut);
-      quickMenuNotice = "Saved";
+      quickMenuNotice = tr("settings.msg.saved");
       quickMenuNoticeTone = "ok";
     } catch (e) {
       quickMenuNotice = `${e}`;
@@ -802,7 +802,7 @@
     paletteNotice = "";
     try {
       paletteShortcut = await setPaletteShortcut(paletteShortcut);
-      paletteNotice = "Saved";
+      paletteNotice = tr("settings.msg.saved");
       paletteNoticeTone = "ok";
     } catch (e) {
       paletteNotice = `${e}`;
@@ -851,7 +851,7 @@
       settings = { ...saved, ...deferred };
       await rebindVoiceShortcut();
       snapshotDeferred();
-      voiceShortcutNotice = "Saved";
+      voiceShortcutNotice = tr("settings.msg.saved");
       voiceShortcutNoticeTone = "ok";
     } catch (e) {
       voiceShortcutNotice = `${e}`;
@@ -882,14 +882,14 @@
       const u = await checkForUpdate();
       if (u) {
         update = u;
-        updateMessage = `Update available: ${u.version}`;
+        updateMessage = tr("updates.available", { version: u.version });
         appendUpdateLog(`check: update ${u.version} available`);
       } else {
-        updateMessage = "You're on the latest version.";
+        updateMessage = tr("settings.msg.you-re-on-the");
         appendUpdateLog("check: already up to date");
       }
     } catch (e) {
-      updateMessage = `Check failed: ${errorToString(e)}`;
+      updateMessage = tr("settings.msg.check-failed", { error: errorToString(e) });
       appendUpdateLog(`check: ERROR — ${errorToString(e)}`);
     } finally {
       updateChecking = false;
@@ -901,7 +901,7 @@
     if (!update) return;
     updateInstalling = true;
     updateProgress = -1;
-    updateMessage = "Installing…";
+    updateMessage = tr("settings.msg.installing");
     appendUpdateLog(`install: downloading + installing ${update.version} (same-volume temp)…`);
     refreshUpdateLog();
     // Progress is emitted from the Rust install command.
@@ -915,7 +915,7 @@
       await invoke("install_update");
       appendUpdateLog("install: bundle replaced OK — relaunching…");
     } catch (e) {
-      updateMessage = `Install failed: ${errorToString(e)}`;
+      updateMessage = tr("settings.msg.install-failed", { error: errorToString(e) });
       appendUpdateLog(`install: ERROR — ${errorToString(e)}`);
       updateInstalling = false;
     } finally {
@@ -1010,7 +1010,7 @@
 
 <div class="settings-shell ui-no-select">
   <aside class="settings-sidebar">
-    <div class="sidebar-title">Settings</div>
+    <div class="sidebar-title">{$t("settings.title")}</div>
     <nav class="sidebar-nav">
       {#each visiblePanes as p}
         <button
@@ -1026,25 +1026,25 @@
     </nav>
     <div class="sidebar-foot">
       <span class="sidebar-dot" class:ok={hubTestResult?.ok} class:fail={hubTestResult && !hubTestResult.ok}></span>
-      <span>{hubTestResult ? (hubTestResult.ok ? "Hub connected" : "Hub error") : settings.hub_token?.trim() ? "Hub configured" : "Hub not set"}</span>
+      <span>{hubTestResult ? (hubTestResult.ok ? $t("settings.msg.hub-connected") : $t("settings.msg.hub-error")) : settings.hub_token?.trim() ? $t("settings.msg.hub-configured") : $t("settings.msg.hub-not-set")}</span>
     </div>
   </aside>
 
   <main class="settings-content">
     {#if activePane === "hub"}
       <div class="pane-head">
-        <div class="pane-title">AI Hub</div>
-        <div class="pane-subtitle">Cloud models for tagging, transcription, web search and the research agent — any OpenAI-compatible endpoint.</div>
+        <div class="pane-title">{$t("nav.hub")}</div>
+        <div class="pane-subtitle">{$t("settings.text.cloud-models-for-tagging")}</div>
       </div>
 
       <section class="form-section">
         <div class="form-section-header">
-          <div class="form-section-title form-section-title--with-icon"><SectionIcon name="hub" />Hub</div>
+          <div class="form-section-title form-section-title--with-icon"><SectionIcon name="hub" />{$t("settings.text.hub")}</div>
           <label class="toggle">
             <input
               type="checkbox"
               role="switch"
-              aria-label="Enable the AI hub"
+              aria-label={$t("settings.aria-label.enable-the-ai-hub")}
               checked={settings.hub_enabled}
               onchange={(e) => handleHubToggle((e.currentTarget as HTMLInputElement).checked)}
             />
@@ -1057,23 +1057,27 @@
           disabled={!settings.hub_enabled}
         >
           <div class="form-hint">
-            When off, hub tagging, transcription, web search, and voice polishing are disabled.
+            {$t("settings.text.when-off-hub-tagging")}
           </div>
 
           <div class="form-subsection">
-            <div class="form-subsection-title form-subsection-title--with-icon"><SectionIcon name="connection" />Connection</div>
+            <div class="form-subsection-title form-subsection-title--with-icon"><SectionIcon name="connection" />{$t("settings.text.connection")}</div>
             <div class="inset-list">
               <div class="form-field">
-                <span class="form-label">3 steps</span>
+                <span class="form-label">{$t("settings.text.steps-3")}</span>
                 <ol class="form-instruction-list">
-                  <li>Get an API key from your OpenAI-compatible provider (the app ships no default)</li>
-                  <li>Paste it into <strong>API Token</strong> below</li>
-                  <li>Click <strong>Test connection</strong> → then <strong>Save</strong></li>
+                  <li>{$t("settings.text.get-an-api-key")}</li>
+                  <li>
+                    {$t("settings.text.paste-into-field.a")}<strong>{$t("settings.text.api-token")}</strong>{$t("settings.text.paste-into-field.b")}
+                  </li>
+                  <li>
+                    {$t("settings.text.click-test-then-save.a")}<strong>{$t("settings.text.test-connection")}</strong>{$t("settings.text.click-test-then-save.b")}<strong>{$t("common.save")}</strong>
+                  </li>
                 </ol>
               </div>
 
               <label class="form-field">
-                <span class="form-label">API base URL</span>
+                <span class="form-label">{$t("settings.text.api-base-url")}</span>
                 <input
                   class="form-input"
                   type="text"
@@ -1081,22 +1085,19 @@
                   placeholder="http://localhost:8000/v1"
                 />
                 <div class="form-hint">
-                  Any OpenAI-compatible server. The URL is used exactly as written and the
-                  route is appended to it — if your server expects <code>/v1</code>, put
-                  <code>/v1</code> here. Plain <code>http://</code> is allowed for a local
-                  or LAN server.
+                  {$t("settings.text.api-base-url-hint.1")}<code>/v1</code>{$t("settings.text.api-base-url-hint.2")}<code>/v1</code>{$t("settings.text.api-base-url-hint.3")}<code>http://</code>{$t("settings.text.api-base-url-hint.4")}
                 </div>
               </label>
               <label class="form-field">
-                <span class="form-label">API Token</span>
+                <span class="form-label">{$t("settings.text.api-token")}</span>
                 <input
                   class="form-input"
                   type="password"
                   bind:value={settings.hub_token}
-                  placeholder="sk-... Bearer token"
+                  placeholder={$t("settings.placeholder.provider-key-bearer")}
                 />
                 <button class="form-btn form-btn-secondary app-btn" type="button" disabled={hubTesting} onclick={handleHubTest}>
-                  {hubTesting ? "Testing..." : "Test connection"}
+                  {hubTesting ? $t("settings.msg.testing") : $t("settings.msg.test-connection")}
                 </button>
                 {#if hubTestResult}
                   <div class="form-hint" class:ok={hubTestResult.ok} class:fail={!hubTestResult.ok}>
@@ -1110,22 +1111,22 @@
           <div class="form-subsection-rule" role="separator"></div>
 
           <div class="form-subsection">
-            <div class="form-subsection-title form-subsection-title--with-icon"><SectionIcon name="ollama-model" />Model</div>
+            <div class="form-subsection-title form-subsection-title--with-icon"><SectionIcon name="ollama-model" />{$t("settings.text.model")}</div>
             <div class="inset-list">
               <label class="form-field">
-                <span class="form-label">Chat / agent model (tagging & search)</span>
+                <span class="form-label">{$t("settings.text.chat-agent-model-tagging")}</span>
                 <div class="form-inline">
                   <select class="form-select" bind:value={settings.hub_chat_model}>
                     {#each withCurrent(hubModels, settings.hub_chat_model) as m}
                       <option value={m}>{m}</option>
                     {/each}
                   </select>
-                  <button class="form-btn form-btn-secondary app-btn" type="button" disabled={modelsLoading} onclick={loadHubModels} title="Load live model list from the hub">
+                  <button class="form-btn form-btn-secondary app-btn" type="button" disabled={modelsLoading} onclick={loadHubModels} title={$t("settings.title.load-live-model-list")}>
                     {modelsLoading ? "…" : "↻"}
                   </button>
                 </div>
                 <div class="form-hint">
-                  {hubModels.length ? `${hubModels.length} models loaded from the hub` : "Test connection or press ↻ to load the live model list."}
+                  {hubModels.length ? $t("settings.text.models-loaded-from-the", { count: hubModels.length }) : $t("settings.text.test-connection-or-press")}
                 </div>
               </label>
             </div>
@@ -1134,7 +1135,7 @@
           <div class="form-subsection-rule" role="separator"></div>
 
           <div class="form-subsection">
-            <div class="form-subsection-title form-subsection-title--with-icon"><SectionIcon name="setup" />Features</div>
+            <div class="form-subsection-title form-subsection-title--with-icon"><SectionIcon name="setup" />{$t("settings.text.features")}</div>
             <div class="inset-list">
               <label class="form-checkbox">
                 <span class="form-checkbox-leading">
@@ -1146,7 +1147,7 @@
                   />
                   <span class="form-checkbox-box" aria-hidden="true"></span>
                 </span>
-                <span class="form-checkbox-label ui-selectable-text">Use hub for tagging (falls back to Ollama on error)</span>
+                <span class="form-checkbox-label ui-selectable-text">{$t("settings.text.use-hub-for-tagging")}</span>
               </label>
               <label class="form-checkbox">
                 <span class="form-checkbox-leading">
@@ -1158,12 +1159,11 @@
                   />
                   <span class="form-checkbox-box" aria-hidden="true"></span>
                 </span>
-                <span class="form-checkbox-label ui-selectable-text">Use hub for voice transcription</span>
+                <span class="form-checkbox-label ui-selectable-text">{$t("settings.text.use-hub-for-voice")}</span>
               </label>
             </div>
             <div class="form-hint">
-              <strong>Web search:</strong> press <code>⌘⇧Space</code> anywhere (or tray → Agent Search,
-              or the search button in the main window) to query the web via the hub.
+              <strong>{$t("settings.text.web-search-label")}</strong> {$t("settings.text.web-search-hint.1")}<code>⌘⇧Space</code> {$t("settings.text.web-search-hint.2")} {$t("settings.text.agent-search")} {$t("settings.text.web-search-hint.3")}
             </div>
           </div>
         </fieldset>
@@ -1175,7 +1175,7 @@
             bind:value={paletteShortcut}
             placeholder="cmd+shift+space"
             examples={["cmd+shift+space"]}
-            detail="Opens the command / agent palette. The agent can search the web, act on your apps, use the selected model, and see a screenshot of the active window. Registered only while the hub is enabled."
+            detail={$t("settings.text.opens-the-command")}
             notice={paletteNotice || undefined}
             noticeTone={paletteNoticeTone}
             onSave={savePaletteShortcut}
@@ -1184,18 +1184,18 @@
       </section>
     {:else if activePane === "voice"}
       <div class="pane-head">
-        <div class="pane-title">Voice</div>
-        <div class="pane-subtitle">Hold the shortcut to record, release to transcribe and paste at the cursor.</div>
+        <div class="pane-title">{$t("settings.text.voice")}</div>
+        <div class="pane-subtitle">{$t("settings.text.hold-the-shortcut-to")}</div>
       </div>
 
       <section class="form-section">
         <div class="form-section-header">
-          <div class="form-section-title form-section-title--with-icon"><SectionIcon name="recording" />Recording</div>
+          <div class="form-section-title form-section-title--with-icon"><SectionIcon name="recording" />{$t("settings.text.recording")}</div>
           <label class="toggle">
             <input
               type="checkbox"
               role="switch"
-              aria-label="Enable voice transcription"
+              aria-label={$t("settings.aria-label.enable-voice-transcription")}
               checked={settings.voice_transcription_enabled}
               onchange={(e) => handleVoiceToggle((e.currentTarget as HTMLInputElement).checked)}
             />
@@ -1208,14 +1208,14 @@
           disabled={!settings.voice_transcription_enabled}
         >
           <div class="form-hint">
-            When off, the global hold-to-record shortcut is not registered.
+            {$t("settings.text.when-off-the-global")}
           </div>
 
           <HotkeySettingsSection
             bind:value={settings.voice_shortcut}
             placeholder="option+space"
             examples={["option+space", "cmd+shift+r", "ctrl+alt+space"]}
-            detail="Hold to record, release to transcribe and paste at the cursor."
+            detail={$t("settings.text.hold-to-record-release")}
             notice={voiceShortcutNotice || undefined}
             noticeTone={voiceShortcutNoticeTone}
             onSave={saveVoiceShortcut}
@@ -1225,7 +1225,7 @@
 
           <div class="form-subsection">
             <div class="form-subsection-title form-subsection-title--with-icon">
-              <SectionIcon name="hub" class="form-subsection-icon" />Transcription
+              <SectionIcon name="hub" class="form-subsection-icon" />{$t("settings.text.transcription")}
             </div>
             <div class="inset-list">
               <label class="form-checkbox">
@@ -1239,14 +1239,14 @@
                   />
                   <span class="form-checkbox-box" aria-hidden="true"></span>
                 </span>
-                <span class="form-checkbox-label ui-selectable-text">Transcribe with the AI hub</span>
+                <span class="form-checkbox-label ui-selectable-text">{$t("settings.text.transcribe-with-the-ai")}</span>
               </label>
             </div>
             <div class="form-hint">
               {#if settings.hub_enabled}
-                On → hub <code>/v1/audio/transcriptions</code>; off → your local Whisper server.
+                {$t("settings.text.on-hub-off-your.1")}<code>/v1/audio/transcriptions</code>{$t("settings.text.on-hub-off-your.2")}
               {:else}
-                Enable the <strong>AI hub</strong> (AI Hub tab) to transcribe via the hub.
+                {$t("settings.text.enable-the-ai-hub.1")}<strong>{$t("settings.text.ai-hub")}</strong>{$t("settings.text.enable-the-ai-hub.2")}
               {/if}
             </div>
           </div>
@@ -1255,18 +1255,18 @@
 
           <div class="form-subsection">
             <div class="form-subsection-title form-subsection-title--with-icon">
-              <SectionIcon name="voice" class="form-subsection-icon" />Microphone
+              <SectionIcon name="voice" class="form-subsection-icon" />{$t("settings.text.microphone")}
             </div>
             <div class="inset-list">
               <div class="form-field">
                 <select
                   class="form-select"
-                  aria-label="Microphone"
+                  aria-label={$t("settings.aria-label.microphone")}
                   bind:value={settings.selected_microphone}
                 >
-                  <option value="">System default</option>
+                  <option value="">{$t("settings.text.system-default")}</option>
                   {#each microphones as mic}
-                    <option value={mic.name}>{mic.name}{mic.is_default ? " (default)" : ""}</option>
+                    <option value={mic.name}>{mic.name}{mic.is_default ? $t("settings.text.default-suffix") : ""}</option>
                   {/each}
                 </select>
               </div>
@@ -1276,30 +1276,29 @@
           <div class="form-subsection-rule" role="separator"></div>
 
           <div class="form-subsection">
-            <div class="form-subsection-title form-subsection-title--with-icon"><SectionIcon name="ollama-model" />Transcription model</div>
+            <div class="form-subsection-title form-subsection-title--with-icon"><SectionIcon name="ollama-model" />{$t("settings.text.transcription-model")}</div>
             <div class="form-hint">
-              With <strong>hub transcription</strong> on (AI hub tab), audio goes to the hub model below.
-              Otherwise it uses the custom Whisper server.
+              {$t("settings.text.with-hub-transcription.1")}<strong>{$t("settings.text.hub-transcription")}</strong>{$t("settings.text.with-hub-transcription.2")}
             </div>
             <div class="inset-list">
               <label class="form-field">
-                <span class="form-label">Model</span>
+                <span class="form-label">{$t("settings.text.model")}</span>
                 <div class="form-inline">
                   <select class="form-select" bind:value={settings.whisper_server_model}>
                     {#each withCurrent(hubModels.length ? hubModels : ["whisper-1"], settings.whisper_server_model) as m}
                       <option value={m}>{m}</option>
                     {/each}
                   </select>
-                  <button class="form-btn form-btn-secondary app-btn" type="button" disabled={modelsLoading} onclick={loadHubModels} title="Load live model list from the hub">
+                  <button class="form-btn form-btn-secondary app-btn" type="button" disabled={modelsLoading} onclick={loadHubModels} title={$t("settings.title.load-live-model-list")}>
                     {modelsLoading ? "…" : "↻"}
                   </button>
                 </div>
                 <div class="form-hint">
-                  Pick a transcription model — e.g. <code>whisper-1</code> or <code>подлодка</code>
+                  {$t("settings.text.pick-transcription-model.1")}<code>whisper-1</code>{$t("settings.text.pick-transcription-model.2")}<code>подлодка</code>
                 </div>
               </label>
               <label class="form-field">
-                <span class="form-label">Custom Whisper server URL (optional)</span>
+                <span class="form-label">{$t("settings.text.custom-whisper-server-url")}</span>
                 <input
                   class="form-input"
                   type="text"
@@ -1308,12 +1307,12 @@
                 />
               </label>
               <label class="form-field">
-                <span class="form-label">Custom server token (optional)</span>
+                <span class="form-label">{$t("settings.text.custom-server-token-optional")}</span>
                 <input
                   class="form-input"
                   type="password"
                   bind:value={settings.whisper_server_token}
-                  placeholder="Bearer token (optional)"
+                  placeholder={$t("settings.placeholder.bearer-token-optional")}
                 />
               </label>
             </div>
@@ -1322,11 +1321,9 @@
           <div class="form-subsection-rule" role="separator"></div>
 
           <div class="form-subsection">
-            <div class="form-subsection-title form-subsection-title--with-icon"><SectionIcon name="text-polish" />AI text polishing</div>
+            <div class="form-subsection-title form-subsection-title--with-icon"><SectionIcon name="text-polish" />{$t("settings.text.ai-text-polishing")}</div>
             <div class="form-hint">
-              After transcription, run the text through the hub LLM to add punctuation,
-              remove filler, format lists, and match the app you're pasting into.
-              Returns only the cleaned text. Requires the AI hub.
+              {$t("settings.text.after-transcription-run")}
             </div>
             <div class="inset-list">
               <label class="form-checkbox">
@@ -1340,7 +1337,7 @@
                   />
                   <span class="form-checkbox-box" aria-hidden="true"></span>
                 </span>
-                <span class="form-checkbox-label ui-selectable-text">Polish transcription with the LLM before pasting</span>
+                <span class="form-checkbox-label ui-selectable-text">{$t("settings.text.polish-transcription-with-the")}</span>
               </label>
               {#if settings.voice_polish_enabled && settings.hub_enabled}
                 <label class="form-checkbox form-checkbox--indented">
@@ -1353,7 +1350,7 @@
                     />
                     <span class="form-checkbox-box" aria-hidden="true"></span>
                   </span>
-                  <span class="form-checkbox-label ui-selectable-text">Send a screenshot of the target window for context (needs Screen Recording permission)</span>
+                  <span class="form-checkbox-label ui-selectable-text">{$t("settings.text.send-a-screenshot-of")}</span>
                 </label>
                 <label class="form-checkbox form-checkbox--indented">
                   <span class="form-checkbox-leading">
@@ -1365,28 +1362,28 @@
                     />
                     <span class="form-checkbox-box" aria-hidden="true"></span>
                   </span>
-                  <span class="form-checkbox-label ui-selectable-text">Selected-text mode: if text is selected, your voice becomes an instruction (summarize / fix / translate / rewrite it)</span>
+                  <span class="form-checkbox-label ui-selectable-text">{$t("settings.text.selected-text-mode-if")}</span>
                 </label>
 
                 <label class="form-field">
-                  <span class="form-label">Polish model (multimodal for screenshots)</span>
+                  <span class="form-label">{$t("settings.text.polish-model-multimodal-for")}</span>
                   <div class="form-inline">
                     <select class="form-select" bind:value={settings.voice_polish_model}>
                       {#each withCurrent(hubModels, settings.voice_polish_model) as m}
                         <option value={m}>{m}</option>
                       {/each}
                     </select>
-                    <button class="form-btn form-btn-secondary app-btn" type="button" disabled={modelsLoading} onclick={loadHubModels} title="Load live model list from the hub">
+                    <button class="form-btn form-btn-secondary app-btn" type="button" disabled={modelsLoading} onclick={loadHubModels} title={$t("settings.title.load-live-model-list")}>
                       {modelsLoading ? "…" : "↻"}
                     </button>
                   </div>
-                  <div class="form-hint">Use a multimodal model when screenshots are on.</div>
+                  <div class="form-hint">{$t("settings.text.use-a-multimodal-model")}</div>
                 </label>
 
                 <label class="form-field">
-                  <span class="form-label">Translate result to</span>
+                  <span class="form-label">{$t("settings.text.translate-result-to")}</span>
                   <select class="form-select" bind:value={settings.voice_translate_lang}>
-                    <option value="">Don't translate</option>
+                    <option value="">{$t("settings.text.don-t-translate")}</option>
                     {#each translateLangs as l}
                       <option value={l.code}>{l.label}</option>
                     {/each}
@@ -1394,24 +1391,24 @@
                 </label>
 
                 <label class="form-field">
-                  <span class="form-label">Custom polishing instructions (optional)</span>
+                  <span class="form-label">{$t("settings.text.custom-polishing-instructions-optional")}</span>
                   <textarea
                     class="form-textarea"
                     rows="3"
                     bind:value={settings.voice_polish_prompt}
-                    placeholder="e.g. Always sign off with 'Спасибо!'; keep it formal."
+                    placeholder={$t("settings.placeholder.e-g-always-sign")}
                   ></textarea>
                 </label>
 
                 <label class="form-field">
-                  <span class="form-label">Dictionary — exact spellings (one per line)</span>
+                  <span class="form-label">{$t("settings.text.dictionary-exact-spellings-one")}</span>
                   <textarea
                     class="form-textarea"
                     rows="3"
                     bind:value={settings.voice_dictionary}
                     placeholder={"bash\nssh\ndocker"}
                   ></textarea>
-                  <div class="form-hint">The model will keep these terms spelled exactly as written.</div>
+                  <div class="form-hint">{$t("settings.text.the-model-will-keep")}</div>
                 </label>
               {/if}
             </div>
@@ -1420,8 +1417,8 @@
       </section>
     {:else if activePane === "quickmenu"}
       <div class="pane-head">
-        <div class="pane-title">Quick Menu</div>
-        <div class="pane-subtitle">A native pop-up menu for recent history and saved snippets — paste in two clicks, no overlay browsing.</div>
+        <div class="pane-title">{$t("nav.quickmenu")}</div>
+        <div class="pane-subtitle">{$t("settings.text.a-native-pop-up")}</div>
       </div>
 
       <section class="form-section">
@@ -1430,7 +1427,7 @@
             bind:value={quickMenuShortcut}
             placeholder="cmd+shift+c"
             examples={["cmd+shift+c"]}
-            detail="Press anywhere to pop the menu at your cursor with history and snippets; items 1–9 have number keys."
+            detail={$t("settings.text.press-anywhere-to")}
             notice={quickMenuNotice || undefined}
             noticeTone={quickMenuNoticeTone}
             onSave={saveQuickMenuShortcut}
@@ -1440,10 +1437,10 @@
 
           <div class="form-subsection">
             <div class="form-subsection-title form-subsection-title--with-icon">
-              <SectionIcon name="snippets" class="form-subsection-icon" />Snippets
+              <SectionIcon name="snippets" class="form-subsection-icon" />{$t("settings.text.snippets")}
             </div>
             <div class="form-hint">
-              Reusable text templates grouped in folders — they show up in the quick menu for two-click paste.
+              {$t("settings.text.reusable-text-templates")}
             </div>
             <SnippetsEditor />
           </div>
@@ -1451,34 +1448,32 @@
       </section>
     {:else if activePane === "permissions"}
       <div class="pane-head">
-        <div class="pane-title">Permissions</div>
-        <div class="pane-subtitle">Accessibility access is required for paste automation and the global shortcut.</div>
+        <div class="pane-title">{$t("nav.permissions")}</div>
+        <div class="pane-subtitle">{$t("settings.text.accessibility-access-is-required")}</div>
       </div>
 
       <section class="form-section">
-        <div class="form-section-title form-section-title--with-icon"><SectionIcon name="permissions" />Accessibility</div>
+        <div class="form-section-title form-section-title--with-icon"><SectionIcon name="permissions" />{$t("settings.text.accessibility")}</div>
         <div class="form-section-body">
           <div class="inset-list">
             <div class="status-step">
               <div class="status-row">
                 <span class="status-dot" class:ok={accessibilityGranted === true} class:fail={accessibilityGranted === false} class:checking={accessibilityGranted === null}></span>
                 <span class="status-text">
-                  {accessibilityGranted === null ? "Checking..." : accessibilityGranted ? "Accessibility granted" : "Accessibility not granted"}
+                  {accessibilityGranted === null ? $t("settings.text.checking") : accessibilityGranted ? $t("settings.msg.accessibility-granted") : $t("settings.msg.accessibility-not-granted")}
                 </span>
                 {#if accessibilityGranted === false}
                   <button class="status-action app-btn" type="button" onclick={handleRequestAccessibility}>
-                    Request
-                  </button>
+                    {$t("settings.text.request")}</button>
                 {:else if accessibilityGranted === true}
                   <button class="status-action app-btn" type="button" onclick={handleRecheckAccessibility}>
-                    Recheck
-                  </button>
+                    {$t("settings.text.recheck")}</button>
                 {/if}
               </div>
               {#if accessibilityGranted === false}
                 <div class="status-hint">
-                  Required for paste automation (Cmd+V) and global shortcut.<br />
-                  Click "Request" to open System Settings, then enable <strong>Copyosity</strong>.
+                  {$t("settings.text.required-for-paste")}<br />
+                  {$t("settings.text.click-request.1")}{$t("settings.text.request")}{$t("settings.text.click-request.2")}<strong>Copyosity</strong>.
                 </div>
               {/if}
               {#if accessibilityNotice}
@@ -1491,7 +1486,7 @@
                 </div>
               {/if}
               <div class="status-hint">
-                After a new build or reinstall, remove Copyosity from Accessibility and add it again if paste stops working.
+                {$t("settings.text.after-a-new-build")}
               </div>
             </div>
           </div>
@@ -1499,23 +1494,23 @@
       </section>
     {:else if activePane === "updates"}
       <div class="pane-head">
-        <div class="pane-title">Updates</div>
-        <div class="pane-subtitle">This fork updates itself from its own GitHub Releases, signed and verified with the fork's own key.</div>
+        <div class="pane-title">{$t("nav.updates")}</div>
+        <div class="pane-subtitle">{$t("settings.text.this-fork-updates-itself")}</div>
       </div>
 
       <section class="form-section">
-        <div class="form-section-title form-section-title--with-icon"><SectionIcon name="version" />Version</div>
+        <div class="form-section-title form-section-title--with-icon"><SectionIcon name="version" />{$t("settings.text.version")}</div>
         <div class="form-section-body">
           <div class="inset-list">
             <div class="status-step">
               <div class="status-row">
                 <span class="status-dot" class:ok={!update && !!updateMessage} class:checking={updateChecking}></span>
                 <span class="status-text">
-                  Current: <code>{appVersion || "…"}</code>
-                  {#if update}— new version <code>{update.version}</code> available{/if}
+                  {$t("settings.text.current-version.1")}<code>{appVersion || "…"}</code>
+                  {#if update}{$t("settings.text.current-version.2")}<code>{update.version}</code>{$t("settings.text.current-version.3")}{/if}
                 </span>
                 <button class="status-action app-btn" type="button" disabled={updateChecking || updateInstalling} onclick={checkUpdates}>
-                  {updateChecking ? "Checking…" : "Check now"}
+                  {updateChecking ? $t("settings.msg.checking") : $t("settings.msg.check-now")}
                 </button>
               </div>
               {#if updateMessage && !update}
@@ -1528,9 +1523,9 @@
                 <div class="update-install-actions">
                   <button class="form-btn form-btn-primary app-btn" type="button" disabled={updateInstalling} onclick={installUpdate}>
                     {#if updateInstalling}
-                      {updateProgress >= 0 ? `Installing… ${updateProgress}%` : "Installing…"}
+                      {updateProgress >= 0 ? $t("settings.msg.installing-percent", { percent: updateProgress }) : $t("settings.msg.installing")}
                     {:else}
-                      Download &amp; install, then restart
+                      {$t("settings.text.download-install-then")}
                     {/if}
                   </button>
                 </div>
@@ -1547,39 +1542,39 @@
 
       <section class="form-section">
         <div class="form-section-header">
-          <div class="form-section-title form-section-title--with-icon"><SectionIcon name="update-log" />Update log</div>
+          <div class="form-section-title form-section-title--with-icon"><SectionIcon name="update-log" />{$t("settings.text.update-log")}</div>
           <div class="update-log-actions">
-            <button class="form-btn form-btn-secondary app-btn" type="button" onclick={refreshUpdateLog}>Refresh</button>
-            <button class="form-btn form-btn-secondary app-btn" type="button" disabled={updateLog.length === 0} onclick={copyUpdateLog}>Copy</button>
-            <button class="form-btn form-btn-danger app-btn" type="button" disabled={updateLog.length === 0} onclick={clearUpdateLogAndRefresh}>Clear</button>
+            <button class="form-btn form-btn-secondary app-btn" type="button" onclick={refreshUpdateLog}>{$t("settings.text.refresh")}</button>
+            <button class="form-btn form-btn-secondary app-btn" type="button" disabled={updateLog.length === 0} onclick={copyUpdateLog}>{$t("settings.text.copy")}</button>
+            <button class="form-btn form-btn-danger app-btn" type="button" disabled={updateLog.length === 0} onclick={clearUpdateLogAndRefresh}>{$t("settings.text.clear")}</button>
           </div>
         </div>
         <div class="form-section-body">
-          <div class="form-hint">Every update step and error is recorded here (including the automatic check on launch). Copy this if an update fails.</div>
+          <div class="form-hint">{$t("settings.text.every-update-step-and")}</div>
           {#if updateLog.length === 0}
-            <div class="status-hint">No update activity logged yet.</div>
+            <div class="status-hint">{$t("settings.text.no-update-activity-logged")}</div>
           {:else}
             <pre class="update-log ui-selectable-text">{updateLog.join("\n")}</pre>
           {/if}
           {#if updateLogCopied}
-            <div class="status-hint ok" aria-live="polite">Copied to clipboard.</div>
+            <div class="status-hint ok" aria-live="polite">{$t("settings.text.copied-to-clipboard")}</div>
           {/if}
         </div>
       </section>
     {:else if activePane === "ai"}
       <div class="pane-head">
-        <div class="pane-title">Local AI</div>
-        <div class="pane-subtitle">Run tagging on-device with Ollama — used when the hub is off or unavailable.</div>
+        <div class="pane-title">{$t("nav.ai")}</div>
+        <div class="pane-subtitle">{$t("settings.text.run-tagging-on-device")}</div>
       </div>
 
       <section class="form-section">
         <div class="form-section-header">
-          <div class="form-section-title form-section-title--with-icon"><SectionIcon name="ai-tagging" />AI Tagging</div>
+          <div class="form-section-title form-section-title--with-icon"><SectionIcon name="ai-tagging" />{$t("settings.text.ai-tagging")}</div>
           <label class="toggle">
             <input
               type="checkbox"
               role="switch"
-              aria-label="Enable AI tagging"
+              aria-label={$t("settings.aria-label.enable-ai-tagging")}
               checked={settings.ai_tagging_enabled}
               onchange={(e) => handleAiTaggingToggle((e.currentTarget as HTMLInputElement).checked)}
             />
@@ -1592,18 +1587,17 @@
           disabled={!settings.ai_tagging_enabled}
         >
           <div class="form-hint">
-            Automatically tag clipboard text entries using a local Ollama model.
-            When off, new entries are not auto-tagged (manual retag still works).
+            {$t("settings.text.automatically-tag-clipboard")}
           </div>
 
           <div class="form-subsection">
-            <div class="form-subsection-title form-subsection-title--with-icon"><SectionIcon name="gauge" />Setup</div>
+            <div class="form-subsection-title form-subsection-title--with-icon"><SectionIcon name="gauge" />{$t("settings.text.setup")}</div>
             <div class="inset-list">
               {#if ollamaStatus === null}
                 <div class="status-step">
                   <div class="status-row">
                     <span class="status-dot checking"></span>
-                    <span class="status-text">Checking...</span>
+                    <span class="status-text">{$t("settings.text.checking")}</span>
                   </div>
                 </div>
               {:else}
@@ -1611,19 +1605,16 @@
                   <div class="status-row">
                     <span class="status-dot" class:ok={ollamaStatus.cli_installed} class:fail={!ollamaStatus.cli_installed}></span>
                     <span class="status-text">
-                      {ollamaStatus.cli_installed ? "Ollama installed" : "Ollama not installed"}
+                      {ollamaStatus.cli_installed ? $t("settings.msg.ollama-installed") : $t("settings.msg.ollama-not-installed")}
                     </span>
                     {#if !ollamaStatus.cli_installed}
                       <button class="status-action app-btn" type="button" onclick={() => openUrl("https://ollama.com/download")}>
-                        Open ollama.com
-                      </button>
+                        {$t("settings.text.open-ollama-com")}</button>
                     {/if}
                   </div>
                   {#if !ollamaStatus.cli_installed}
                     <div class="status-hint">
-                      Ollama runs AI models locally on your machine. Download it from
-                      <button class="link-btn app-btn" type="button" onclick={() => openUrl("https://ollama.com/download")}>ollama.com</button>,
-                      install the app, and click "Check again".
+                      {$t("settings.text.ollama-runs-ai.1")}<button class="link-btn app-btn" type="button" onclick={() => openUrl("https://ollama.com/download")}>ollama.com</button>{$t("settings.text.ollama-runs-ai.2")}{$t("settings.text.check-again")}{$t("settings.text.ollama-runs-ai.3")}
                     </div>
                   {/if}
                 </div>
@@ -1632,18 +1623,18 @@
                   <div class="status-row">
                     <span class="status-dot" class:ok={ollamaStatus.server_running} class:fail={ollamaStatus.cli_installed && !ollamaStatus.server_running} class:disabled={!ollamaStatus.cli_installed}></span>
                     <span class="status-text" class:dimmed={!ollamaStatus.cli_installed}>
-                      {ollamaStatus.server_running ? "Server running" : "Server not running"}
+                      {ollamaStatus.server_running ? $t("settings.msg.server-running") : $t("settings.msg.server-not-running")}
                     </span>
                     {#if ollamaStatus.cli_installed && !ollamaStatus.server_running}
                       <button class="status-action app-btn" type="button" disabled={ollamaLoading} onclick={handleStartServer}>
-                        {#if ollamaLoading}<span class="app-btn-spinner-icon app-btn-spinner-icon--sm app-btn-spinner-icon--success is-inline"></span> Starting...{:else}Start{/if}
+                        {#if ollamaLoading}<span class="app-btn-spinner-icon app-btn-spinner-icon--sm app-btn-spinner-icon--success is-inline"></span> {$t("settings.text.starting")}{:else}{$t("settings.text.start-button")}{/if}
                       </button>
                     {/if}
                   </div>
                   {#if ollamaStatus.cli_installed && !ollamaStatus.server_running}
                     <div class="status-hint">
-                      Ollama server is not running. Click "Start" to launch it, or run
-                      <code>ollama serve</code> in your terminal.
+                      {$t("settings.text.ollama-server-not-running.1")} {$t("settings.text.start-button")} {$t("settings.text.ollama-server-not-running.2")}
+                      <code>ollama serve</code>{$t("settings.text.ollama-server-not-running.3")}
                     </div>
                   {/if}
                 </div>
@@ -1652,17 +1643,16 @@
                   <div class="status-row">
                     <span class="status-dot" class:ok={ollamaStatus.model_installed} class:fail={ollamaStatus.server_running && !ollamaStatus.model_installed} class:disabled={!ollamaStatus.server_running}></span>
                     <span class="status-text" class:dimmed={!ollamaStatus.server_running}>
-                      {ollamaStatus.model_installed ? "Model ready" : "Model not installed"}
+                      {ollamaStatus.model_installed ? $t("settings.msg.model-ready") : $t("settings.msg.model-not-installed")}
                     </span>
                     {#if ollamaStatus.server_running && !ollamaStatus.model_installed}
                       <button class="status-action app-btn" type="button" disabled={ollamaLoading} onclick={handlePullModel}>
-                        {#if ollamaLoading}<span class="app-btn-spinner-icon app-btn-spinner-icon--sm app-btn-spinner-icon--success is-inline"></span> Pulling...{:else}Download{/if}
+                        {#if ollamaLoading}<span class="app-btn-spinner-icon app-btn-spinner-icon--sm app-btn-spinner-icon--success is-inline"></span> {$t("settings.text.pulling")}{:else}{$t("settings.text.download-button")}{/if}
                       </button>
                     {/if}
                     {#if ollamaStatus.model_installed}
-                      <button class="status-action app-btn" type="button" onclick={async () => { await unloadOllamaModel(); settingsNotice = "Model unloaded from memory"; }}>
-                        Unload
-                      </button>
+                      <button class="status-action app-btn" type="button" onclick={async () => { await unloadOllamaModel(); settingsNotice = tr("settings.msg.model-unloaded-from"); }}>
+                        {$t("settings.text.unload")}</button>
                     {/if}
                   </div>
                   {#if pullProgress}
@@ -1671,13 +1661,13 @@
                     </div>
                   {:else if ollamaStatus.server_running && !ollamaStatus.model_installed}
                     <div class="status-hint">
-                      Model <code>{ollamaStatus.model_name}</code> needs to be downloaded.
-                      Click "Download" or run <code>ollama pull {ollamaStatus.model_name}</code> in terminal.
-                      This may take a few minutes depending on your connection.
+                      {$t("settings.text.model")} <code>{ollamaStatus.model_name}</code> {$t("settings.text.ollama-model-missing.2")}
+                      {$t("settings.text.ollama-model-missing.3")} {$t("settings.text.download-button")} {$t("settings.text.ollama-model-missing.4")} <code>ollama pull {ollamaStatus.model_name}</code> {$t("settings.text.ollama-model-missing.5")}
+                      {$t("settings.text.ollama-model-missing.6")}
                     </div>
                   {:else if ollamaStatus.model_installed}
                     <div class="status-hint ok">
-                      Using <code>{ollamaStatus.model_name}</code>
+                      {$t("settings.text.using")} <code>{ollamaStatus.model_name}</code>
                     </div>
                   {/if}
                 </div>
@@ -1687,42 +1677,42 @@
                     <span class="status-dot" class:ok={taggingResult !== undefined && taggingResult !== null} class:fail={taggingResult === null} class:disabled={!ollamaStatus.model_installed}></span>
                     <span class="status-text" class:dimmed={!ollamaStatus.model_installed}>
                       {#if taggingResult === undefined}
-                        Tagging not tested
+                        {$t("settings.text.tagging-not-tested")}
                       {:else if taggingResult !== null}
-                        Tagging works
+                        {$t("settings.text.tagging-works")}
                       {:else}
-                        Tagging failed
+                        {$t("settings.text.tagging-failed")}
                       {/if}
                     </span>
                     {#if ollamaStatus.model_installed}
-                      <button class="status-action app-btn" type="button" disabled={taggingLoading || modelDirty} onclick={handleTestTagging} title={modelDirty ? "Save settings first" : ""}>
+                      <button class="status-action app-btn" type="button" disabled={taggingLoading || modelDirty} onclick={handleTestTagging} title={modelDirty ? $t("settings.msg.save-settings-first") : ""}>
                         {#if taggingLoading}
-                          <span class="app-btn-spinner-icon app-btn-spinner-icon--sm app-btn-spinner-icon--success is-inline"></span> Testing...
+                          <span class="app-btn-spinner-icon app-btn-spinner-icon--sm app-btn-spinner-icon--success is-inline"></span> {$t("settings.text.testing")}
                         {:else}
-                          Test
+                          {$t("settings.text.test")}
                         {/if}
                       </button>
                     {/if}
                   </div>
                   {#if modelDirty}
                     <div class="status-hint fail">
-                      Model changed — save settings first, then test.
+                      {$t("settings.text.model-changed-save")}
                     </div>
                   {:else if taggingLoading}
                     <div class="status-hint">
-                      Sending test request... This can take up to 60 seconds on first run while the model loads into memory.
+                      {$t("settings.text.sending-test-request")}
                     </div>
                   {:else if taggingResult !== undefined && taggingResult !== null}
                     <div class="status-hint ok">
-                      Test result: {taggingResult.join(", ")}
+                      {$t("settings.text.test-result", { tags: taggingResult.join(", ") })}
                     </div>
                   {:else if taggingResult === null}
                     <div class="status-hint fail">
-                      The model did not return tags. Try a different model or check Ollama logs.
+                      {$t("settings.text.the-model-did")}
                     </div>
                   {:else if ollamaStatus.model_installed}
                     <div class="status-hint">
-                      Click "Test" to verify that the model can tag clipboard content.
+                      {$t("settings.text.click-request.1")}{$t("settings.text.test")}{$t("settings.text.click-test-verify.2")}
                     </div>
                   {/if}
                 </div>
@@ -1731,8 +1721,7 @@
             {#if ollamaStatus !== null}
               <div class="status-list-footer">
                 <button class="form-btn form-btn-ghost app-btn" type="button" disabled={ollamaLoading} onclick={refreshOllamaStatus}>
-                  Check again
-                </button>
+                  {$t("settings.text.check-again")}</button>
               </div>
             {/if}
           </div>
@@ -1740,26 +1729,26 @@
           <div class="form-subsection-rule" role="separator"></div>
 
           <div class="form-subsection">
-            <div class="form-subsection-title form-subsection-title--with-icon"><SectionIcon name="ollama-model" />Ollama Model</div>
+            <div class="form-subsection-title form-subsection-title--with-icon"><SectionIcon name="ollama-model" />{$t("settings.text.ollama-model")}</div>
             <div class="inset-list">
               <div class="form-field">
                 <select
                   class="form-select"
-                  aria-label="Ollama model"
+                  aria-label={$t("settings.aria-label.ollama-model")}
                   bind:value={selectedModelPreset}
                   onchange={(e) => handleModelPresetChange((e.currentTarget as HTMLSelectElement).value)}
                 >
                   {#each modelCatalog.options as option}
                     <option value={option.value}>
-                      {option.label} · ~{option.memory_gb.toFixed(1)} GB · {option.fits ? "Fits" : "Too large"}{option.installed ? " · Installed" : ""}
+                      {option.label} · ~{option.memory_gb.toFixed(1)} GB · {option.fits ? $t("settings.text.fits") : $t("settings.msg.too-large")}{option.installed ? $t("settings.text.installed-suffix") : ""}
                     </option>
                   {/each}
-                  <option value="__custom__">Custom model</option>
+                  <option value="__custom__">{$t("settings.text.custom-model")}</option>
                 </select>
               </div>
               {#if selectedModelPreset === "__custom__"}
                 <div class="form-field">
-                  <label class="form-label" for="custom-ollama-model">Model name</label>
+                  <label class="form-label" for="custom-ollama-model">{$t("settings.text.model-name")}</label>
                   <input
                     id="custom-ollama-model"
                     class="form-input"
@@ -1767,7 +1756,7 @@
                     bind:value={settings.ollama_model}
                     placeholder="qwen3:4b-instruct-2507-q4_K_M"
                   />
-                  <div class="form-hint">Memory use cannot be estimated for custom models.</div>
+                  <div class="form-hint">{$t("settings.text.memory-use-cannot-be")}</div>
                 </div>
               {/if}
             </div>
@@ -1776,21 +1765,21 @@
           <div class="form-subsection-rule" role="separator"></div>
 
           <div class="form-subsection">
-            <div class="form-subsection-title form-subsection-title--with-icon"><SectionIcon name="this-mac" />This Mac</div>
-            <dl class="form-meta inset-list" aria-label="Machine memory details">
+            <div class="form-subsection-title form-subsection-title--with-icon"><SectionIcon name="this-mac" />{$t("settings.text.this-mac")}</div>
+            <dl class="form-meta inset-list" aria-label={$t("settings.aria-label.machine-memory-details")}>
               <div class="form-meta-item">
-                <dt>Machine RAM</dt>
+                <dt>{$t("settings.text.machine-ram")}</dt>
                 <dd>{modelCatalog.total_memory_gb.toFixed(1)} GB</dd>
               </div>
               <div class="form-meta-item">
-                <dt>Recommended Ollama budget</dt>
+                <dt>{$t("settings.text.recommended-ollama-budget")}</dt>
                 <dd>{modelCatalog.recommended_memory_gb.toFixed(1)} GB</dd>
               </div>
               {#if selectedModelMeta}
                 <div class="form-meta-item">
                   <dt>{selectedModelMeta.label}</dt>
                   <dd class:fits={selectedModelMeta.fits} class:tight={!selectedModelMeta.fits}>
-                    ~{selectedModelMeta.memory_gb.toFixed(1)} GB · {selectedModelMeta.fits ? "Fits" : "Too large"}
+                    ~{selectedModelMeta.memory_gb.toFixed(1)} GB · {selectedModelMeta.fits ? $t("settings.text.fits") : $t("settings.msg.too-large")}
                   </dd>
                 </div>
               {/if}
@@ -1800,12 +1789,12 @@
       </section>
     {:else if activePane === "history"}
       <div class="pane-head">
-        <div class="pane-title">History</div>
-        <div class="pane-subtitle">Layout, how long clips are kept, and which apps are ignored.</div>
+        <div class="pane-title">{$t("nav.history")}</div>
+        <div class="pane-subtitle">{$t("settings.text.layout-how-long-clips")}</div>
       </div>
 
       <section class="form-section">
-        <div class="form-section-title form-section-title--with-icon"><SectionIcon name="clipboard-panel" />Board layout</div>
+        <div class="form-section-title form-section-title--with-icon"><SectionIcon name="clipboard-panel" />{$t("settings.text.board-layout")}</div>
         <div class="form-section-body">
           <div class="inset-list">
             <label class="form-checkbox">
@@ -1819,8 +1808,8 @@
                 <span class="form-checkbox-box" aria-hidden="true"></span>
               </span>
               <span class="form-checkbox-label ui-selectable-text">
-                <span class="form-pref-label">Vertical board</span>
-                <span class="form-pref-hint">Tall panel docked to the screen edge instead of the horizontal bottom bar. Opens on the screen where your cursor is (⌘⇧V).</span>
+                <span class="form-pref-label">{$t("settings.text.vertical-board")}</span>
+                <span class="form-pref-hint">{$t("settings.text.tall-panel-docked-to")}</span>
               </span>
             </label>
             <label class="form-checkbox">
@@ -1834,39 +1823,37 @@
                 <span class="form-checkbox-box" aria-hidden="true"></span>
               </span>
               <span class="form-checkbox-label ui-selectable-text">
-                <span class="form-pref-label">Keyboard shortcuts</span>
-                <span class="form-pref-hint">Show hint strips along the bottom of the clipboard panel and Quick Look preview.</span>
+                <span class="form-pref-label">{$t("settings.text.keyboard-shortcuts")}</span>
+                <span class="form-pref-hint">{$t("settings.text.show-hint-strips-along")}</span>
               </span>
             </label>
             <div class="form-pref-row">
               <div class="form-pref-copy">
-                <span class="form-pref-label">Restore default size</span>
-                <span class="form-pref-hint">Resets the panel's width and height to their original values.</span>
+                <span class="form-pref-label">{$t("settings.text.restore-default-size")}</span>
+                <span class="form-pref-hint">{$t("settings.text.resets-the-panel-s")}</span>
               </div>
               <button
                 class="form-btn form-btn-secondary app-btn"
                 type="button"
                 onclick={() => void handleRestoreOverlayBoardSizes()}
               >
-                Restore defaults
-              </button>
+                {$t("settings.text.restore-defaults")}</button>
             </div>
           </div>
         </div>
       </section>
 
       <section class="form-section">
-        <div class="form-section-title form-section-title--with-icon"><SectionIcon name="privacy" />Privacy</div>
+        <div class="form-section-title form-section-title--with-icon"><SectionIcon name="privacy" />{$t("settings.text.privacy")}</div>
         <div class="form-section-body">
       {#if platformIsMacOS()}
         <div class="form-field excluded-apps-field">
-          <span class="form-label">Excluded apps</span>
+          <span class="form-label">{$t("settings.text.excluded-apps")}</span>
           <div class="form-hint">
-            Clipboard from excluded apps will not be stored or tagged.
-          </div>
+            {$t("settings.text.clipboard-from-excluded-apps")}</div>
 
           <div class="excluded-apps-stack">
-            <div class="excluded-apps-panel inset-list" role="group" aria-label="Excluded applications">
+            <div class="excluded-apps-panel inset-list" role="group" aria-label={$t("settings.aria-label.excluded-applications")}>
               {#if excludableCandidate}
                 <div class="excluded-apps-row excluded-apps-row--candidate">
                   <div class="excluded-apps-row-leading">
@@ -1929,7 +1916,7 @@
               {/each}
 
               {#if !excludedAppsPanelHasRows}
-                <div class="excluded-apps-empty" role="status">No apps excluded yet</div>
+                <div class="excluded-apps-empty" role="status">{$t("settings.text.no-apps-excluded-yet")}</div>
               {/if}
 
               <FieldStatusFooter message={excludedAppsNotice} tone={excludedAppsNoticeTone} />
@@ -1967,8 +1954,8 @@
                 class="form-input"
                 type="text"
                 bind:value={excludedAppInput}
-                placeholder="Installed app name, e.g. Telegram"
-                aria-label="Installed app name to exclude"
+                placeholder={$t("settings.placeholder.installed-app-name-e")}
+                aria-label={$t("settings.aria-label.installed-app-name-to")}
                 onkeydown={(e) => {
                   if (e.key === "Enter") void handleAddExcludedByName();
                 }}
@@ -1978,26 +1965,26 @@
                 type="button"
                 onclick={handleAddExcludedByName}
               >
-                Add
+                {$t("exclusion.text.add")}
               </button>
             </div>
           </div>
         </div>
       {:else}
-        <div class="form-hint">App exclusion is available on macOS only.</div>
+        <div class="form-hint">{$t("settings.text.app-exclusion-is-available")}</div>
       {/if}
     </div>
       </section>
 
       <section class="form-section">
-        <div class="form-section-title form-section-title--with-icon"><SectionIcon name="storage" />Storage</div>
+        <div class="form-section-title form-section-title--with-icon"><SectionIcon name="storage" />{$t("settings.text.storage")}</div>
         <div class="form-section-body">
           <div class="inset-list">
             <label class="form-field">
-              <span class="form-label">History retention</span>
+              <span class="form-label">{$t("settings.text.history-retention")}</span>
               <select class="form-select" bind:value={settings.retention_days}>
                 {#each retentionOptions as option}
-                  <option value={option.value}>{option.label}</option>
+                  <option value={option.value}>{$t(option.labelKey)}</option>
                 {/each}
               </select>
             </label>
@@ -2005,7 +1992,7 @@
               <ActionMenu
                 block
                 disabled={clearHistoryMenuDisabled}
-                label="Clear history"
+                label={$t("settings.label.clear-history")}
                 items={clearHistoryMenuItems}
                 onselect={(id) => void handleClearHistoryMenu(id as ClearHistoryAction)}
               />
@@ -2061,7 +2048,11 @@
               <select
                 class="form-select"
                 value={$locale}
-                onchange={(e) => setLocale((e.currentTarget as HTMLSelectElement).value as LocaleCode)}
+                onchange={(e) => {
+                  const code = (e.currentTarget as HTMLSelectElement).value as LocaleCode;
+                  setLocale(code);
+
+                }}
               >
                 {#each LOCALES as l}
                   <option value={l.code}>{l.label}</option>
@@ -2078,11 +2069,11 @@
 
 {#if isDirty}
   <div class="dirty-bar">
-    <span class="dirty-label">Unsaved changes</span>
+    <span class="dirty-label">{$t("settings.text.unsaved-changes")}</span>
     <div class="dirty-actions">
-      <button class="dirty-reset" type="button" onclick={resetSettings}>Reset</button>
+      <button class="dirty-reset" type="button" onclick={resetSettings}>{$t("settings.text.reset")}</button>
       <button class="dirty-save" type="button" disabled={savingSettings} onclick={saveSettings}>
-        {savingSettings ? "Saving…" : "Save"}
+        {savingSettings ? $t("settings.msg.saving") : $t("settings.text.save")}
       </button>
     </div>
   </div>

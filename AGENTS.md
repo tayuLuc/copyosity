@@ -53,8 +53,7 @@ the signed updater tarballs and `latest.json` from this repository. Details:
 - One command: `scripts/release.sh <version> "notes"` — bump → fix+check →
   commit+push → build both arches (signed) → notarize+staple+clean tarballs →
   GitHub `latest.json` → tag → GitHub release → vkovalskii.com mirror → verify.
-- Run it via the Bash tool with `dangerouslyDisableSandbox` (hdiutil/notarytool);
-  export `HTTPS_PROXY` first (gh's API needs it on this network).
+- Run it via the Bash tool with `dangerouslyDisableSandbox` (hdiutil/notarytool).
 - Ship macOS aarch64 + x86_64 only, notarized. No Windows/Linux (inert stubs).
 - Updater invariants: tarballs must have **0 AppleDouble (`._*`)** entries;
   install runs with `TMPDIR` on the app's own volume (EXDEV). Full details +

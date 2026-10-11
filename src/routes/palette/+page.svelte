@@ -15,7 +15,7 @@
     sessionCanPersist,
     trimOrphanedUserMessages,
   } from "$lib/agent";
-  import { t } from "$lib/i18n";
+  import { t, tr, trp } from "$lib/i18n";
   import { invokeErrorMessage } from "$lib/exclusion-label";
   import { resetFocusState } from "$lib/input-modality";
   import {
@@ -87,7 +87,7 @@
       transport: createAgentTransport(() => agentModel),
       onError: (e) => {
         revertFailedUserTurn();
-        setStatusNotice(e?.message || "Agent request failed", "fail");
+        setStatusNotice(e?.message || tr("palette.msg.agent-request-failed"), "fail");
       },
     });
   }
@@ -129,15 +129,15 @@
   function toolLabel(name: string): { icon: string; label: string } {
     switch (name) {
       case "web_search":
-        return { icon: "🔎", label: "Web search" };
+        return { icon: "🔎", label: $t("palette.text.tool-web-search") };
       case "create_note":
-        return { icon: "📝", label: "Note" };
+        return { icon: "📝", label: $t("palette.text.tool-note") };
       case "create_reminder":
-        return { icon: "⏰", label: "Reminder" };
+        return { icon: "⏰", label: $t("palette.text.tool-reminder") };
       case "list_reminders":
-        return { icon: "⏰", label: "Reminders" };
+        return { icon: "⏰", label: $t("palette.text.tool-reminders") };
       case "read_calendar":
-        return { icon: "📅", label: "Calendar" };
+        return { icon: "📅", label: $t("palette.text.tool-calendar") };
       default:
         return { icon: "🛠", label: name };
     }
@@ -165,7 +165,7 @@
       .map((p) => (p as { text: string }).text)
       .join(" ")
       .trim();
-    return text || "Conversation";
+    return text || tr("palette.msg.conversation");
   }
   function upsertSession() {
     const msgs = chat.messages;
@@ -210,9 +210,10 @@
   }
   function timeAgo(ts: number): string {
     const s = Math.floor((Date.now() - ts) / 1000);
-    if (s < 60) return "just now";
-    if (s < 3600) return `${Math.floor(s / 60)} min ago`;
-    if (s < 86400) return `${Math.floor(s / 3600)} hr ago`;
+    if (s < 60) return tr("time.just-now");
+    if (s < 3600) return trp("time.minutes-ago", Math.floor(s / 60));
+    if (s < 86400) return trp("time.hours-ago", Math.floor(s / 3600));
+    if (s < 604800) return trp("time.days-ago", Math.floor(s / 86400));
     return new Date(ts).toLocaleDateString();
   }
 
@@ -297,7 +298,7 @@
 
   const paletteShortcutHints = $derived<KeyboardHint[]>([
     { keys: "↵", action: mode === "agent" ? $t("palette.run.agent") : $t("palette.run.search") },
-    { keys: "⇧↵", action: "New line" },
+    { keys: "⇧↵", action: $t("palette.hint.new-line") },
     { keys: "Tab", action: $t("palette.switchMode") },
     { keys: "⌘↵", action: $t("palette.insert") },
     { keys: "Esc", action: $t("palette.close") },
@@ -390,7 +391,7 @@
       });
       minimized = true;
     } catch (e) {
-      setInvokeFailure(e, "Could not minimize palette.");
+      setInvokeFailure(e, tr("palette.msg.could-not-minimize-palette"));
     }
   }
   async function restoreWindow() {
@@ -403,7 +404,7 @@
       });
       minimized = false;
     } catch (e) {
-      setInvokeFailure(e, "Could not restore palette.");
+      setInvokeFailure(e, tr("palette.msg.could-not-restore-palette"));
       return;
     }
     setTimeout(() => inputEl?.focus(), 40);
@@ -477,7 +478,7 @@
         revertFailedUserTurn();
         input = text;
         autoGrow();
-        setInvokeFailure(e, "Request failed. Try again.");
+        setInvokeFailure(e, tr("palette.msg.request-failed-try-again"));
       }
     } else {
       input = "";
@@ -487,7 +488,7 @@
       try {
         searchAnswer = await invoke<string>("palette_search", { query: text });
       } catch (e) {
-        setInvokeFailure(e, "Request failed. Try again.");
+        setInvokeFailure(e, tr("palette.msg.request-failed-try-again"));
       }
       searchLoading = false;
     }
@@ -509,7 +510,7 @@
           void submit();
         }
       } catch (e) {
-        setInvokeFailure(e, "Voice input failed. Try again.");
+        setInvokeFailure(e, tr("palette.msg.voice-input-failed-try"));
       }
     } else {
       clearStatusNotice();
@@ -517,7 +518,7 @@
         await invoke("palette_voice_start");
         recording = true;
       } catch (e) {
-        setInvokeFailure(e, "Voice input failed. Try again.");
+        setInvokeFailure(e, tr("palette.msg.voice-input-failed-try"));
       }
     }
   }
@@ -618,8 +619,8 @@
       role="button"
       tabindex="0"
       data-tauri-drag-region="deep"
-      title="Drag to move · double-click or Enter to expand"
-      aria-label="Agent status. Drag to move, double-click or press Enter to expand."
+      title={$t("palette.title.drag-to-move-double")}
+      aria-label={$t("palette.aria-label.agent-status-drag-to")}
       ondblclick={dotDblClick}
     >
       <span class="min-blob" class:busy={loading} class:done={!loading && hasConversation} aria-hidden="true"></span>
@@ -633,7 +634,7 @@
             class="mode-badge app-btn"
             class:agent={mode === "agent"}
             type="button"
-            title="Tab — switch mode"
+            title={$t("palette.title.tab-switch-mode")}
             aria-pressed={mode === "agent"}
             onclick={toggleMode}
           >
@@ -643,14 +644,14 @@
             <select
               class="form-select model-select"
               class:is-unavailable={!hubEnabled}
-              title={hubEnabled ? "Agent model" : "Enable the AI hub in Settings to choose a model"}
-              aria-label="Agent model"
+              title={hubEnabled ? $t("palette.msg.agent-model") : $t("palette.msg.enable-the-ai-hub")}
+              aria-label={$t("palette.aria-label.agent-model")}
               disabled={!hubEnabled}
               value={hubEnabled ? agentModel : ""}
               onchange={onModelChange}
             >
               {#if !hubEnabled}
-                <option value="">Hub disabled</option>
+                <option value="">{$t("palette.text.hub-disabled")}</option>
               {:else}
                 {#each modelOptions() as m (m)}
                   <option value={m}>{m}</option>
@@ -659,16 +660,16 @@
             </select>
           {/if}
           {#if loading}
-            <span class="run-dot" title="Agent running"></span>
-            <span class="run-label">running… {elapsed}s</span>
+            <span class="run-dot" title={$t("palette.title.agent-running")}></span>
+            <span class="run-label">{$t("palette.text.running-elapsed", { elapsed })}</span>
           {/if}
           <div class="topbar-spacer"></div>
           <button
             class="bar-btn overlay-icon-btn app-btn"
             class:active={translucent}
             type="button"
-            title="Transparency (glass) mode"
-            aria-label="Toggle transparency"
+            title={$t("palette.title.transparency-glass-mode")}
+            aria-label={$t("palette.aria-label.toggle-transparency")}
             aria-pressed={translucent}
             onclick={toggleTranslucent}
           >
@@ -681,8 +682,8 @@
             class="bar-btn overlay-icon-btn app-btn"
             class:active={showHistory}
             type="button"
-            title="Session history"
-            aria-label="Session history"
+            title={$t("palette.title.session-history")}
+            aria-label={$t("palette.aria-label.session-history")}
             onclick={toggleHistory}
           >
             <svg class="overlay-icon-btn-icon" viewBox="0 0 24 24" aria-hidden="true">
@@ -694,8 +695,8 @@
           <button
             class="bar-btn overlay-icon-btn app-btn"
             type="button"
-            title="New conversation"
-            aria-label="New conversation"
+            title={$t("palette.title.new-conversation")}
+            aria-label={$t("palette.aria-label.new-conversation")}
             onclick={newConversation}
           >
             <svg class="overlay-icon-btn-icon" viewBox="0 0 24 24" aria-hidden="true">
@@ -706,8 +707,8 @@
           <button
             class="bar-btn overlay-icon-btn app-btn"
             type="button"
-            title="Compact to blob"
-            aria-label="Compact to blob"
+            title={$t("palette.title.compact-to-blob")}
+            aria-label={$t("palette.aria-label.compact-to-blob")}
             onclick={minimize}
           >
             <svg class="overlay-icon-btn-icon" viewBox="0 0 24 24" aria-hidden="true">
@@ -718,8 +719,8 @@
           <button
             class="bar-btn overlay-icon-btn overlay-icon-btn--close app-btn"
             type="button"
-            title="Hide (Esc) — conversation is preserved"
-            aria-label="Close"
+            title={$t("palette.title.hide-esc-conversation-is")}
+            aria-label={$t("common.close")}
             onclick={close}
           >
             <svg class="overlay-icon-btn-icon overlay-icon-btn-icon--close" viewBox="0 0 24 24" aria-hidden="true">
@@ -759,7 +760,6 @@
         {:else if mode === "search"}
           {#if searchAnswerHtml}
             <div class="msg msg-assistant">
-              <!-- eslint-disable-next-line svelte/no-at-html-tags -->
               <div class="bubble markdown">{@html searchAnswerHtml}</div>
             </div>
           {:else if !searchLoading && showCenterPlaceholder}
@@ -792,7 +792,7 @@
                     {#if part.type === "text"}
                       <span>{part.text}</span>
                     {:else if part.type === "file" && (part as { mediaType?: string }).mediaType?.startsWith("image/")}
-                      <img class="msg-image" src={(part as { url: string }).url} alt="attached screenshot" />
+                      <img class="msg-image" src={(part as { url: string }).url} alt={$t("palette.alt.attached-screenshot")} />
                     {/if}
                   {/each}
                 </div>
@@ -804,13 +804,12 @@
                     {#if part.type === "reasoning"}
                       {#if (part as { text: string }).text.trim()}
                         <details class="reasoning" open={agentBusy && i === message.parts.length - 1}>
-                          <summary>💭 Reasoning</summary>
+                          <summary>💭 {$t("palette.text.reasoning")}</summary>
                           <div class="reasoning-body">{(part as { text: string }).text}</div>
                         </details>
                       {/if}
                     {:else if part.type === "text"}
                       {#if part.text.trim()}
-                        <!-- eslint-disable-next-line svelte/no-at-html-tags -->
                         <div class="bubble markdown">{@html md(part.text)}</div>
                       {/if}
                     {:else if part.type.startsWith("tool-")}
@@ -829,21 +828,21 @@
                           {#if tp.state === "input-available" || tp.state === "input-streaming"}
                             <span class="tool-spinner" aria-hidden="true"></span>
                           {:else if tp.state === "output-error"}
-                            <span class="tool-badge fail">error</span>
+                            <span class="tool-badge fail">{$t("palette.text.error")}</span>
                           {:else}
-                            <span class="tool-badge ok">done</span>
+                            <span class="tool-badge ok">{$t("palette.text.done")}</span>
                           {/if}
                         </summary>
                         <div class="tool-body">
                           {#if tp.input}
-                            <div class="tool-io-label">input</div>
+                            <div class="tool-io-label">{$t("palette.text.input")}</div>
                             <pre class="tool-io">{JSON.stringify(tp.input, null, 2)}</pre>
                           {/if}
                           {#if tp.state === "output-error"}
-                            <div class="tool-io-label">error</div>
+                            <div class="tool-io-label">{$t("palette.text.error")}</div>
                             <pre class="tool-io">{tp.errorText}</pre>
                           {:else if tp.output != null}
-                            <div class="tool-io-label">output</div>
+                            <div class="tool-io-label">{$t("palette.text.output")}</div>
                             <pre class="tool-io">{typeof tp.output === "string" ? tp.output : JSON.stringify(tp.output, null, 2)}</pre>
                           {/if}
                         </div>
@@ -892,7 +891,7 @@
           bind:value={input}
           class="query-input composer-input"
           rows="1"
-          aria-label={mode === "agent" ? "Ask the agent" : "Search the web"}
+          aria-label={mode === "agent" ? $t("palette.msg.ask-the-agent") : $t("palette.msg.search-the-web")}
           placeholder={mode === "agent" ? $t("palette.askAgent") : $t("palette.searchWeb")}
           autocomplete="off"
           spellcheck="false"
@@ -910,9 +909,9 @@
             class:active={attachScreenshot}
             type="button"
             title={attachScreenshot
-              ? "Screenshot attached — the agent will see the active window"
-              : "Attach a screenshot of the active window for the agent"}
-            aria-label="Attach screenshot of the active window"
+              ? $t("palette.msg.screenshot-attached-the-agent")
+              : $t("palette.msg.attach-a-screenshot-of")}
+            aria-label={$t("palette.aria-label.attach-screenshot-of-the")}
             aria-pressed={attachScreenshot}
             disabled={loading}
             onclick={() => (attachScreenshot = !attachScreenshot)}
@@ -927,8 +926,8 @@
           class="mic-btn app-btn"
           class:recording
           type="button"
-          title={recording ? "Stop voice input" : "Voice input"}
-          aria-label={recording ? "Stop voice input" : "Start voice input"}
+          title={recording ? $t("palette.msg.stop-voice-input") : $t("palette.msg.voice-input")}
+          aria-label={recording ? $t("palette.msg.stop-voice-input") : $t("palette.msg.start-voice-input")}
           aria-pressed={recording}
           onclick={toggleMic}
         >
@@ -939,15 +938,15 @@
           </svg>
         </button>
         {#if agentBusy}
-          <button class="send-btn stop app-btn" type="button" title="Stop" aria-label="Stop" onclick={stopAgent}>
+          <button class="send-btn stop app-btn" type="button" title={$t("common.stop")} aria-label={$t("common.stop")} onclick={stopAgent}>
             <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2" /></svg>
           </button>
         {:else}
           <button
             class="send-btn app-btn"
             type="button"
-            title="Send (↵)"
-            aria-label="Send"
+            title={$t("palette.title.send")}
+            aria-label={$t("common.send")}
             disabled={!input.trim() || loading}
             onclick={submit}
           >
@@ -965,8 +964,8 @@
         class="resize-grip"
         type="button"
         tabindex="-1"
-        aria-label="Resize"
-        title="Drag to resize"
+        aria-label={$t("palette.aria-label.resize")}
+        title={$t("palette.title.drag-to-resize")}
         onmousedown={startResize}
       ></button>
     </div>

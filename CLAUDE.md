@@ -27,6 +27,32 @@ After macOS tray, overlay, or activation-policy changes, also run `make verify-t
 - Do not skip compilation checks after generating code.
 - Do not leave workflow changes undocumented.
 
+## Localisation
+
+Every user-visible string lives in `src/lib/i18n/dict.ts` — seven locales (`en ru es zh de fr ja`),
+flat `"screen.kind.slug"` keys, English as the fallback of last resort.
+
+- Markup: `$t("key", { param })` from `$lib/i18n`; imperative code: `tr("key", { param })`.
+- `tr()` reads the store once, so it is wrong anywhere Svelte caches the result: a `$derived` body, a
+  `$props()` default or a module-level constant. Use `$t()` there, or a `?? $t("key")` fallback.
+- One window changes the language, all windows follow: `setLocale` broadcasts `ui-locale-changed`,
+  `+layout.svelte` subscribes through `followLocaleChanges()`, and the same call publishes the code to
+  Rust. Never write `copyosity.locale` or invoke `set_ui_locale` from a component directly.
+- Counts: `trp(key, count)` against values whose forms are separated by `|`
+  (`"item…|items…"`); Slavic locales carry three forms, Chinese/Japanese one.
+- Native macOS menus cannot read the store: the tray labels come from `tray_labels` in Rust, fed by
+  the `ui_locale` settings key that `commands::set_ui_locale` persists (`docs/architecture/macos-tray-menu.md` § 13).
+- `src/lib/i18n/dict.test.ts` gates key parity, `{placeholder}` parity and spacing of sentence
+  fragments, protected brand and shortcut tokens, French elision typography and tray label coverage;
+  `usage.test.ts` rejects dictionary keys no source file references, `plural.test.ts` the count rules.
+  Adding a key to `en` without the other six, or reordering a fragment, fails the gate.
+- Brand and protocol tokens (`Copyosity`, `Ollama`, `⌘⇧Space`, `/v1`) stay untranslated inside templates,
+  as do key legends (`Esc`, `Space`), locale endonyms in the language picker and agent tool schemas.
+  Excluded by design: the updater log (`src/lib/update-log.ts` and its `appendUpdateLog` callers),
+  accelerator literals such as `"cmd+shift+space"`, and CSS/storage keys.
+- Source-scanning tests must not build a `Set` or use `.includes` on a local collection: `oxlint --fix`
+  (part of `make fix-frontend`) rewrites those and silently changes the assertion. Use `assert.match`.
+
 ## Releasing the app (macOS)
 
 One command does the whole pipeline:
@@ -64,8 +90,6 @@ Windows/Linux are inert stubs — do not ship them. "Notarization" is Apple-only
 - `hdiutil`/`notarytool`/`stapler` need the Bash tool with
   `dangerouslyDisableSandbox: true`.
 - Tests are locale-fragile → the script sets `LC_ALL=en_US.UTF-8`.
-- `gh`'s HTTPS API needs `HTTPS_PROXY` exported in the shell on this network;
-  `git push`, notarytool, and the mirror do not.
 
 **Updater delivery (fork).** One endpoint:
 `https://github.com/tayuLuc/copyosity/releases/latest/download/latest.json`, verified

@@ -1,4 +1,6 @@
 <script lang="ts">
+import { t } from "$lib/i18n";
+
   type SegmentItem = {
     id: string;
     label: string;
@@ -10,7 +12,7 @@
     value = null,
     onSelect,
     onButtonMount,
-    ariaLabel = "Segmented control",
+    ariaLabel,
     ariaKind = "selected",
     compact = false,
     rootClass = "",
@@ -40,7 +42,7 @@
 <div
   class={`segment-track segment-control segment-control--grid ${compact ? "segment-control--compact" : ""} ${rootClass}`}
   role={ariaKind === "selected" ? "tablist" : "group"}
-  aria-label={ariaLabel}
+  aria-label={ariaLabel ?? $t("segment.msg.segmented-control")}
   style={`--segment-count: ${items.length};`}
 >
   {#each items as item (item.id)}

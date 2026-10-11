@@ -24,10 +24,11 @@
     notifyCardContextMenuOpened,
     OVERLAY_CLOSE_CARD_CONTEXT_MENUS,
   } from "$lib/overlay-card-context-menu";
+  import { t, tr, trp } from "$lib/i18n";
   import {
     phoneDialUrl,
     resolveSmartAction,
-    SMART_KIND_LABEL,
+    smartKindLabel,
     smartContextMenuItems,
     smartPrimaryActionLabel,
     type SmartActionInfo,
@@ -78,10 +79,10 @@
     const then = new Date(dateStr).getTime();
     const diff = Math.floor((now - then) / 1000);
 
-    if (diff < 60) return "just now";
-    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-    if (diff < 604800) return `${Math.floor(diff / 86400)}d ago`;
+    if (diff < 60) return tr("time.just-now");
+    if (diff < 3600) return trp("time.short.minutes", Math.floor(diff / 60));
+    if (diff < 86400) return trp("time.short.hours", Math.floor(diff / 3600));
+    if (diff < 604800) return trp("time.short.days", Math.floor(diff / 86400));
     return formatCardDate(dateStr);
   }
 
@@ -170,7 +171,7 @@
     clearCopyAnnouncement();
     requestAnimationFrame(() => {
       if (!mounted) return;
-      copyAnnouncement = "Copied to clipboard";
+      copyAnnouncement = tr("card.msg.copied-to-clipboard");
       clearCopyAnnouncementSoon();
     });
   }
@@ -179,7 +180,7 @@
     clearCopyAnnouncement();
     requestAnimationFrame(() => {
       if (!mounted) return;
-      copyAnnouncement = "Copy failed";
+      copyAnnouncement = tr("card.msg.copy-failed");
       clearCopyAnnouncementSoon();
     });
   }
@@ -188,7 +189,7 @@
     clearCopyAnnouncement();
     requestAnimationFrame(() => {
       if (!mounted) return;
-      copyAnnouncement = "Could not open";
+      copyAnnouncement = tr("card.msg.could-not-open");
       clearCopyAnnouncementSoon();
     });
   }
@@ -465,7 +466,7 @@
       qrImageSrc = `data:image/png;base64,${b64}`;
     } catch {
       if (!mounted) return;
-      qrError = "Could not generate QR code";
+      qrError = tr("card.msg.could-not-generate-qr");
     } finally {
       if (mounted) qrLoading = false;
     }
@@ -552,7 +553,9 @@
   const smartAction = $derived(entry.content_type === "text" ? resolveSmartAction(entry) : null);
   const textKind = $derived(detectTextKind(entry.text_content));
   const isMonoPreview = $derived(usesMonoPreview(textKind) || smartAction?.kind === "json");
-  const typeBadgeLabel = $derived(smartAction ? SMART_KIND_LABEL[smartAction.kind] : null);
+  const typeBadgeLabel = $derived(
+    smartAction ? smartKindLabel(smartAction.kind) : null,
+  );
   const typeBadgeColor = $derived(smartAction?.kind === "color" ? smartAction.hex : null);
   const smartPrimaryLabel = $derived(
     smartAction ? smartPrimaryActionLabel(smartAction) : "",
@@ -653,8 +656,8 @@
           <button
             class="type-preview-btn type-preview-btn--beside app-btn"
             type="button"
-            aria-label="Open preview"
-            title="Preview · Space or ⌘Y"
+            aria-label={$t("card.aria-label.open-preview")}
+            title={$t("card.title.preview-space-or-y")}
             onclick={handlePreviewClick}
             onmousedown={(e) => e.stopPropagation()}
           >
@@ -688,8 +691,8 @@
           <button
             class="type-preview-btn app-btn"
             type="button"
-            aria-label="Open preview"
-            title="Preview · Space or ⌘Y"
+            aria-label={$t("card.aria-label.open-preview")}
+            title={$t("card.title.preview-space-or-y")}
             onclick={handlePreviewClick}
             onmousedown={(e) => e.stopPropagation()}
           >
@@ -742,9 +745,9 @@
           class="action-btn app-btn paste"
           class:is-busy={pasting}
           onclick={handlePaste}
-          aria-label="Paste into active app"
+          aria-label={$t("card.aria-label.paste-into-active-app")}
           aria-busy={pasting ? "true" : undefined}
-          title="Paste"
+          title={$t("card.title.paste")}
         >
           <span class="app-btn-spinner" aria-hidden="true">
             <span class="app-btn-spinner-icon"></span>
@@ -758,8 +761,8 @@
         <button
           class="action-btn app-btn"
           onclick={handleCopyOcr}
-          aria-label="Copy recognised text"
-          title="Copy recognised text"
+          aria-label={$t("card.aria-label.copy-recognised-text")}
+          title={$t("card.title.copy-recognised-text")}
         >
           <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M4 7V5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v2" />
@@ -769,7 +772,7 @@
         </button>
       {/if}
       {#if (entry.content_type === "text" || entry.content_type === "image") && retagAvailable}
-        <button class="action-btn app-btn" onclick={handleRetag} aria-label="Retag" title="Retag">
+        <button class="action-btn app-btn" onclick={handleRetag} aria-label={$t("card.aria-label.retag")} title={$t("card.title.retag")}>
           <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
             <path d="M21 3v5h-5" />
@@ -782,14 +785,14 @@
         class="action-btn app-btn"
         class:pinned={entry.is_pinned}
         onclick={handlePin}
-        aria-label={entry.is_pinned ? "Unpin" : "Pin"}
-        title={entry.is_pinned ? "Unpin" : "Pin"}
+        aria-label={entry.is_pinned ? $t("overlay.hint.unpin") : $t("overlay.hint.pin")}
+        title={entry.is_pinned ? $t("overlay.hint.unpin") : $t("overlay.hint.pin")}
       >
         <svg class="action-icon" viewBox="0 0 24 24" fill={entry.is_pinned ? "currentColor" : "none"} stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
         </svg>
       </button>
-      <button class="action-btn app-btn delete" onclick={handleDelete} aria-label="Delete" title="Delete">
+      <button class="action-btn app-btn delete" onclick={handleDelete} aria-label={$t("common.delete")} title={$t("common.delete")}>
         <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <polyline points="3 6 5 6 21 6" />
           <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
@@ -811,9 +814,9 @@
     {:else if entry.content_type === "image"}
       <div class="image-preview" class:has-ocr={ocrPreview.length > 0}>
         {#if entry.image_thumb}
-          <img src={imageDataUrl(entry.image_thumb)} alt="Copied content" loading="lazy" decoding="async" />
+          <img src={imageDataUrl(entry.image_thumb)} alt={$t("card.alt.copied-content")} loading="lazy" decoding="async" />
         {:else}
-          <div class="image-placeholder">Image</div>
+          <div class="image-placeholder">{$t("overlay.text.image")}</div>
         {/if}
         {#if ocrPreview}
           <div class="text-preview">
@@ -865,7 +868,7 @@
       <svg class="copied-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
         <polyline points="20 6 9 17 4 12" />
       </svg>
-      <span>Copied</span>
+      <span>{$t("overlay.text.copied")}</span>
     </div>
   {/if}
   </div>
@@ -875,12 +878,12 @@
       bind:this={contextMenuEl}
       class="card-context-menu"
       role="menu"
-      aria-label="Card actions"
+      aria-label={$t("card.aria-label.card-actions")}
       style:left="{contextMenuPos.x}px"
       style:top="{contextMenuPos.y}px"
     >
       {#if smartMenuItems.length > 0}
-        <div class="card-context-section" role="group" aria-label="Smart actions">
+        <div class="card-context-section" role="group" aria-label={$t("card.aria-label.smart-actions")}>
           {#each smartMenuItems as item, index (item.id)}
             <button
               class="card-context-item app-btn"
@@ -906,8 +909,7 @@
           onpointerdown={(e) => e.stopPropagation()}
           onclick={handleContextMenuPreview}
         >
-          Preview
-        </button>
+          {$t("card.text.preview")}</button>
       {/if}
     </div>
   {/if}

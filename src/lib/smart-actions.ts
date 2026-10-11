@@ -1,5 +1,7 @@
 import type { ClipboardEntry } from "$lib/types";
 
+import { tr } from "./i18n/index.ts";
+
 export type SmartKind = "link" | "email" | "phone" | "address" | "color" | "math" | "json";
 
 export type SmartActionInfo =
@@ -11,15 +13,27 @@ export type SmartActionInfo =
   | { kind: "math"; expression: string; result: string }
   | { kind: "json"; formatted: string; minified: string };
 
-export const SMART_KIND_LABEL: Record<SmartKind, string> = {
-  link: "Link",
-  email: "Email",
-  phone: "Phone",
-  address: "Address",
-  color: "Color",
-  math: "Calc",
-  json: "JSON",
-};
+export function smartKindLabel(kind: SmartKind): string {
+  switch (kind) {
+    case "link":
+      return tr("smart.kind.link");
+    case "email":
+      return tr("smart.kind.email");
+    case "phone":
+      return tr("smart.kind.phone");
+    case "address":
+      return tr("smart.kind.address");
+    case "color":
+      return tr("smart.kind.color");
+    case "math":
+      return tr("smart.kind.calc");
+    case "json":
+      return tr("smart.kind.json");
+    default: {
+      return kind satisfies never;
+    }
+  }
+}
 
 const TRACKING_PARAM_PREFIXES = ["utm_"] as const;
 const TRACKING_PARAM_KEYS = new Set([
@@ -387,27 +401,27 @@ export function smartSecondaryMenuItems(action: SmartActionInfo): SmartMenuItem[
   switch (action.kind) {
     case "link":
       return [
-        { id: "copy-clean-url", label: "Copy tracking-free URL" },
-        { id: "make-qr", label: "Make QR code" },
+        { id: "copy-clean-url", label: tr("smart.msg.copy-tracking-free-url") },
+        { id: "make-qr", label: tr("smart.msg.make-qr-code") },
       ];
     case "email":
-      return [{ id: "copy-address", label: "Copy address" }];
+      return [{ id: "copy-address", label: tr("smart.msg.copy-address") }];
     case "phone":
       return [
-        { id: "facetime-audio", label: "FaceTime Audio" },
-        { id: "message", label: "Message" },
+        { id: "facetime-audio", label: tr("smart.msg.facetime-audio") },
+        { id: "message", label: tr("smart.msg.message") },
       ];
     case "color":
       return [
-        { id: "copy-rgb", label: "Copy rgb()" },
-        { id: "copy-swiftui", label: "Copy SwiftUI Color" },
+        { id: "copy-rgb", label: tr("smart.msg.copy-rgb") },
+        { id: "copy-swiftui", label: tr("smart.msg.copy-swiftui-color") },
       ];
     case "math":
-      return [{ id: "paste-result", label: "Paste result" }];
+      return [{ id: "paste-result", label: tr("smart.msg.paste-result") }];
     case "json":
       return [
-        { id: "minify", label: "Minify" },
-        { id: "paste-formatted", label: "Paste formatted" },
+        { id: "minify", label: tr("smart.msg.minify") },
+        { id: "paste-formatted", label: tr("smart.msg.paste-formatted") },
       ];
     case "address":
       return [];
@@ -428,19 +442,19 @@ export function smartContextMenuItems(action: SmartActionInfo): SmartMenuItem[] 
 export function smartPrimaryActionLabel(action: SmartActionInfo): string {
   switch (action.kind) {
     case "link":
-      return "Open link";
+      return tr("smart.msg.open-link");
     case "email":
-      return "Compose email";
+      return tr("smart.msg.compose-email");
     case "phone":
-      return "FaceTime";
+      return tr("smart.msg.facetime");
     case "address":
-      return "Open in Maps";
+      return tr("smart.msg.open-in-maps");
     case "color":
-      return "Copy HEX";
+      return tr("smart.msg.copy-hex");
     case "math":
-      return "Copy result";
+      return tr("smart.msg.copy-result");
     case "json":
-      return "Format JSON";
+      return tr("smart.msg.format-json");
     default: {
       return action satisfies never;
     }

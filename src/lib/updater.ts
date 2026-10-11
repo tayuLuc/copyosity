@@ -7,6 +7,7 @@ import {
 import { relaunch } from "@tauri-apps/plugin-process";
 import { check, type Update } from "@tauri-apps/plugin-updater";
 
+import { tr } from "./i18n/index.ts";
 import { appendUpdateLog, errorToString } from "./update-log";
 
 export type { Update };
@@ -45,12 +46,15 @@ export async function autoUpdateOnLaunch(): Promise<void> {
       return;
     }
     appendUpdateLog(`launch: update ${update.version} found — downloading + installing…`);
-    await notify("Copyosity update available", `Downloading version ${update.version}…`);
+    await notify(
+      tr("updater.msg.update-available"),
+      tr("updater.msg.downloading-version", { version: update.version }),
+    );
     await update.downloadAndInstall();
     appendUpdateLog(`launch: installed ${update.version} — restart to apply`);
     await notify(
-      "Copyosity updated",
-      `Version ${update.version} installed — restart Copyosity to apply.`,
+      tr("updater.msg.updated"),
+      tr("updater.msg.installed-restart", { version: update.version }),
     );
   } catch (e) {
     // Offline / transient failure — the Settings → Updates pane can retry.

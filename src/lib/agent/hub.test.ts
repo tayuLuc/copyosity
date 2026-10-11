@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 
 import type { UIMessage } from "ai";
 
+import { tr } from "../i18n/index.ts";
 import { hubAgentBlockReason, sessionCanPersist, trimOrphanedUserMessages } from "./hub.ts";
 
 const user = (id: string): UIMessage => ({
@@ -20,22 +21,22 @@ describe("hubAgentBlockReason", () => {
   it("blocks when hub is disabled", () => {
     assert.equal(
       hubAgentBlockReason({ hub_enabled: false, hub_url: "https://hub", hub_token: "tok" }),
-      "AI hub is disabled in Settings",
+      tr("hub.msg.ai-hub-is-disabled"),
     );
   });
 
   it("blocks when url or token is missing", () => {
     assert.equal(
       hubAgentBlockReason({ hub_enabled: true, hub_url: "", hub_token: "tok" }),
-      "Set the AI hub URL and API key in Settings",
+      tr("hub.msg.set-the-ai-hub"),
     );
     assert.equal(
       hubAgentBlockReason({ hub_enabled: true, hub_url: "https://hub", hub_token: "  " }),
-      "Set the AI hub URL and API key in Settings",
+      tr("hub.msg.set-the-ai-hub"),
     );
     assert.equal(
       hubAgentBlockReason({ hub_enabled: true, hub_url: "   ", hub_token: "tok" }),
-      "Set the AI hub URL and API key in Settings",
+      tr("hub.msg.set-the-ai-hub"),
     );
   });
 

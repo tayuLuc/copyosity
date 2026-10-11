@@ -703,6 +703,7 @@ pub fn run() {
             commands::rebind_palette_shortcut,
             commands::get_quick_menu_shortcut,
             commands::set_quick_menu_shortcut,
+            commands::set_ui_locale,
             commands::get_snippet_folders,
             commands::get_snippets,
             commands::create_snippet_folder,
@@ -1054,7 +1055,89 @@ fn tray_icon_image(app: &tauri::App) -> tauri::image::Image<'static> {
     app.default_window_icon().unwrap().clone().to_owned()
 }
 
+/// Native tray labels live outside the web dictionary, so they are mirrored here.
+/// The item order and the double-space shortcut suffix are the menu's contract.
+struct TrayLabels {
+    search: &'static str,
+    clipboard: &'static str,
+    snippets: &'static str,
+    settings: &'static str,
+    quit: &'static str,
+}
+
+const TRAY_LABELS_EN: TrayLabels = TrayLabels {
+    search: "Agent Search",
+    clipboard: "Open Clipboard",
+    snippets: "Open Snippets",
+    settings: "Settings",
+    quit: "Quit",
+};
+
+fn tray_labels(locale: &str) -> TrayLabels {
+    match locale {
+        "ru" => TrayLabels {
+            search: "Поиск с агентом",
+            clipboard: "Открыть буфер",
+            snippets: "Открыть сниппеты",
+            settings: "Настройки",
+            quit: "Выход",
+        },
+        "es" => TrayLabels {
+            search: "Buscar con el agente",
+            clipboard: "Abrir portapapeles",
+            snippets: "Abrir snippets",
+            settings: "Ajustes",
+            quit: "Salir",
+        },
+        "de" => TrayLabels {
+            search: "Agentensuche",
+            clipboard: "Zwischenablage öffnen",
+            snippets: "Snippets öffnen",
+            settings: "Einstellungen",
+            quit: "Beenden",
+        },
+        "fr" => TrayLabels {
+            search: "Recherche d’agent",
+            clipboard: "Ouvrir le presse-papiers",
+            snippets: "Ouvrir les snippets",
+            settings: "Réglages",
+            quit: "Quitter",
+        },
+        "zh" => TrayLabels {
+            search: "智能体检索",
+            clipboard: "打开剪贴板",
+            snippets: "打开代码片段",
+            settings: "设置",
+            quit: "退出",
+        },
+        "ja" => TrayLabels {
+            search: "エージェント検索",
+            clipboard: "クリップボードを開く",
+            snippets: "スニペットを開く",
+            settings: "設定",
+            quit: "終了",
+        },
+        _ => TRAY_LABELS_EN,
+    }
+}
+
+fn normalize_tray_locale(raw: &str) -> String {
+    raw.trim()
+        .to_ascii_lowercase()
+        .chars()
+        .filter(char::is_ascii_alphabetic)
+        .take(2)
+        .collect()
+}
+
+fn tray_locale(app: &tauri::AppHandle) -> String {
+    app.try_state::<std::sync::Arc<db::Database>>()
+        .and_then(|db| db.get_setting("ui_locale").ok().flatten())
+        .unwrap_or_else(|| "en".to_string())
+}
+
 fn build_tray_menu(app: &tauri::AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
+    let labels = tray_labels(&normalize_tray_locale(&tray_locale(app)));
     let version = &app.package_info().version;
     let version_label = format!("Copyosity v{}", version);
 
@@ -1064,38 +1147,43 @@ fn build_tray_menu(app: &tauri::AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
         .map(|s| s.hub_enabled)
         .unwrap_or(false);
 
+    #[cfg(target_os = "macos")]
+    let (search_key, clipboard_key, snippets_key) = ("⌘⇧Space", "⌘⇧V", "⌘⇧C");
+    #[cfg(not(target_os = "macos"))]
+    let (search_key, clipboard_key, snippets_key) =
+        ("Ctrl+Shift+Space", "Ctrl+Shift+V", "Ctrl+Shift+C");
+
     let search = MenuItem::with_id(
         app,
         "search",
-        "Agent Search  ⌘⇧Space",
+        format!("{}  {}", labels.search, search_key),
         hub_enabled,
         None::<&str>,
     )?;
-    #[cfg(target_os = "macos")]
-    let overlay_label = "Open Clipboard  ⌘⇧V";
-    #[cfg(not(target_os = "macos"))]
-    let overlay_label = "Open Clipboard  Ctrl+Shift+V";
-    let overlay = MenuItem::with_id(app, "overlay", overlay_label, true, None::<&str>)?;
+    let overlay = MenuItem::with_id(
+        app,
+        "overlay",
+        format!("{}  {}", labels.clipboard, clipboard_key),
+        true,
+        None::<&str>,
+    )?;
     let snippets_label = app
         .try_state::<std::sync::Arc<db::Database>>()
         .and_then(|db| quick_menu_shortcut_string(db.as_ref()).ok())
-        .map(|shortcut| format!("Open Snippets  {}", format_shortcut_for_menu(&shortcut)))
-        .unwrap_or_else(|| {
-            #[cfg(target_os = "macos")]
-            {
-                "Open Snippets  ⌘⇧C".to_string()
-            }
-            #[cfg(not(target_os = "macos"))]
-            {
-                "Open Snippets  Ctrl+Shift+C".to_string()
-            }
-        });
+        .map(|shortcut| {
+            format!(
+                "{}  {}",
+                labels.snippets,
+                format_shortcut_for_menu(&shortcut)
+            )
+        })
+        .unwrap_or_else(|| format!("{}  {}", labels.snippets, snippets_key));
     let snippets = MenuItem::with_id(app, "snippets", &snippets_label, true, None::<&str>)?;
     let ver = MenuItem::with_id(app, "version", &version_label, false, None::<&str>)?;
     let sep = PredefinedMenuItem::separator(app)?;
-    let settings = MenuItem::with_id(app, "settings", "Settings", true, None::<&str>)?;
+    let settings = MenuItem::with_id(app, "settings", labels.settings, true, None::<&str>)?;
     let sep2 = PredefinedMenuItem::separator(app)?;
-    let quit = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
+    let quit = MenuItem::with_id(app, "quit", labels.quit, true, None::<&str>)?;
     Menu::with_items(
         app,
         &[
@@ -2411,5 +2499,47 @@ mod overlay_width_tests {
         assert_eq!(resolve_vertical_win_width(5000.0, 1.0, 2560), 720);
         // A narrow work area wins over the preferred width but not below the minimum.
         assert_eq!(resolve_vertical_win_width(600.0, 1.0, 200), 360);
+    }
+}
+
+#[cfg(test)]
+mod tray_labels_tests {
+    use super::{normalize_tray_locale, tray_labels, TRAY_LABELS_EN};
+
+    #[test]
+    fn every_supported_ui_locale_localizes_the_tray_menu() {
+        for code in ["ru", "es", "zh", "de", "fr", "ja"] {
+            let labels = tray_labels(code);
+            assert_ne!(
+                labels.quit, TRAY_LABELS_EN.quit,
+                "{code} tray stays English"
+            );
+            assert_ne!(
+                labels.settings, TRAY_LABELS_EN.settings,
+                "{code} tray stays English"
+            );
+        }
+    }
+
+    #[test]
+    fn unknown_locale_falls_back_to_english() {
+        assert_eq!(tray_labels("it").search, TRAY_LABELS_EN.search);
+    }
+
+    #[test]
+    fn locale_is_lowercased_trimmed_and_cut_to_two_letters() {
+        assert_eq!("ru", normalize_tray_locale("RU"));
+        assert_eq!("de", normalize_tray_locale("  de-DE  "));
+        assert_eq!("pt", normalize_tray_locale("🌐pt-BR"));
+        assert_eq!("zh", normalize_tray_locale("zh-Hant"));
+        assert_eq!("", normalize_tray_locale(""));
+    }
+
+    #[test]
+    fn a_regional_tag_reaches_the_same_labels_as_its_base_code() {
+        assert_eq!(
+            tray_labels(&normalize_tray_locale("ru-RU")).clipboard,
+            tray_labels("ru").clipboard
+        );
     }
 }

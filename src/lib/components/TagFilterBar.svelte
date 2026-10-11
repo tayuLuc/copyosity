@@ -1,10 +1,11 @@
 <script lang="ts">
+import { t } from "$lib/i18n";
   import { onMount } from "svelte";
   import { formatImageFormatBadge } from "$lib/image-meta";
   import type { TagChip } from "$lib/overlay-filters";
 
   const {
-    resetLabel = "All tags",
+    resetLabel,
     activeTag = null,
     formatChips = [] as TagChip[],
     semanticChips = [] as TagChip[],
@@ -77,7 +78,7 @@
       aria-pressed={!activeTag}
       onclick={() => onreset?.()}
     >
-      {resetLabel}
+      {resetLabel ?? $t("tagfilter.msg.all-tags")}
     </button>
 
     {#each formatChips as [tag, count] (tag)}

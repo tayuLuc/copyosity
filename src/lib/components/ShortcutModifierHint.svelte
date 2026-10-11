@@ -1,4 +1,5 @@
 <script lang="ts">
+
   const {
     examples,
     detail,

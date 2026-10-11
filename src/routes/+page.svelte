@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount, tick } from "svelte";
   import { listen } from "@tauri-apps/api/event";
+  import { invoke } from "@tauri-apps/api/core";
   import { getCurrentWindow } from "@tauri-apps/api/window";
   import { parseEntryOcrEvent, parseEntryTaggedEvent, type Collection, type ExcludableAppCandidate } from "$lib/types";
   import {
@@ -24,7 +25,7 @@
   import ClipboardCard from "$lib/components/ClipboardCard.svelte";
   import QuickLookPanel from "$lib/components/QuickLookPanel.svelte";
   import KeyboardHints, { type KeyboardHint } from "$lib/components/KeyboardHints.svelte";
-  import { t } from "$lib/i18n";
+  import { currentLocale, locale, publishLocale, t, tr } from "$lib/i18n";
   import SearchBar from "$lib/components/SearchBar.svelte";
   import CollectionTabs from "$lib/components/CollectionTabs.svelte";
   // TEMP: re-enable with Content Kind segment block below.
@@ -90,21 +91,21 @@
   import { initPlatform, platformIsMacOS } from "$lib/platform.svelte";
 
   const overlayShortcutHints = $derived<KeyboardHint[]>([
-    { prefix: "Click", action: $t("overlay.hint.copy") },
+    { prefix: $t("overlay.hint.click"), action: $t("overlay.hint.copy") },
     { keys: "Space", action: $t("overlay.hint.preview") },
     { keys: "⌘Y", action: $t("overlay.hint.preview") },
     { keys: "↵", action: $t("overlay.hint.paste") },
-    { prefix: "Double-click", action: $t("overlay.hint.paste") },
+    { prefix: $t("overlay.hint.double-click"), action: $t("overlay.hint.paste") },
     { keys: ["←", "→"], action: $t("overlay.hint.browse") },
     { keys: "Esc", action: $t("overlay.hint.dismiss") },
   ]);
 
   const overlayVerticalShortcutHints = $derived<KeyboardHint[]>([
-    { prefix: "Click", action: $t("overlay.hint.copy") },
+    { prefix: $t("overlay.hint.click"), action: $t("overlay.hint.copy") },
     { keys: "Space", action: $t("overlay.hint.preview") },
     { keys: "⌘Y", action: $t("overlay.hint.preview") },
     { keys: "↵", action: $t("overlay.hint.paste") },
-    { prefix: "2× click", action: $t("overlay.hint.paste") },
+    { prefix: $t("overlay.hint.2x-click"), action: $t("overlay.hint.paste") },
     { keys: ["↑", "↓"], action: $t("overlay.hint.browse") },
     { keys: "Esc", action: $t("overlay.hint.dismiss") },
   ]);
@@ -159,7 +160,7 @@
   const panelTransitionEpoch = createPanelTransitionEpoch();
 
   const SETTINGS_SYNC_USER_NOTICE =
-    "Couldn't load app settings. Tags and filters may not work properly. Restart Copyosity.";
+    tr("overlay.msg.couldn-t-load-app");
 
   async function loadLayout() {
     try {
@@ -177,7 +178,7 @@
         gridEl.scrollTop = 0;
       }
     } catch (e) {
-      console.error("Failed to load layout:", e);
+      console.error(tr("overlay.msg.failed-to-load-layout"), e);
     }
   }
 
@@ -224,8 +225,9 @@
     return () => clearInterval(timer);
   });
 
-  const tagBarModel = $derived(
-    buildTagBarModel({
+  const tagBarModel = $derived.by(() => {
+    void $locale;
+    return buildTagBarModel({
       entries: overlay.entries,
       layoutEntries: overlay.catalogEntries,
       contentKind: overlay.contentKind,
@@ -235,8 +237,8 @@
       layoutTagCounts: overlay.catalogTagCounts,
       searchQuery: overlay.searchQuery,
       searchPending: overlay.displayListPending,
-    }),
-  );
+    });
+  });
 
   const verticalTagChips = $derived<TagChip[]>([
     ...tagBarModel.formatChips,
@@ -250,6 +252,10 @@
   );
 
   const filteredEntries = $derived(overlay.entries);
+  const emptyCopy = $derived.by(() => {
+    void $locale;
+    return emptyStateCopy();
+  });
   const showEntryGrid = $derived(
     shouldShowOverlayEntryGrid(
       filteredEntries.length,
@@ -375,56 +381,60 @@
     if (overlay.displayFetchFailed) {
       if (overlay.searchQuery) {
         return {
-          title: `Couldn't search for “${overlay.searchQuery}”`,
-          hint: "Something went wrong — try again or clear the search",
+          title: tr("overlay.msg.couldn-t-search-for", { query: overlay.searchQuery }),
+          hint: tr("overlay.msg.something-went-wrong-try"),
         };
       }
       if (overlay.activeTag) {
         return {
-          title: `Couldn't load tag “${overlay.activeTag}”`,
-          hint: "Something went wrong — try again or clear the filter",
+          title: tr("overlay.msg.couldn-t-load-tag", { tag: overlay.activeTag }),
+          hint: tr("overlay.msg.something-went-wrong-try"),
         };
       }
       if (overlay.aiTaggingEnabled && overlay.contentKind !== "all") {
-        const kindLabel = contentKindEmptyLabel(overlay.contentKind);
         return {
-          title: kindLabel ? `Couldn't load ${kindLabel.toLowerCase()}` : "Couldn't load filter",
-          hint: "Something went wrong — try again or clear filters",
+          title:
+            overlay.contentKind === "image"
+              ? tr("overlay.msg.couldn-t-load-images")
+              : overlay.contentKind === "text"
+                ? tr("overlay.msg.couldn-t-load-text")
+                : tr("overlay.msg.couldn-t-load-filter"),
+          hint: tr("overlay.msg.something-went-wrong-try"),
         };
       }
       return {
-        title: "Couldn't load clipboard entries",
-        hint: "Something went wrong — try again",
+        title: tr("overlay.msg.couldn-t-load-clipboard"),
+        hint: tr("overlay.msg.something-went-wrong-try"),
       };
     }
     if (overlay.loadMoreFailed) {
       return {
-        title: "Couldn't load more entries",
-        hint: "Something went wrong — try again",
+        title: tr("overlay.msg.couldn-t-load-more"),
+        hint: tr("overlay.msg.something-went-wrong-try"),
       };
     }
     if (overlay.searchQuery && overlay.activeTag) {
       return {
-        title: `No results for “${overlay.searchQuery}” in tag “${overlay.activeTag}”`,
-        hint: "Try a different search or tag",
+        title: tr("overlay.msg.no-results-for-query-in", { query: overlay.searchQuery, tag: overlay.activeTag }),
+        hint: tr("overlay.msg.try-a-different-search"),
       };
     }
     if (overlay.searchQuery) {
       return {
-        title: `No results for “${overlay.searchQuery}”`,
-        hint: "Try a different search term",
+        title: tr("overlay.msg.no-results-for-query", { query: overlay.searchQuery }),
+        hint: tr("overlay.msg.try-a-different-search"),
       };
     }
     if (overlay.activeTag) {
       if (isFormatTag(overlay.activeTag)) {
         return {
           title: formatTagEmptyLabel(overlay.activeTag),
-          hint: "Try another format or clear the filter",
+          hint: tr("overlay.msg.try-another-format-or"),
         };
       }
       return {
-        title: `No results for tag “${overlay.activeTag}”`,
-        hint: "Try another tag or clear the filter",
+        title: tr("overlay.msg.no-results-for-tag", { tag: overlay.activeTag }),
+        hint: tr("overlay.msg.try-another-tag-or"),
       };
     }
     if (overlay.aiTaggingEnabled) {
@@ -432,13 +442,13 @@
       if (kindLabel) {
         return {
           title: kindLabel,
-          hint: "Try another content type or clear filters",
+          hint: tr("overlay.msg.try-another-content-type"),
         };
       }
     }
     return {
-      title: "Clipboard history is empty",
-      hint: "Copy something to get started",
+      title: tr("overlay.msg.clipboard-history-is-empty"),
+      hint: tr("overlay.msg.copy-something-to-get"),
     };
   }
 
@@ -729,7 +739,7 @@
       excludeNotice = "";
     } catch (err) {
       excludeCandidate = null;
-      excludeNotice = invokeErrorMessage(err) || "Could not detect active app";
+      excludeNotice = invokeErrorMessage(err) || tr("overlay.msg.could-not-detect-active");
       excludeNoticeTone = "warn";
     }
   }
@@ -743,10 +753,10 @@
         await loadExcludeCandidate();
         return;
       }
-      excludeNotice = "No active app";
+      excludeNotice = tr("overlay.msg.no-active-app");
       excludeNoticeTone = "warn";
     } catch (err) {
-      excludeNotice = invokeErrorMessage(err) || "Could not exclude this app";
+      excludeNotice = invokeErrorMessage(err) || tr("overlay.msg.could-not-exclude-this");
       excludeNoticeTone = "warn";
     } finally {
       excludeBusy = false;
@@ -766,6 +776,7 @@
 
     // Background: check for updates on launch, auto-install, and notify.
     void autoUpdateOnLaunch();
+    publishLocale(currentLocale());
 
     let reloadTimer: ReturnType<typeof setTimeout>;
     function scheduleReload() {
@@ -842,7 +853,7 @@
 
     // Voice transcription failures (e.g. a hub 429 asking to raise the tariff).
     const unlistenVoiceError = listen<string>("voice-error", (e) => {
-      void notify("Voice transcription failed", e.payload);
+      void notify(tr("overlay.msg.voice-transcription-failed"), e.payload);
     });
 
     const handleKeydown = (e: KeyboardEvent) => {
@@ -1378,8 +1389,8 @@
           <button
             class="overlay-icon-btn overlay-icon-btn--agent app-btn"
             type="button"
-            aria-label="Open command palette (Cmd+Shift+Space)"
-            title="Open command palette · ⌘⇧Space"
+            aria-label={$t("overlay.aria-label.open-command-palette", { shortcut: "Cmd+Shift+Space" })}
+            title={$t("overlay.title.open-command-palette-space")}
             onclick={() => void openCommandPalette()}
           >
             <svg class="overlay-icon-btn-icon" viewBox="0 0 24 24" aria-hidden="true">
@@ -1394,8 +1405,8 @@
         <button
           class="overlay-icon-btn overlay-icon-btn--settings app-btn"
           type="button"
-          aria-label="Open settings"
-          title="Settings"
+          aria-label={$t("overlay.aria-label.open-settings")}
+          title={$t("settings.title")}
           onclick={() => openSettingsWindow()}
         >
           <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -1445,8 +1456,8 @@
           <button
             class="overlay-icon-btn overlay-icon-btn--agent app-btn"
             type="button"
-            aria-label="Open command palette (Cmd+Shift+Space)"
-            title="Open command palette · ⌘⇧Space"
+            aria-label={$t("overlay.aria-label.open-command-palette", { shortcut: "Cmd+Shift+Space" })}
+            title={$t("overlay.title.open-command-palette-space")}
             onclick={() => void openCommandPalette()}
           >
             <svg class="overlay-icon-btn-icon" viewBox="0 0 24 24" aria-hidden="true">
@@ -1461,8 +1472,8 @@
         <button
           class="overlay-icon-btn overlay-icon-btn--settings app-btn"
           type="button"
-          aria-label="Open settings"
-          title="Settings"
+          aria-label={$t("overlay.aria-label.open-settings")}
+          title={$t("settings.title")}
           onclick={() => openSettingsWindow()}
         >
           <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -1474,8 +1485,8 @@
         <button
           class="close-btn overlay-icon-btn overlay-icon-btn--close app-btn"
           type="button"
-          aria-label="Close overlay"
-          title="Close"
+          aria-label={$t("overlay.aria-label.close-overlay")}
+          title={$t("common.close")}
           onclick={() => forceHideWindow()}
         >
           <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -1494,8 +1505,7 @@
         type="button"
         onclick={() => overlay.handleTagReset()}
       >
-        All tags
-      </button>
+        {$t("overlay.text.all-tags")}</button>
       {#each verticalTagChips as [tag, count] (tag)}
         <button
           class="filter-chip filter-chip--compact filter-chip--muted app-btn"
@@ -1550,27 +1560,27 @@
     onscrollend={handleGridScrollEnd}
   >
     {#if !showEntryGrid}
-      {@const empty = emptyStateCopy()}
+      {@const empty = emptyCopy}
       {@const listPending = overlay.displayListPending}
       {@const searchingMore = overlay.loadingMoreEntries}
       <div class="empty-state" role="status" aria-live="polite">
         <p class="empty-title">
           {#if listPending && overlay.searchQuery}
-            Searching for “{overlay.searchQuery}”…
+            {$t("overlay.msg.searching-for", { query: overlay.searchQuery })}
           {:else if listPending}
-            Loading entries…
+            {$t("overlay.msg.loading-entries")}
           {:else if searchingMore}
-            Loading more entries…
+            {$t("overlay.msg.loading-more-entries")}
           {:else}
             {empty.title}
           {/if}
         </p>
         {#if listPending && overlay.searchQuery}
-          <p class="hint">Matching entries will appear here</p>
+          <p class="hint">{$t("overlay.text.matching-entries-will-appear")}</p>
         {:else if listPending}
-          <p class="hint">Updating the list</p>
+          <p class="hint">{$t("overlay.text.updating-the-list")}</p>
         {:else if searchingMore}
-          <p class="hint">Fetching the next page of matching entries</p>
+          <p class="hint">{$t("overlay.text.fetching-the-next-page")}</p>
         {:else if empty.hint}
           <p class="hint">{empty.hint}</p>
         {/if}
@@ -1580,16 +1590,14 @@
             type="button"
             onclick={() => overlay.retryDisplayFetch()}
           >
-            Try again
-          </button>
+            {$t("overlay.text.try-again")}</button>
         {:else if overlay.loadMoreFailed}
           <button
             class="empty-retry-btn"
             type="button"
             onclick={() => overlay.retryLoadMore()}
           >
-            Try again
-          </button>
+            {$t("overlay.text.try-again")}</button>
         {/if}
       </div>
     {:else}
@@ -1632,10 +1640,9 @@
   {/if}
   {#if showEntryGrid && overlay.loadMoreFailed}
     <div class="load-more-banner overlay-footer-strip" role="status" aria-live="polite">
-      <p class="hint">Couldn't load more entries</p>
+      <p class="hint">{$t("overlay.text.couldn-t-load-more")}</p>
       <button class="empty-retry-btn" type="button" onclick={() => overlay.retryLoadMore()}>
-        Try again
-      </button>
+        {$t("overlay.text.try-again")}</button>
     </div>
   {/if}
   {#if overlay.overlayShortcutHintsEnabled}
@@ -1657,8 +1664,8 @@
     class:vertical={boardVertical}
     type="button"
     tabindex="-1"
-    aria-label="Resize"
-    title="Drag to resize"
+    aria-label={$t("overlay.aria-label.resize")}
+    title={$t("overlay.title.drag-to-resize")}
     onmousedown={startOverlayResize}
   ></button>
 </div>
