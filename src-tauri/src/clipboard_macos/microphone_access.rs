@@ -1,8 +1,8 @@
 //! Microphone authorization: status read and request, both through AVFoundation.
 //!
 //! The Settings pane treats microphone like accessibility: read the status without prompting, and
-//! let one explicit button raise the system dialog. Opening System Settings is the person's
-//! decision — the dialog itself offers that button.
+//! let one explicit button raise the system dialog. macOS shows that dialog once per app, so after
+//! a denial only System Settings grants the permission.
 
 #[cfg(target_os = "macos")]
 use block2::DynBlock;
