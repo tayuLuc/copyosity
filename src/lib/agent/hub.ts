@@ -10,7 +10,7 @@ export type HubAgentSettings = {
 
 /** When non-null, the agent must not send — same checks as web search on the backend. */
 export function hubAgentBlockReason(s: HubAgentSettings): string | null {
-  if (!s.hub_enabled) return "AI hub is disabled in Settings";
+  if (!s.hub_enabled) return tr("hub.msg.ai-hub-is-disabled");
   const base = s.hub_url.trim().replace(/\/+$/, "");
   if (!base || !s.hub_token.trim()) {
     return tr("hub.msg.set-the-ai-hub");

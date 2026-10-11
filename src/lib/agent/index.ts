@@ -23,6 +23,7 @@ import {
 } from "ai";
 import { z } from "zod";
 
+import { tr } from "../i18n/index.ts";
 import { hubAgentBlockReason } from "./hub";
 
 export {
@@ -98,7 +99,7 @@ async function resolveModel(model: string) {
   // No vendor model id is assumed: an unknown provider has no model we could pick on the
   // user's behalf, so an empty id is reported where it can be fixed instead of sent as `""`.
   const id = model.trim() || s.hub_chat_model.trim();
-  if (!id) throw new Error("Choose a chat model in Settings → AI hub");
+  if (!id) throw new Error(tr("hub.msg.choose-a-chat-model"));
   return provider.chatModel(id);
 }
 

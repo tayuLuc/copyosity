@@ -132,8 +132,8 @@
   let settingsNotice = $state("");
   let savedModel = $state("");
 
-  const A11Y_NOTICE_ENABLE = tr("settings.msg.enable-copyosity-in-the");
-  const A11Y_NOTICE_VERIFIED = tr("settings.msg.accessibility-verified-paste-automation");
+  const A11Y_NOTICE_ENABLE = $derived($t("settings.msg.enable-copyosity-in-the"));
+  const A11Y_NOTICE_VERIFIED = $derived($t("settings.msg.accessibility-verified-paste-automation"));
 
   let accessibilityGranted = $state<boolean | null>(null);
   let accessibilityNotice = $state("");
@@ -154,7 +154,7 @@
     hubTestResult = null;
     try {
       const count = await hubTestConnection(settings.hub_url, settings.hub_token);
-      hubTestResult = { ok: true, message: `Connected — ${count} model(s) available` };
+      hubTestResult = { ok: true, message: tr("settings.msg.connected-models-available", { count }) };
       loadHubModels();
     } catch (e) {
       hubTestResult = { ok: false, message: String(e) };
@@ -179,10 +179,10 @@
   ];
 
   const retentionOptions = [
-    { label: "1 day", value: 1 },
-    { label: "1 week", value: 7 },
-    { label: "1 month", value: 30 },
-    { label: "6 months", value: 180 },
+    { value: 1, labelKey: "settings.text.retention-1-day" },
+    { value: 7, labelKey: "settings.text.retention-1-week" },
+    { value: 30, labelKey: "settings.text.retention-1-month" },
+    { value: 180, labelKey: "settings.text.retention-6-months" },
   ];
 
   /** Text fields and selects — saved via the footer bar. Booleans apply immediately. */
@@ -462,7 +462,7 @@
       settings = await updateAppSettings(deferred);
       savedModel = settings.ollama_model;
       snapshotDeferred();
-      settingsNotice = "Saved";
+      settingsNotice = tr("settings.msg.saved");
       taggingResult = undefined;
       await Promise.all([
         rebindVoiceShortcut(),
@@ -633,12 +633,12 @@
   const clearHistoryMenuItems = $derived([
     {
       id: "unpinned",
-      label: tr("settings.msg.clear-unpinned-history"),
+      label: $t("settings.msg.clear-unpinned-history"),
       disabled: historyCounts.unpinned === 0,
     },
     {
       id: "all",
-      label: tr("settings.msg.clear-all-history"),
+      label: $t("settings.msg.clear-all-history"),
       disabled: historyCounts.total === 0,
       destructive: true,
     },
@@ -779,7 +779,7 @@
     quickMenuNotice = "";
     try {
       quickMenuShortcut = await setQuickMenuShortcut(quickMenuShortcut);
-      quickMenuNotice = "Saved";
+      quickMenuNotice = tr("settings.msg.saved");
       quickMenuNoticeTone = "ok";
     } catch (e) {
       quickMenuNotice = `${e}`;
@@ -802,7 +802,7 @@
     paletteNotice = "";
     try {
       paletteShortcut = await setPaletteShortcut(paletteShortcut);
-      paletteNotice = "Saved";
+      paletteNotice = tr("settings.msg.saved");
       paletteNoticeTone = "ok";
     } catch (e) {
       paletteNotice = `${e}`;
@@ -851,7 +851,7 @@
       settings = { ...saved, ...deferred };
       await rebindVoiceShortcut();
       snapshotDeferred();
-      voiceShortcutNotice = "Saved";
+      voiceShortcutNotice = tr("settings.msg.saved");
       voiceShortcutNoticeTone = "ok";
     } catch (e) {
       voiceShortcutNotice = `${e}`;
@@ -882,14 +882,14 @@
       const u = await checkForUpdate();
       if (u) {
         update = u;
-        updateMessage = `Update available: ${u.version}`;
+        updateMessage = tr("updates.available", { version: u.version });
         appendUpdateLog(`check: update ${u.version} available`);
       } else {
         updateMessage = tr("settings.msg.you-re-on-the");
         appendUpdateLog("check: already up to date");
       }
     } catch (e) {
-      updateMessage = `Check failed: ${errorToString(e)}`;
+      updateMessage = tr("settings.msg.check-failed", { error: errorToString(e) });
       appendUpdateLog(`check: ERROR — ${errorToString(e)}`);
     } finally {
       updateChecking = false;
@@ -915,7 +915,7 @@
       await invoke("install_update");
       appendUpdateLog("install: bundle replaced OK — relaunching…");
     } catch (e) {
-      updateMessage = `Install failed: ${errorToString(e)}`;
+      updateMessage = tr("settings.msg.install-failed", { error: errorToString(e) });
       appendUpdateLog(`install: ERROR — ${errorToString(e)}`);
       updateInstalling = false;
     } finally {
@@ -1033,7 +1033,7 @@
   <main class="settings-content">
     {#if activePane === "hub"}
       <div class="pane-head">
-        <div class="pane-title">AI Hub</div>
+        <div class="pane-title">{$t("nav.hub")}</div>
         <div class="pane-subtitle">{$t("settings.text.cloud-models-for-tagging")}</div>
       </div>
 
@@ -1057,7 +1057,7 @@
           disabled={!settings.hub_enabled}
         >
           <div class="form-hint">
-            When off, hub tagging, transcription, web search, and voice polishing are disabled.
+            {$t("settings.text.when-off-hub-tagging")}
           </div>
 
           <div class="form-subsection">
@@ -1126,7 +1126,7 @@
                   </button>
                 </div>
                 <div class="form-hint">
-                  {hubModels.length ? `${hubModels.length} models loaded from the hub` : "Test connection or press ↻ to load the live model list."}
+                  {hubModels.length ? $t("settings.text.models-loaded-from-the", { count: hubModels.length }) : $t("settings.text.test-connection-or-press")}
                 </div>
               </label>
             </div>
@@ -1175,7 +1175,7 @@
             bind:value={paletteShortcut}
             placeholder="cmd+shift+space"
             examples={["cmd+shift+space"]}
-            detail="Opens the command / agent palette. The agent can search the web, act on your apps, use the selected model, and see a screenshot of the active window. Registered only while the hub is enabled."
+            detail={$t("settings.text.opens-the-command")}
             notice={paletteNotice || undefined}
             noticeTone={paletteNoticeTone}
             onSave={savePaletteShortcut}
@@ -1208,14 +1208,14 @@
           disabled={!settings.voice_transcription_enabled}
         >
           <div class="form-hint">
-            When off, the global hold-to-record shortcut is not registered.
+            {$t("settings.text.when-off-the-global")}
           </div>
 
           <HotkeySettingsSection
             bind:value={settings.voice_shortcut}
             placeholder="option+space"
             examples={["option+space", "cmd+shift+r", "ctrl+alt+space"]}
-            detail="Hold to record, release to transcribe and paste at the cursor."
+            detail={$t("settings.text.hold-to-record-release")}
             notice={voiceShortcutNotice || undefined}
             noticeTone={voiceShortcutNoticeTone}
             onSave={saveVoiceShortcut}
@@ -1244,9 +1244,9 @@
             </div>
             <div class="form-hint">
               {#if settings.hub_enabled}
-                On → hub <code>/v1/audio/transcriptions</code>; off → your local Whisper server.
+                {$t("settings.text.on-hub-off-your.1")}<code>/v1/audio/transcriptions</code>{$t("settings.text.on-hub-off-your.2")}
               {:else}
-                Enable the <strong>AI hub</strong> (AI Hub tab) to transcribe via the hub.
+                {$t("settings.text.enable-the-ai-hub.1")}<strong>{$t("settings.text.ai-hub")}</strong>{$t("settings.text.enable-the-ai-hub.2")}
               {/if}
             </div>
           </div>
@@ -1266,7 +1266,7 @@
                 >
                   <option value="">{$t("settings.text.system-default")}</option>
                   {#each microphones as mic}
-                    <option value={mic.name}>{mic.name}{mic.is_default ? " (default)" : ""}</option>
+                    <option value={mic.name}>{mic.name}{mic.is_default ? $t("settings.text.default-suffix") : ""}</option>
                   {/each}
                 </select>
               </div>
@@ -1323,9 +1323,7 @@
           <div class="form-subsection">
             <div class="form-subsection-title form-subsection-title--with-icon"><SectionIcon name="text-polish" />{$t("settings.text.ai-text-polishing")}</div>
             <div class="form-hint">
-              After transcription, run the text through the hub LLM to add punctuation,
-              remove filler, format lists, and match the app you're pasting into.
-              Returns only the cleaned text. Requires the AI hub.
+              {$t("settings.text.after-transcription-run")}
             </div>
             <div class="inset-list">
               <label class="form-checkbox">
@@ -1398,7 +1396,7 @@
                     class="form-textarea"
                     rows="3"
                     bind:value={settings.voice_polish_prompt}
-                    placeholder="e.g. Always sign off with 'Спасибо!'; keep it formal."
+                    placeholder={$t("settings.placeholder.e-g-always-sign")}
                   ></textarea>
                 </label>
 
@@ -1429,7 +1427,7 @@
             bind:value={quickMenuShortcut}
             placeholder="cmd+shift+c"
             examples={["cmd+shift+c"]}
-            detail="Press anywhere to pop the menu at your cursor with history and snippets; items 1–9 have number keys."
+            detail={$t("settings.text.press-anywhere-to")}
             notice={quickMenuNotice || undefined}
             noticeTone={quickMenuNoticeTone}
             onSave={saveQuickMenuShortcut}
@@ -1442,7 +1440,7 @@
               <SectionIcon name="snippets" class="form-subsection-icon" />{$t("settings.text.snippets")}
             </div>
             <div class="form-hint">
-              Reusable text templates grouped in folders — they show up in the quick menu for two-click paste.
+              {$t("settings.text.reusable-text-templates")}
             </div>
             <SnippetsEditor />
           </div>
@@ -1462,7 +1460,7 @@
               <div class="status-row">
                 <span class="status-dot" class:ok={accessibilityGranted === true} class:fail={accessibilityGranted === false} class:checking={accessibilityGranted === null}></span>
                 <span class="status-text">
-                  {accessibilityGranted === null ? "Checking..." : accessibilityGranted ? $t("settings.msg.accessibility-granted") : $t("settings.msg.accessibility-not-granted")}
+                  {accessibilityGranted === null ? $t("settings.text.checking") : accessibilityGranted ? $t("settings.msg.accessibility-granted") : $t("settings.msg.accessibility-not-granted")}
                 </span>
                 {#if accessibilityGranted === false}
                   <button class="status-action app-btn" type="button" onclick={handleRequestAccessibility}>
@@ -1488,7 +1486,7 @@
                 </div>
               {/if}
               <div class="status-hint">
-                After a new build or reinstall, remove Copyosity from Accessibility and add it again if paste stops working.
+                {$t("settings.text.after-a-new-build")}
               </div>
             </div>
           </div>
@@ -1508,8 +1506,8 @@
               <div class="status-row">
                 <span class="status-dot" class:ok={!update && !!updateMessage} class:checking={updateChecking}></span>
                 <span class="status-text">
-                  Current: <code>{appVersion || "…"}</code>
-                  {#if update}— new version <code>{update.version}</code> available{/if}
+                  {$t("settings.text.current-version.1")}<code>{appVersion || "…"}</code>
+                  {#if update}{$t("settings.text.current-version.2")}<code>{update.version}</code>{$t("settings.text.current-version.3")}{/if}
                 </span>
                 <button class="status-action app-btn" type="button" disabled={updateChecking || updateInstalling} onclick={checkUpdates}>
                   {updateChecking ? $t("settings.msg.checking") : $t("settings.msg.check-now")}
@@ -1525,9 +1523,9 @@
                 <div class="update-install-actions">
                   <button class="form-btn form-btn-primary app-btn" type="button" disabled={updateInstalling} onclick={installUpdate}>
                     {#if updateInstalling}
-                      {updateProgress >= 0 ? `Installing… ${updateProgress}%` : $t("settings.msg.installing")}
+                      {updateProgress >= 0 ? $t("settings.msg.installing-percent", { percent: updateProgress }) : $t("settings.msg.installing")}
                     {:else}
-                      Download &amp; install, then restart
+                      {$t("settings.text.download-install-then")}
                     {/if}
                   </button>
                 </div>
@@ -1589,8 +1587,7 @@
           disabled={!settings.ai_tagging_enabled}
         >
           <div class="form-hint">
-            Automatically tag clipboard text entries using a local Ollama model.
-            When off, new entries are not auto-tagged (manual retag still works).
+            {$t("settings.text.automatically-tag-clipboard")}
           </div>
 
           <div class="form-subsection">
@@ -1617,9 +1614,7 @@
                   </div>
                   {#if !ollamaStatus.cli_installed}
                     <div class="status-hint">
-                      Ollama runs AI models locally on your machine. Download it from
-                      <button class="link-btn app-btn" type="button" onclick={() => openUrl("https://ollama.com/download")}>ollama.com</button>,
-                      install the app, and click "Check again".
+                      {$t("settings.text.ollama-runs-ai.1")}<button class="link-btn app-btn" type="button" onclick={() => openUrl("https://ollama.com/download")}>ollama.com</button>{$t("settings.text.ollama-runs-ai.2")}{$t("settings.text.check-again")}{$t("settings.text.ollama-runs-ai.3")}
                     </div>
                   {/if}
                 </div>
@@ -1632,7 +1627,7 @@
                     </span>
                     {#if ollamaStatus.cli_installed && !ollamaStatus.server_running}
                       <button class="status-action app-btn" type="button" disabled={ollamaLoading} onclick={handleStartServer}>
-                        {#if ollamaLoading}<span class="app-btn-spinner-icon app-btn-spinner-icon--sm app-btn-spinner-icon--success is-inline"></span> Starting...{:else}Start{/if}
+                        {#if ollamaLoading}<span class="app-btn-spinner-icon app-btn-spinner-icon--sm app-btn-spinner-icon--success is-inline"></span> {$t("settings.text.starting")}{:else}{$t("settings.text.start-button")}{/if}
                       </button>
                     {/if}
                   </div>
@@ -1652,11 +1647,11 @@
                     </span>
                     {#if ollamaStatus.server_running && !ollamaStatus.model_installed}
                       <button class="status-action app-btn" type="button" disabled={ollamaLoading} onclick={handlePullModel}>
-                        {#if ollamaLoading}<span class="app-btn-spinner-icon app-btn-spinner-icon--sm app-btn-spinner-icon--success is-inline"></span> Pulling...{:else}Download{/if}
+                        {#if ollamaLoading}<span class="app-btn-spinner-icon app-btn-spinner-icon--sm app-btn-spinner-icon--success is-inline"></span> {$t("settings.text.pulling")}{:else}{$t("settings.text.download-button")}{/if}
                       </button>
                     {/if}
                     {#if ollamaStatus.model_installed}
-                      <button class="status-action app-btn" type="button" onclick={async () => { await unloadOllamaModel(); settingsNotice = "Model unloaded from memory"; }}>
+                      <button class="status-action app-btn" type="button" onclick={async () => { await unloadOllamaModel(); settingsNotice = tr("settings.msg.model-unloaded-from"); }}>
                         {$t("settings.text.unload")}</button>
                     {/if}
                   </div>
@@ -1682,11 +1677,11 @@
                     <span class="status-dot" class:ok={taggingResult !== undefined && taggingResult !== null} class:fail={taggingResult === null} class:disabled={!ollamaStatus.model_installed}></span>
                     <span class="status-text" class:dimmed={!ollamaStatus.model_installed}>
                       {#if taggingResult === undefined}
-                        Tagging not tested
+                        {$t("settings.text.tagging-not-tested")}
                       {:else if taggingResult !== null}
-                        Tagging works
+                        {$t("settings.text.tagging-works")}
                       {:else}
-                        Tagging failed
+                        {$t("settings.text.tagging-failed")}
                       {/if}
                     </span>
                     {#if ollamaStatus.model_installed}
@@ -1701,23 +1696,23 @@
                   </div>
                   {#if modelDirty}
                     <div class="status-hint fail">
-                      Model changed — save settings first, then test.
+                      {$t("settings.text.model-changed-save")}
                     </div>
                   {:else if taggingLoading}
                     <div class="status-hint">
-                      Sending test request... This can take up to 60 seconds on first run while the model loads into memory.
+                      {$t("settings.text.sending-test-request")}
                     </div>
                   {:else if taggingResult !== undefined && taggingResult !== null}
                     <div class="status-hint ok">
-                      Test result: {taggingResult.join(", ")}
+                      {$t("settings.text.test-result", { tags: taggingResult.join(", ") })}
                     </div>
                   {:else if taggingResult === null}
                     <div class="status-hint fail">
-                      The model did not return tags. Try a different model or check Ollama logs.
+                      {$t("settings.text.the-model-did")}
                     </div>
                   {:else if ollamaStatus.model_installed}
                     <div class="status-hint">
-                      Click "Test" to verify that the model can tag clipboard content.
+                      {$t("settings.text.click-request.1")}{$t("settings.text.test")}{$t("settings.text.click-test-verify.2")}
                     </div>
                   {/if}
                 </div>
@@ -1745,7 +1740,7 @@
                 >
                   {#each modelCatalog.options as option}
                     <option value={option.value}>
-                      {option.label} · ~{option.memory_gb.toFixed(1)} GB · {option.fits ? "Fits" : $t("settings.msg.too-large")}{option.installed ? " · Installed" : ""}
+                      {option.label} · ~{option.memory_gb.toFixed(1)} GB · {option.fits ? $t("settings.text.fits") : $t("settings.msg.too-large")}{option.installed ? $t("settings.text.installed-suffix") : ""}
                     </option>
                   {/each}
                   <option value="__custom__">{$t("settings.text.custom-model")}</option>
@@ -1784,7 +1779,7 @@
                 <div class="form-meta-item">
                   <dt>{selectedModelMeta.label}</dt>
                   <dd class:fits={selectedModelMeta.fits} class:tight={!selectedModelMeta.fits}>
-                    ~{selectedModelMeta.memory_gb.toFixed(1)} GB · {selectedModelMeta.fits ? "Fits" : $t("settings.msg.too-large")}
+                    ~{selectedModelMeta.memory_gb.toFixed(1)} GB · {selectedModelMeta.fits ? $t("settings.text.fits") : $t("settings.msg.too-large")}
                   </dd>
                 </div>
               {/if}
@@ -1970,7 +1965,7 @@
                 type="button"
                 onclick={handleAddExcludedByName}
               >
-                Add
+                {$t("exclusion.text.add")}
               </button>
             </div>
           </div>
@@ -1989,7 +1984,7 @@
               <span class="form-label">{$t("settings.text.history-retention")}</span>
               <select class="form-select" bind:value={settings.retention_days}>
                 {#each retentionOptions as option}
-                  <option value={option.value}>{option.label}</option>
+                  <option value={option.value}>{$t(option.labelKey)}</option>
                 {/each}
               </select>
             </label>
@@ -2056,7 +2051,7 @@
                 onchange={(e) => {
                   const code = (e.currentTarget as HTMLSelectElement).value as LocaleCode;
                   setLocale(code);
-                  void invoke("set_ui_locale", { locale: code }).catch(() => undefined);
+
                 }}
               >
                 {#each LOCALES as l}

@@ -1,5 +1,5 @@
 <script lang="ts">
-import { tr } from "$lib/i18n";
+import { t } from "$lib/i18n";
 
   type SegmentItem = {
     id: string;
@@ -12,7 +12,7 @@ import { tr } from "$lib/i18n";
     value = null,
     onSelect,
     onButtonMount,
-    ariaLabel = tr("segment.msg.segmented-control"),
+    ariaLabel,
     ariaKind = "selected",
     compact = false,
     rootClass = "",
@@ -42,7 +42,7 @@ import { tr } from "$lib/i18n";
 <div
   class={`segment-track segment-control segment-control--grid ${compact ? "segment-control--compact" : ""} ${rootClass}`}
   role={ariaKind === "selected" ? "tablist" : "group"}
-  aria-label={ariaLabel}
+  aria-label={ariaLabel ?? $t("segment.msg.segmented-control")}
   style={`--segment-count: ${items.length};`}
 >
   {#each items as item (item.id)}

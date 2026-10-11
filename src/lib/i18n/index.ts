@@ -32,6 +32,26 @@ function initialLocale(): LocaleCode {
 
 export const locale = writable<LocaleCode>(initialLocale());
 
+/** Push the locale into the Rust core so the native menu-bar menu follows it. */
+export function publishLocale(code: LocaleCode): void {
+  void import("@tauri-apps/api/core")
+    .then(({ invoke }) => invoke("set_ui_locale", { locale: code }))
+    .catch(() => undefined);
+}
+
+/** Tell every window of this app which locale is now active. */
+function broadcastLocale(code: LocaleCode): void {
+  void import("@tauri-apps/api/event")
+    .then(({ emit }) => emit("ui-locale-changed", code))
+    .catch(() => undefined);
+}
+
+/** Subscribe this window to locale changes made in any other window. */
+export async function followLocaleChanges(): Promise<() => void> {
+  const { listen } = await import("@tauri-apps/api/event");
+  return listen<LocaleCode>("ui-locale-changed", (event) => locale.set(event.payload));
+}
+
 export function setLocale(code: LocaleCode): void {
   locale.set(code);
   try {
@@ -39,6 +59,8 @@ export function setLocale(code: LocaleCode): void {
   } catch {
     /* storage unavailable — locale still applies in-session */
   }
+  broadcastLocale(code);
+  publishLocale(code);
 }
 
 function lookup(code: LocaleCode, key: string): string {
@@ -57,7 +79,7 @@ function applyParams(text: string, params?: Record<string, string | number>): st
 }
 
 /** Grammatical number → index into the `|`-separated forms of a dictionary value. */
-const PLURAL_INDEX: Record<LocaleCode, (count: number) => number> = {
+export const PLURAL_INDEX: Record<LocaleCode, (count: number) => number> = {
   en: (count) => (count === 1 ? 0 : 1),
   de: (count) => (count === 1 ? 0 : 1),
   es: (count) => (count === 1 ? 0 : 1),
@@ -104,5 +126,5 @@ export function trp(key: string, count: number, params?: Record<string, string |
   const code = get(locale);
   const forms = lookup(code, key).split("|");
   const index = Math.min(PLURAL_INDEX[code](count), forms.length - 1);
-  return applyParams(forms[index], { ...params, count });
+  return applyParams(forms[index], { count, ...params });
 }

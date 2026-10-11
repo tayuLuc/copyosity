@@ -88,7 +88,7 @@
       }
       pruneCollapsedFolders(folders.map((folder) => folder.id));
     } catch (e) {
-      error = `Failed to load snippets: ${e}`;
+      error = tr("snippets.msg.failed-to-load-snippets", { error: String(e) });
     } finally {
       if (!silent) {
         loading = false;
@@ -154,7 +154,7 @@
 
   async function removeFolder(folder: SnippetFolder) {
     const confirmed = await confirmDestructive({
-      title: `Delete "${folder.name}"?`,
+      title: tr("snippets.title.delete-name", { name: folder.name }),
       message: tr("snippets.msg.this-deletes-the-folder"),
       confirmLabel: tr("snippets.msg.delete"),
       destructiveConfirm: true,
@@ -266,7 +266,7 @@
             type="button"
             aria-expanded={expanded}
             aria-controls={`snip-folder-panel-${folder.id}`}
-            aria-label={expanded ? `Collapse ${folder.name}` : `Expand ${folder.name}`}
+            aria-label={expanded ? $t("snippets.aria-label.collapse-folder", { name: folder.name }) : $t("snippets.aria-label.expand-folder", { name: folder.name })}
             onclick={() => toggleFolder(folder)}
           >
             <span class="snip-folder-chevron" class:collapsed={!expanded}>
@@ -331,7 +331,7 @@
             <button
               class="action-btn app-btn snip-folder-rename-btn"
               type="button"
-              aria-label={`Rename folder ${folder.name}`}
+              aria-label={$t("snippets.aria-label.rename-folder", { name: folder.name })}
               title={$t("snippets.title.rename")}
               onclick={(e) => {
                 e.stopPropagation();
@@ -402,7 +402,7 @@
                         class="action-btn app-btn"
                         type="button"
                         onclick={() => startEdit(snippet)}
-                        aria-label={`Edit snippet ${snippet.title}`}
+                        aria-label={$t("snippets.aria-label.edit-snippet", { name: snippet.title })}
                         title={$t("common.edit")}
                       >
                         <svg
@@ -423,7 +423,7 @@
                         class="action-btn app-btn delete"
                         type="button"
                         onclick={() => removeSnippet(snippet)}
-                        aria-label={`Delete snippet ${snippet.title}`}
+                        aria-label={$t("snippets.aria-label.delete-snippet", { name: snippet.title })}
                         title={$t("common.delete")}
                       >
                         <svg
@@ -469,7 +469,7 @@
                     onclick={() => addSnippet(folder.id)}
                     disabled={!drafts[folder.id].title.trim()}
                   >
-                    Add
+                    {$t("snippets.text.add")}
                   </button>
             </div>
           {/if}
@@ -479,7 +479,7 @@
               class="snip-folder-delete app-btn"
               type="button"
               onclick={() => removeFolder(folder)}
-              aria-label={`Delete folder ${folder.name} and all snippets inside`}
+              aria-label={$t("snippets.aria-label.delete-folder-and-all", { name: folder.name })}
             >
               {$t("snippets.text.delete-folder")}</button>
           </div>

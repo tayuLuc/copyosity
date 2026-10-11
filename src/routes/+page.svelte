@@ -25,7 +25,7 @@
   import ClipboardCard from "$lib/components/ClipboardCard.svelte";
   import QuickLookPanel from "$lib/components/QuickLookPanel.svelte";
   import KeyboardHints, { type KeyboardHint } from "$lib/components/KeyboardHints.svelte";
-  import { currentLocale, t, tr } from "$lib/i18n";
+  import { currentLocale, locale, publishLocale, t, tr } from "$lib/i18n";
   import SearchBar from "$lib/components/SearchBar.svelte";
   import CollectionTabs from "$lib/components/CollectionTabs.svelte";
   // TEMP: re-enable with Content Kind segment block below.
@@ -95,7 +95,7 @@
     { keys: "Space", action: $t("overlay.hint.preview") },
     { keys: "⌘Y", action: $t("overlay.hint.preview") },
     { keys: "↵", action: $t("overlay.hint.paste") },
-    { prefix: "Double-click", action: $t("overlay.hint.paste") },
+    { prefix: $t("overlay.hint.double-click"), action: $t("overlay.hint.paste") },
     { keys: ["←", "→"], action: $t("overlay.hint.browse") },
     { keys: "Esc", action: $t("overlay.hint.dismiss") },
   ]);
@@ -105,7 +105,7 @@
     { keys: "Space", action: $t("overlay.hint.preview") },
     { keys: "⌘Y", action: $t("overlay.hint.preview") },
     { keys: "↵", action: $t("overlay.hint.paste") },
-    { prefix: "2× click", action: $t("overlay.hint.paste") },
+    { prefix: $t("overlay.hint.2x-click"), action: $t("overlay.hint.paste") },
     { keys: ["↑", "↓"], action: $t("overlay.hint.browse") },
     { keys: "Esc", action: $t("overlay.hint.dismiss") },
   ]);
@@ -225,8 +225,9 @@
     return () => clearInterval(timer);
   });
 
-  const tagBarModel = $derived(
-    buildTagBarModel({
+  const tagBarModel = $derived.by(() => {
+    void $locale;
+    return buildTagBarModel({
       entries: overlay.entries,
       layoutEntries: overlay.catalogEntries,
       contentKind: overlay.contentKind,
@@ -236,8 +237,8 @@
       layoutTagCounts: overlay.catalogTagCounts,
       searchQuery: overlay.searchQuery,
       searchPending: overlay.displayListPending,
-    }),
-  );
+    });
+  });
 
   const verticalTagChips = $derived<TagChip[]>([
     ...tagBarModel.formatChips,
@@ -251,6 +252,10 @@
   );
 
   const filteredEntries = $derived(overlay.entries);
+  const emptyCopy = $derived.by(() => {
+    void $locale;
+    return emptyStateCopy();
+  });
   const showEntryGrid = $derived(
     shouldShowOverlayEntryGrid(
       filteredEntries.length,
@@ -376,20 +381,24 @@
     if (overlay.displayFetchFailed) {
       if (overlay.searchQuery) {
         return {
-          title: `Couldn't search for “${overlay.searchQuery}”`,
+          title: tr("overlay.msg.couldn-t-search-for", { query: overlay.searchQuery }),
           hint: tr("overlay.msg.something-went-wrong-try"),
         };
       }
       if (overlay.activeTag) {
         return {
-          title: `Couldn't load tag “${overlay.activeTag}”`,
+          title: tr("overlay.msg.couldn-t-load-tag", { tag: overlay.activeTag }),
           hint: tr("overlay.msg.something-went-wrong-try"),
         };
       }
       if (overlay.aiTaggingEnabled && overlay.contentKind !== "all") {
-        const kindLabel = contentKindEmptyLabel(overlay.contentKind);
         return {
-          title: kindLabel ? `Couldn't load ${kindLabel.toLowerCase()}` : tr("overlay.msg.couldn-t-load-filter"),
+          title:
+            overlay.contentKind === "image"
+              ? tr("overlay.msg.couldn-t-load-images")
+              : overlay.contentKind === "text"
+                ? tr("overlay.msg.couldn-t-load-text")
+                : tr("overlay.msg.couldn-t-load-filter"),
           hint: tr("overlay.msg.something-went-wrong-try"),
         };
       }
@@ -406,13 +415,13 @@
     }
     if (overlay.searchQuery && overlay.activeTag) {
       return {
-        title: `No results for “${overlay.searchQuery}” in tag “${overlay.activeTag}”`,
+        title: tr("overlay.msg.no-results-for-query-in", { query: overlay.searchQuery, tag: overlay.activeTag }),
         hint: tr("overlay.msg.try-a-different-search"),
       };
     }
     if (overlay.searchQuery) {
       return {
-        title: `No results for “${overlay.searchQuery}”`,
+        title: tr("overlay.msg.no-results-for-query", { query: overlay.searchQuery }),
         hint: tr("overlay.msg.try-a-different-search"),
       };
     }
@@ -424,7 +433,7 @@
         };
       }
       return {
-        title: `No results for tag “${overlay.activeTag}”`,
+        title: tr("overlay.msg.no-results-for-tag", { tag: overlay.activeTag }),
         hint: tr("overlay.msg.try-another-tag-or"),
       };
     }
@@ -767,7 +776,7 @@
 
     // Background: check for updates on launch, auto-install, and notify.
     void autoUpdateOnLaunch();
-    void invoke("set_ui_locale", { locale: currentLocale() }).catch(() => undefined);
+    publishLocale(currentLocale());
 
     let reloadTimer: ReturnType<typeof setTimeout>;
     function scheduleReload() {
@@ -1551,17 +1560,17 @@
     onscrollend={handleGridScrollEnd}
   >
     {#if !showEntryGrid}
-      {@const empty = emptyStateCopy()}
+      {@const empty = emptyCopy}
       {@const listPending = overlay.displayListPending}
       {@const searchingMore = overlay.loadingMoreEntries}
       <div class="empty-state" role="status" aria-live="polite">
         <p class="empty-title">
           {#if listPending && overlay.searchQuery}
-            Searching for “{overlay.searchQuery}”…
+            {$t("overlay.msg.searching-for", { query: overlay.searchQuery })}
           {:else if listPending}
-            Loading entries…
+            {$t("overlay.msg.loading-entries")}
           {:else if searchingMore}
-            Loading more entries…
+            {$t("overlay.msg.loading-more-entries")}
           {:else}
             {empty.title}
           {/if}

@@ -18,7 +18,7 @@
     shouldApplyFullImageResult,
   } from "$lib/quick-look-image-fetch";
   import SegmentControl from "$lib/components/SegmentControl.svelte";
-import { t, tr } from "$lib/i18n";
+import { locale, t, tr, trp } from "$lib/i18n";
 
   const {
     entry,
@@ -64,16 +64,20 @@ import { t, tr } from "$lib/i18n";
       ? resolveImageFooterMetaParts(entry.image_width, entry.image_height, entry.image_byte_size)
       : null,
   );
-  const charLabel = $derived(
-    entry.char_count ? `${entry.char_count.toLocaleString()} characters` : null,
-  );
+  const charLabel = $derived.by(() => {
+    void $locale;
+    if (!entry.char_count) return null;
+    return trp("quicklook.msg.characters-count", entry.char_count, {
+      count: entry.char_count.toLocaleString(),
+    });
+  });
   const dialogLabel = $derived(
-    entry.content_type === "image" ? tr("quicklook.msg.image-entry-preview") : tr("quicklook.msg.text-entry-preview"),
+    entry.content_type === "image" ? ("quicklook.msg.image-entry-preview") : ("quicklook.msg.text-entry-preview"),
   );
   const typeLabel = $derived(entry.content_type === "image" ? $t("overlay.text.image") : $t("overlay.text.kind-text"));
   /** Announced on open and whenever the previewed entry changes via arrow-key browsing. */
   const liveAnnouncement = $derived(
-    `${typeLabel} preview${entry.source_app ? ` from ${entry.source_app}` : ""}`,
+    entry.source_app ? $t("quicklook.msg.type-preview-from", { type: typeLabel, app: entry.source_app }) : $t("quicklook.msg.type-preview", { type: typeLabel }),
   );
   /** Full-res once the lazy fetch resolves; the list thumb until then (avoids a blank flash). */
   const imageSrc = $derived.by(() => {
@@ -264,7 +268,7 @@ import { t, tr } from "$lib/i18n";
         <CardTypeBadge contentType={entry.content_type} formatLabel={imageFormatBadge} />
         {#if showTabs}
           <SegmentControl
-            ariaLabel="Preview mode"
+            ariaLabel={$t("quicklook.aria-label.preview-mode")}
             ariaKind="selected"
             rootClass={compact ? "quicklook-mode-segment quicklook-mode-segment--compact" : "quicklook-mode-segment"}
             items={[
@@ -314,13 +318,13 @@ import { t, tr } from "$lib/i18n";
         {:else}
           <div class="quicklook-image-preview">
             {#if imageSrc}
-              <img src={imageSrc} alt="Copied content" />
+              <img src={imageSrc} alt={$t("quicklook.alt.copied-content")} />
             {:else}
               <div class="quicklook-image-placeholder">{$t("overlay.text.image")}</div>
             {/if}
             {#if fullImageFetchFailed}
               <p class="quicklook-fetch-warning" role="status">
-                Full-resolution image unavailable — showing preview thumbnail.
+                {$t("quicklook.msg.full-resolution-image")}
               </p>
             {/if}
           </div>

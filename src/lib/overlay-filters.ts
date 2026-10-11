@@ -375,7 +375,7 @@ export function activeTagCompatibleWithAi(
 }
 
 export function formatTagEmptyLabel(tag: string): string {
-  return `No ${tag.toUpperCase()} images`;
+  return tr("filters.msg.no-format-images", { format: tag.toUpperCase() });
 }
 
 export function contentKindEmptyLabel(kind: ContentKind): string | null {

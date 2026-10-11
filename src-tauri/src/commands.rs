@@ -837,8 +837,8 @@ fn sanitize_ui_locale(input: &str) -> String {
     input
         .trim()
         .chars()
-        .take(5)
         .filter(|c| c.is_ascii_alphanumeric() || *c == '-')
+        .take(5)
         .collect()
 }
 
@@ -855,7 +855,9 @@ mod ui_locale_tests {
     #[test]
     fn clamps_length_and_drops_structural_characters() {
         assert_eq!("ab-cd", sanitize_ui_locale("ab-cd-ef-gh"));
-        assert_eq!("ru", sanitize_ui_locale("ru/../x"));
+        assert_eq!("rux", sanitize_ui_locale("ru/../x"));
+        assert_eq!("pt-BR", sanitize_ui_locale("🌐pt-BR"));
+        assert_eq!("zh-Ha", sanitize_ui_locale("zh-Hant"));
         assert_eq!("", sanitize_ui_locale("🌐"));
     }
 }

@@ -5,24 +5,32 @@ import {
   alreadyExcludedFromHistoryLabel,
   alreadyExcludedFromHistoryNotice,
   appNotFoundNotice,
+  chooseApplicationActionLabel,
   excludeFromClipboardHistoryAriaLabel,
   excludeFromHistoryLabel,
   excludableCandidateMetaLabel,
   invokeErrorMessage,
   isAppNotFoundError,
 } from "./exclusion-label.ts";
+import { tr } from "./i18n/index.ts";
 
 describe("excludeFromHistoryLabel", () => {
   it("capitalizes the app name in visible copy", () => {
-    assert.equal(excludeFromHistoryLabel("safari"), "Exclude Safari from history");
-    assert.equal(excludeFromHistoryLabel("  notes  "), "Exclude Notes from history");
+    assert.equal(
+      excludeFromHistoryLabel("safari"),
+      tr("exclusion.text.exclude-app-from-history", { app: "Safari" }),
+    );
+    assert.equal(
+      excludeFromHistoryLabel("  notes  "),
+      tr("exclusion.text.exclude-app-from-history", { app: "Notes" }),
+    );
   });
 });
 
 describe("excludableCandidateMetaLabel", () => {
   it("distinguishes frontmost vs remembered sources", () => {
-    assert.equal(excludableCandidateMetaLabel("frontmost"), "Active app");
-    assert.equal(excludableCandidateMetaLabel("remembered"), "Recent app");
+    assert.equal(excludableCandidateMetaLabel("frontmost"), tr("exclusion.text.active-app"));
+    assert.equal(excludableCandidateMetaLabel("remembered"), tr("exclusion.text.recent-app"));
   });
 });
 
@@ -30,15 +38,21 @@ describe("aria labels", () => {
   it("uses clipboard history context in full labels", () => {
     assert.equal(
       excludeFromClipboardHistoryAriaLabel("chrome"),
-      "Exclude Chrome from clipboard history",
+      tr("exclusion.text.exclude-app-from-clipboard", { app: "Chrome" }),
     );
   });
 });
 
 describe("status notices", () => {
   it("formats already-excluded copy consistently", () => {
-    assert.equal(alreadyExcludedFromHistoryLabel("mail"), "Mail excluded from history");
-    assert.equal(alreadyExcludedFromHistoryNotice("mail"), "Mail is already excluded");
+    assert.equal(
+      alreadyExcludedFromHistoryLabel("mail"),
+      tr("exclusion.msg.app-excluded-from-history", { app: "Mail" }),
+    );
+    assert.equal(
+      alreadyExcludedFromHistoryNotice("mail"),
+      tr("exclusion.msg.app-is-already-excluded", { app: "Mail" }),
+    );
   });
 });
 
@@ -63,6 +77,6 @@ describe("isAppNotFoundError", () => {
 describe("appNotFoundNotice", () => {
   it("includes the entered app name", () => {
     assert.match(appNotFoundNotice("Safari"), /Safari/);
-    assert.match(appNotFoundNotice("Safari"), /Choose Application/);
+    assert.ok(appNotFoundNotice("Safari").includes(chooseApplicationActionLabel()));
   });
 });

@@ -24,11 +24,11 @@
     notifyCardContextMenuOpened,
     OVERLAY_CLOSE_CARD_CONTEXT_MENUS,
   } from "$lib/overlay-card-context-menu";
-  import { t, tr  } from "$lib/i18n";
+  import { t, tr, trp } from "$lib/i18n";
   import {
     phoneDialUrl,
     resolveSmartAction,
-    SMART_KIND_LABEL,
+    smartKindLabel,
     smartContextMenuItems,
     smartPrimaryActionLabel,
     type SmartActionInfo,
@@ -79,10 +79,10 @@
     const then = new Date(dateStr).getTime();
     const diff = Math.floor((now - then) / 1000);
 
-    if (diff < 60) return "just now";
-    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-    if (diff < 604800) return `${Math.floor(diff / 86400)}d ago`;
+    if (diff < 60) return tr("time.just-now");
+    if (diff < 3600) return trp("time.short.minutes", Math.floor(diff / 60));
+    if (diff < 86400) return trp("time.short.hours", Math.floor(diff / 3600));
+    if (diff < 604800) return trp("time.short.days", Math.floor(diff / 86400));
     return formatCardDate(dateStr);
   }
 
@@ -553,7 +553,9 @@
   const smartAction = $derived(entry.content_type === "text" ? resolveSmartAction(entry) : null);
   const textKind = $derived(detectTextKind(entry.text_content));
   const isMonoPreview = $derived(usesMonoPreview(textKind) || smartAction?.kind === "json");
-  const typeBadgeLabel = $derived(smartAction ? SMART_KIND_LABEL[smartAction.kind] : null);
+  const typeBadgeLabel = $derived(
+    smartAction ? smartKindLabel(smartAction.kind) : null,
+  );
   const typeBadgeColor = $derived(smartAction?.kind === "color" ? smartAction.hex : null);
   const smartPrimaryLabel = $derived(
     smartAction ? smartPrimaryActionLabel(smartAction) : "",
@@ -812,7 +814,7 @@
     {:else if entry.content_type === "image"}
       <div class="image-preview" class:has-ocr={ocrPreview.length > 0}>
         {#if entry.image_thumb}
-          <img src={imageDataUrl(entry.image_thumb)} alt="Copied content" loading="lazy" decoding="async" />
+          <img src={imageDataUrl(entry.image_thumb)} alt={$t("card.alt.copied-content")} loading="lazy" decoding="async" />
         {:else}
           <div class="image-placeholder">{$t("overlay.text.image")}</div>
         {/if}

@@ -10,63 +10,68 @@ function formatAppNameForLabel(appName: string): string {
 
 /** Overlay — visible button / status copy (section context implies clipboard). */
 export function excludeFromHistoryLabel(appName: string): string {
-  return `Exclude ${formatAppNameForLabel(appName)} from history`;
+  return tr("exclusion.text.exclude-app-from-history", {
+    app: formatAppNameForLabel(appName),
+  });
 }
 
 /** Settings active-app row — context from `ExcludableAppCandidate.source`. */
 export function excludableCandidateMetaLabel(source: "remembered" | "frontmost"): string {
-  return source === "frontmost" ? "Active app" : "Recent app";
+  return source === "frontmost" ? tr("exclusion.text.active-app") : tr("exclusion.text.recent-app");
 }
 
 /** Settings list row — compact visible label. */
 export function excludeListAddLabel(): string {
-  return "Add";
+  return tr("exclusion.text.add");
 }
 
 export function excludeListRemoveLabel(): string {
-  return "Remove";
+  return tr("collections.title.remove");
 }
 
 /** Settings row actions — full meaning for aria-label / title. */
 export function excludeFromClipboardHistoryAriaLabel(appName: string): string {
-  return `Exclude ${formatAppNameForLabel(appName)} from clipboard history`;
+  return tr("exclusion.text.exclude-app-from-clipboard", { app: formatAppNameForLabel(appName) });
 }
 
 export function allowInClipboardHistoryAriaLabel(appName: string): string {
-  return `Allow ${formatAppNameForLabel(appName)} in clipboard history`;
+  return tr("exclusion.text.allow-app-in-clipboard", { app: formatAppNameForLabel(appName) });
 }
 
 /** Overlay status when an app is already excluded from capture. */
 export function alreadyExcludedFromHistoryLabel(appName: string): string {
-  return `${formatAppNameForLabel(appName)} excluded from history`;
+  return tr("exclusion.msg.app-excluded-from-history", { app: formatAppNameForLabel(appName) });
 }
 
 export function excludedFromHistoryNotice(appName: string): string {
-  return `${formatAppNameForLabel(appName)} excluded from history`;
+  return tr("exclusion.msg.app-excluded-from-history", { app: formatAppNameForLabel(appName) });
 }
 
 /** Settings — app is already on the exclusion list. */
 export function alreadyExcludedFromHistoryNotice(appName: string): string {
-  return `${formatAppNameForLabel(appName)} is already excluded`;
+  return tr("exclusion.msg.app-is-already-excluded", { app: formatAppNameForLabel(appName) });
 }
 
 export function allowedInHistoryNotice(appName: string): string {
-  return `${formatAppNameForLabel(appName)} allowed in history`;
+  return tr("exclusion.msg.app-allowed-in-history", { app: formatAppNameForLabel(appName) });
 }
 
 /** Settings — label for the native app picker row (keep in sync with Settings UI). */
-export const chooseApplicationActionLabel = "Choose Application…";
+export function chooseApplicationActionLabel(): string {
+  return tr("exclusion.text.choose-application");
+}
 
 /** Settings — app name could not be resolved (HIG-style inline warning). */
 export function appNotFoundNotice(appName: string): string {
-  const name = appName.trim();
-  return `No app named “${name}” was found. Use ${chooseApplicationActionLabel}, or enter the installed app name.`;
+  return tr("exclusion.msg.no-app-named-name", {
+    name: appName.trim(),
+    action: chooseApplicationActionLabel(),
+  });
 }
 
 /** Settings — generic add-by-name failure with the entered app name. */
 export function couldNotAddExcludedAppNotice(appName: string): string {
-  const name = appName.trim();
-  return `Could not add ${name}. Try again.`;
+  return tr("exclusion.msg.could-not-add-app", { app: appName.trim() });
 }
 
 /** Settings — add via native picker failed without a resolved app name. */

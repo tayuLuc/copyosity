@@ -13,15 +13,27 @@ export type SmartActionInfo =
   | { kind: "math"; expression: string; result: string }
   | { kind: "json"; formatted: string; minified: string };
 
-export const SMART_KIND_LABEL: Record<SmartKind, string> = {
-  link: "Link",
-  email: "Email",
-  phone: "Phone",
-  address: "Address",
-  color: "Color",
-  math: "Calc",
-  json: "JSON",
-};
+export function smartKindLabel(kind: SmartKind): string {
+  switch (kind) {
+    case "link":
+      return tr("smart.kind.link");
+    case "email":
+      return tr("smart.kind.email");
+    case "phone":
+      return tr("smart.kind.phone");
+    case "address":
+      return tr("smart.kind.address");
+    case "color":
+      return tr("smart.kind.color");
+    case "math":
+      return tr("smart.kind.calc");
+    case "json":
+      return tr("smart.kind.json");
+    default: {
+      return kind satisfies never;
+    }
+  }
+}
 
 const TRACKING_PARAM_PREFIXES = ["utm_"] as const;
 const TRACKING_PARAM_KEYS = new Set([
@@ -434,15 +446,15 @@ export function smartPrimaryActionLabel(action: SmartActionInfo): string {
     case "email":
       return tr("smart.msg.compose-email");
     case "phone":
-      return "FaceTime";
+      return tr("smart.msg.facetime");
     case "address":
       return tr("smart.msg.open-in-maps");
     case "color":
-      return "Copy HEX";
+      return tr("smart.msg.copy-hex");
     case "math":
       return tr("smart.msg.copy-result");
     case "json":
-      return "Format JSON";
+      return tr("smart.msg.format-json");
     default: {
       return action satisfies never;
     }

@@ -52,7 +52,7 @@ import { t } from "$lib/i18n";
     {:else if error}
       <div class="smart-qr-state smart-qr-state--error">{error}</div>
     {:else if imageSrc}
-      <img class="smart-qr-image" src={imageSrc} alt="QR code for link" />
+      <img class="smart-qr-image" src={imageSrc} alt={$t("qr.alt.qr-code-for-link")} />
     {/if}
     <button class="popover-menu-item app-btn smart-qr-dismiss" type="button" onclick={handleDismiss}>
       {$t("qr.text.dismiss")}</button>

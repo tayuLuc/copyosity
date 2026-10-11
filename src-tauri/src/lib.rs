@@ -1076,14 +1076,14 @@ const TRAY_LABELS_EN: TrayLabels = TrayLabels {
 fn tray_labels(locale: &str) -> TrayLabels {
     match locale {
         "ru" => TrayLabels {
-            search: "Поиск агента",
+            search: "Поиск с агентом",
             clipboard: "Открыть буфер",
             snippets: "Открыть сниппеты",
             settings: "Настройки",
             quit: "Выход",
         },
         "es" => TrayLabels {
-            search: "Busca el agente",
+            search: "Buscar con el agente",
             clipboard: "Abrir portapapeles",
             snippets: "Abrir snippets",
             settings: "Ajustes",
@@ -1097,7 +1097,7 @@ fn tray_labels(locale: &str) -> TrayLabels {
             quit: "Beenden",
         },
         "fr" => TrayLabels {
-            search: "Recherche de l'agent",
+            search: "Recherche d’agent",
             clipboard: "Ouvrir le presse-papiers",
             snippets: "Ouvrir les snippets",
             settings: "Réglages",
@@ -1121,6 +1121,15 @@ fn tray_labels(locale: &str) -> TrayLabels {
     }
 }
 
+fn normalize_tray_locale(raw: &str) -> String {
+    raw.trim()
+        .to_ascii_lowercase()
+        .chars()
+        .filter(char::is_ascii_alphabetic)
+        .take(2)
+        .collect()
+}
+
 fn tray_locale(app: &tauri::AppHandle) -> String {
     app.try_state::<std::sync::Arc<db::Database>>()
         .and_then(|db| db.get_setting("ui_locale").ok().flatten())
@@ -1128,7 +1137,7 @@ fn tray_locale(app: &tauri::AppHandle) -> String {
 }
 
 fn build_tray_menu(app: &tauri::AppHandle) -> tauri::Result<Menu<tauri::Wry>> {
-    let labels = tray_labels(tray_locale(app).get(..2).unwrap_or("en"));
+    let labels = tray_labels(&normalize_tray_locale(&tray_locale(app)));
     let version = &app.package_info().version;
     let version_label = format!("Copyosity v{}", version);
 
@@ -2495,7 +2504,7 @@ mod overlay_width_tests {
 
 #[cfg(test)]
 mod tray_labels_tests {
-    use super::{tray_labels, TRAY_LABELS_EN};
+    use super::{normalize_tray_locale, tray_labels, TRAY_LABELS_EN};
 
     #[test]
     fn every_supported_ui_locale_localizes_the_tray_menu() {
@@ -2515,5 +2524,22 @@ mod tray_labels_tests {
     #[test]
     fn unknown_locale_falls_back_to_english() {
         assert_eq!(tray_labels("it").search, TRAY_LABELS_EN.search);
+    }
+
+    #[test]
+    fn locale_is_lowercased_trimmed_and_cut_to_two_letters() {
+        assert_eq!("ru", normalize_tray_locale("RU"));
+        assert_eq!("de", normalize_tray_locale("  de-DE  "));
+        assert_eq!("pt", normalize_tray_locale("🌐pt-BR"));
+        assert_eq!("zh", normalize_tray_locale("zh-Hant"));
+        assert_eq!("", normalize_tray_locale(""));
+    }
+
+    #[test]
+    fn a_regional_tag_reaches_the_same_labels_as_its_base_code() {
+        assert_eq!(
+            tray_labels(&normalize_tray_locale("ru-RU")).clipboard,
+            tray_labels("ru").clipboard
+        );
     }
 }

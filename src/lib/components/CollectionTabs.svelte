@@ -52,7 +52,7 @@
 <div class="tabs-container">
   <div class="view-tablist">
     <SegmentControl
-      ariaLabel="Clipboard view"
+      ariaLabel={$t("collections.aria-label.clipboard-view")}
       ariaKind="selected"
       items={[
         { id: "history", label: $t("overlay.tab.history") },

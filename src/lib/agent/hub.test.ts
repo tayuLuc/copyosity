@@ -21,7 +21,7 @@ describe("hubAgentBlockReason", () => {
   it("blocks when hub is disabled", () => {
     assert.equal(
       hubAgentBlockReason({ hub_enabled: false, hub_url: "https://hub", hub_token: "tok" }),
-      "AI hub is disabled in Settings",
+      tr("hub.msg.ai-hub-is-disabled"),
     );
   });
 

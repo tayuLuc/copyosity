@@ -24,7 +24,7 @@
 </script>
 
 <SegmentControl
-  ariaLabel="Content type"
+  ariaLabel={$t("segment.aria-label.content-type")}
   ariaKind="pressed"
   items={segments.map((segment) => ({ id: segment.id, label: segment.label }))}
   value={value}

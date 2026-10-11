@@ -245,7 +245,7 @@ describe("smartPrimaryActionLabel", () => {
     );
     assert.equal(
       smartPrimaryActionLabel({ kind: "color", hex: "#fff", rgb: "", swiftUI: "" }),
-      "Copy HEX",
+      tr("smart.msg.copy-hex"),
     );
     assert.equal(
       smartPrimaryActionLabel({ kind: "math", expression: "1+1", result: "2" }),

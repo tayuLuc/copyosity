@@ -15,7 +15,7 @@
     sessionCanPersist,
     trimOrphanedUserMessages,
   } from "$lib/agent";
-  import { t, tr } from "$lib/i18n";
+  import { t, tr, trp } from "$lib/i18n";
   import { invokeErrorMessage } from "$lib/exclusion-label";
   import { resetFocusState } from "$lib/input-modality";
   import {
@@ -210,9 +210,10 @@
   }
   function timeAgo(ts: number): string {
     const s = Math.floor((Date.now() - ts) / 1000);
-    if (s < 60) return "just now";
-    if (s < 3600) return `${Math.floor(s / 60)} min ago`;
-    if (s < 86400) return `${Math.floor(s / 3600)} hr ago`;
+    if (s < 60) return tr("time.just-now");
+    if (s < 3600) return trp("time.minutes-ago", Math.floor(s / 60));
+    if (s < 86400) return trp("time.hours-ago", Math.floor(s / 3600));
+    if (s < 604800) return trp("time.days-ago", Math.floor(s / 86400));
     return new Date(ts).toLocaleDateString();
   }
 
@@ -297,7 +298,7 @@
 
   const paletteShortcutHints = $derived<KeyboardHint[]>([
     { keys: "↵", action: mode === "agent" ? $t("palette.run.agent") : $t("palette.run.search") },
-    { keys: "⇧↵", action: "New line" },
+    { keys: "⇧↵", action: $t("palette.hint.new-line") },
     { keys: "Tab", action: $t("palette.switchMode") },
     { keys: "⌘↵", action: $t("palette.insert") },
     { keys: "Esc", action: $t("palette.close") },
@@ -792,7 +793,7 @@
                     {#if part.type === "text"}
                       <span>{part.text}</span>
                     {:else if part.type === "file" && (part as { mediaType?: string }).mediaType?.startsWith("image/")}
-                      <img class="msg-image" src={(part as { url: string }).url} alt="attached screenshot" />
+                      <img class="msg-image" src={(part as { url: string }).url} alt={$t("palette.alt.attached-screenshot")} />
                     {/if}
                   {/each}
                 </div>
@@ -804,7 +805,7 @@
                     {#if part.type === "reasoning"}
                       {#if (part as { text: string }).text.trim()}
                         <details class="reasoning" open={agentBusy && i === message.parts.length - 1}>
-                          <summary>💭 Reasoning</summary>
+                          <summary>💭 {$t("palette.text.reasoning")}</summary>
                           <div class="reasoning-body">{(part as { text: string }).text}</div>
                         </details>
                       {/if}
@@ -829,21 +830,21 @@
                           {#if tp.state === "input-available" || tp.state === "input-streaming"}
                             <span class="tool-spinner" aria-hidden="true"></span>
                           {:else if tp.state === "output-error"}
-                            <span class="tool-badge fail">error</span>
+                            <span class="tool-badge fail">{$t("palette.text.error")}</span>
                           {:else}
-                            <span class="tool-badge ok">done</span>
+                            <span class="tool-badge ok">{$t("palette.text.done")}</span>
                           {/if}
                         </summary>
                         <div class="tool-body">
                           {#if tp.input}
-                            <div class="tool-io-label">input</div>
+                            <div class="tool-io-label">{$t("palette.text.input")}</div>
                             <pre class="tool-io">{JSON.stringify(tp.input, null, 2)}</pre>
                           {/if}
                           {#if tp.state === "output-error"}
-                            <div class="tool-io-label">error</div>
+                            <div class="tool-io-label">{$t("palette.text.error")}</div>
                             <pre class="tool-io">{tp.errorText}</pre>
                           {:else if tp.output != null}
-                            <div class="tool-io-label">output</div>
+                            <div class="tool-io-label">{$t("palette.text.output")}</div>
                             <pre class="tool-io">{typeof tp.output === "string" ? tp.output : JSON.stringify(tp.output, null, 2)}</pre>
                           {/if}
                         </div>
