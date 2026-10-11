@@ -194,6 +194,8 @@ When the focused element cannot be read, the AX tree walk picks the best editabl
 
 `accessibility_show_prompt` shows the system dialog only and must **never** open System Settings itself. `check_accessibility(prompt: true)` is reached from paths that run whenever the Settings window is shown, so a jump to the Privacy pane there hijacks the user's screen mid-task. The only door to System Settings is the Permissions pane's **Request** button (`open_accessibility_settings`), which the user pressed on purpose.
 
+The sanctioned way to ask for Accessibility from inside our own window is the overlay notice strip (`src/lib/a11y-notice.ts` predicate, `.a11y-notice` footer strip in `src/routes/+page.svelte`): it renders only while the panel is visible, the grant is missing and the user has not dismissed it this session, it polls `check_accessibility(prompt: false)` every ~3 s and stops the moment a probe reports the grant. Its click target is our own Permissions pane (`open_settings_window` with `initial_pane: "permissions"`, delivered as the `navigate-settings-pane` event) — never System Settings. This keeps the probe invariant whole: no code path that only _reads_ trust may navigate the OS UI, so nothing in the overlay may call `open_accessibility_settings()`; asking the OS directly stays behind the **Request** button the user presses on purpose.
+
 ## Extending keyboard-paste apps
 
 Add bundle IDs to `KEYBOARD_PASTE_BUNDLE_IDS` in `accessibility.rs`:
