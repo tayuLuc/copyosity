@@ -90,8 +90,10 @@ Windows/Linux are inert stubs — do not ship them. "Notarization" is Apple-only
 - `hdiutil`/`notarytool`/`stapler` need the Bash tool with
   `dangerouslyDisableSandbox: true`.
 - Tests are locale-fragile → the script sets `LC_ALL=en_US.UTF-8`.
-- `gh`'s HTTPS API needs `HTTPS_PROXY` exported in the shell on this network;
-  `git push`, notarytool, and the mirror do not.
+- `gh` reaches GitHub over a direct route on this machine: `scutil --proxy` reports no system proxy,
+  and a stale `HTTPS_PROXY` aimed at a closed port only breaks every call with `proxyconnect`.
+  Export it only while a local proxy is actually listening; `git push`, notarytool and the mirror
+  bypass proxies either way (`curl --noproxy '*'` in `publish-mirrors.sh`).
 
 **Updater delivery (fork).** One endpoint:
 `https://github.com/tayuLuc/copyosity/releases/latest/download/latest.json`, verified
