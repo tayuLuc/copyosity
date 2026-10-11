@@ -443,7 +443,22 @@
       }
     });
 
+    // Разрешение выдаётся в Системных настройках: после переключения тумблера окно
+    // может не получить фокус снова, и панель остаётся со статусом, прочитанным при монтировании.
+    const a11yPoll = window.setInterval(() => {
+      if (activePane !== "permissions" || accessibilityGranted === null) {
+        return;
+      }
+      void checkAccessibility(false).then((granted) => {
+        if (granted !== accessibilityGranted) {
+          accessibilityGranted = granted;
+          syncA11yNotice(granted, a11yEnablePending);
+        }
+      });
+    }, 2000);
+
     return () => {
+      window.clearInterval(a11yPoll);
       unlistenPull.then((fn) => fn());
       unlistenPullDone.then((fn) => fn());
       unlistenShown.then((fn) => fn());
@@ -1465,10 +1480,9 @@
                 {#if accessibilityGranted === false}
                   <button class="status-action app-btn" type="button" onclick={handleRequestAccessibility}>
                     {$t("settings.text.request")}</button>
-                {:else if accessibilityGranted === true}
-                  <button class="status-action app-btn" type="button" onclick={handleRecheckAccessibility}>
-                    {$t("settings.text.recheck")}</button>
                 {/if}
+                <button class="status-action app-btn" type="button" onclick={handleRecheckAccessibility}>
+                  {$t("settings.text.recheck")}</button>
               </div>
               {#if accessibilityGranted === false}
                 <div class="status-hint">
