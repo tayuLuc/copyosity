@@ -697,6 +697,7 @@ pub fn run() {
             commands::activate_entry,
             commands::paste_entry,
             commands::check_accessibility,
+            commands::check_microphone,
             commands::open_accessibility_settings,
             commands::check_ollama_status,
             commands::start_ollama_server,

@@ -34,6 +34,7 @@
     setPaletteShortcut,
     listMicrophones,
     checkAccessibility,
+    checkMicrophone,
     openAccessibilitySettings,
     checkOllamaStatus,
     unloadOllamaModel,
@@ -136,6 +137,10 @@
   const A11Y_NOTICE_VERIFIED = $derived($t("settings.msg.accessibility-verified-paste-automation"));
 
   let accessibilityGranted = $state<boolean | null>(null);
+  let microphoneGranted = $state<boolean | null>(null);
+  let micEnablePending = $state(false);
+  const MIC_NOTICE_MISSING = $derived($t("settings.msg.microphone-not-granted"));
+  const MIC_NOTICE_GRANTED = $derived($t("settings.msg.microphone-granted"));
   // check_accessibility — синхронная команда: без флага соседние тики могут наложиться
   // и более старый ответ перезапишет более новый.
   let a11yPollBusy = false;
@@ -355,7 +360,8 @@
   }
 
   async function handleRequestAccessibility() {
-    await openAccessibilitySettings();
+    // Только системное окно: открыть Системные настройки должен человек,
+    // в этом окне кнопка «Открыть Системные настройки» и есть.
     await checkAccessibility(true);
     a11yEnablePending = true;
     accessibilityGranted = await checkAccessibility(false);
@@ -363,6 +369,22 @@
   }
 
   let microphonesLoading = $state(false);
+
+  async function updateMicrophoneStatus() {
+    microphoneGranted = await checkMicrophone(false);
+    return microphoneGranted;
+  }
+
+  async function handleRequestMicrophone() {
+    await checkMicrophone(true);
+    micEnablePending = true;
+    microphoneGranted = await checkMicrophone(false);
+  }
+
+  async function handleRecheckMicrophone() {
+    microphoneGranted = await checkMicrophone(false);
+    micEnablePending = false;
+  }
 
   async function handleLoadMicrophones() {
     if (microphonesLoading) {
@@ -418,6 +440,7 @@
     // Status only: a check must not reach for the system prompt, let alone open System
     // Settings on the user. The Permissions pane's "Request" button is the only door.
     void updateAccessibilityStatus();
+    void updateMicrophoneStatus();
 
     const unlistenPull = listen<string>("ollama-pull-progress", (event) => {
       pullProgress = event.payload;
@@ -431,6 +454,7 @@
 
     const unlistenShown = listen("settings-shown", () => {
       void updateAccessibilityStatus();
+      void updateMicrophoneStatus();
       void refreshExcludedAppsSection();
       void refreshHistoryCounts();
     });
@@ -446,6 +470,7 @@
     const unlistenFocus = win.onFocusChanged(({ payload: focused }) => {
       if (focused) {
         void updateAccessibilityStatus();
+        void updateMicrophoneStatus();
         void refreshExcludedAppsSection();
         void refreshHistoryCounts();
       }
@@ -1527,7 +1552,13 @@
               {#if accessibilityGranted === false}
                 <div class="status-hint">
                   {$t("settings.text.required-for-paste")}<br />
-                  {$t("settings.text.click-request.1")}{$t("settings.text.request")}{$t("settings.text.click-request.2")}<strong>Copyosity</strong>.
+                  {$t("settings.text.click-request.1")}{$t("settings.text.request")}{$t("settings.text.click-request.2")}
+                  <button
+                    class="status-action status-action--inline app-btn"
+                    type="button"
+                    onclick={openAccessibilitySettings}
+                  >
+                    {$t("settings.text.open-system-settings")}</button><strong>Copyosity</strong>.
                 </div>
               {/if}
               {#if accessibilityNotice}
@@ -1542,6 +1573,45 @@
               <div class="status-hint">
                 {$t("settings.text.after-a-new-build")}
               </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <div class="form-section-title form-section-title--with-icon"><SectionIcon name="voice" />
+            <div class="form-section-body">
+              <div class="inset-list">
+                <div class="status-step">
+                  <div class="status-row">
+                    <span class="status-dot" class:ok={microphoneGranted === true} class:fail={microphoneGranted === false} />
+                    <span class="status-text">
+                      {microphoneGranted === null ? $t("settings.text.checking") : microphoneGranted ? $t("settings.text.microphone-granted") : $t("settings.text.microphone-not-granted")}
+                    </span>
+                    {#if microphoneGranted === false}
+                      <button class="status-action app-btn" type="button" onclick={handleRequestMicrophone}>
+                        {$t("settings.text.request")}</button>
+                    {/if}
+                    <button
+                      class="status-action status-action--inline app-btn"
+                      type="button"
+                      onclick={handleRecheckMicrophone}
+                    >
+                      {$t("settings.text.recheck")}</button>
+                  </div>
+                  {#if microphoneGranted === false}
+                    <div class="status-hint">
+                      {$t("settings.text.microphone-hint")}<br />
+                      {$t("settings.text.microphone-record-hint")}
+                    </div>
+                  {/if}
+                  {#if micEnablePending && microphoneGranted === false}
+                    <div class="status-hint warn">
+                      {$t("settings.msg.microphone-not-granted")}
+                    </div>
+                  {:else if microphoneGranted === true}
+                    <div class="status-hint ok">
+                      {$t("settings.msg.microphone-granted")}
+                    </div>
+                  {/if}
             </div>
           </div>
         </div>
