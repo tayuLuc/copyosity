@@ -617,6 +617,7 @@ pub fn start_clipboard_monitor(app: AppHandle) {
         let mut cached_probe: Option<String> = probe_clipboard_hash(&mut clipboard);
         let mut state = CaptureRetryState::new();
         let mut last_activity = std::time::Instant::now();
+        let mut retention_due = std::time::Instant::now() + RETENTION_SWEEP_INTERVAL;
 
         loop {
             std::thread::sleep(poll_interval(last_activity.elapsed()));
@@ -670,8 +671,45 @@ pub fn start_clipboard_monitor(app: AppHandle) {
                     try_capture_from_clipboard(&mut clipboard, &ctx)
                 });
             });
+
+            if retention_due_next(std::time::Instant::now(), &mut retention_due)
+                && retention_sweep(&db).is_some()
+            {
+                let _ = app.emit("history-changed", ());
+            }
         }
     });
+}
+
+const RETENTION_SWEEP_INTERVAL: std::time::Duration = std::time::Duration::from_secs(60);
+
+fn retention_due_next(now: std::time::Instant, due: &mut std::time::Instant) -> bool {
+    if now < *due {
+        return false;
+    }
+    *due = now + RETENTION_SWEEP_INTERVAL;
+    true
+}
+
+fn retention_sweep(db: &Database) -> Option<u64> {
+    let days = match db.get_app_settings() {
+        Ok(settings) => settings.retention_days,
+        Err(err) => {
+            eprintln!("[clipboard] retention: settings unreadable, {err}");
+            return None;
+        }
+    };
+    match db.cleanup_old_entries(days) {
+        Ok(0) => None,
+        Ok(deleted) => {
+            eprintln!("[clipboard] retention: removed {deleted} entries older than {days} days");
+            Some(deleted)
+        }
+        Err(err) => {
+            eprintln!("[clipboard] retention: delete failed, {err}");
+            None
+        }
+    }
 }
 
 /// Poll fast right after clipboard activity (bursty copies, capture retries), then relax so an
@@ -701,7 +739,7 @@ fn with_autorelease_pool<R>(f: impl FnOnce() -> R) -> R {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::db::Database;
+    use crate::db::{ClipboardEntry, Database};
     use rusqlite::Connection;
     use std::path::Path;
 
@@ -936,5 +974,73 @@ mod tests {
         assert!(!state.capture_pending);
         assert_eq!(state.last_content_hash, probe);
         assert_eq!(attempts, 2);
+    }
+
+    fn aged_entry(text: &str, hash: &str, pinned: bool, created_at: &str) -> ClipboardEntry {
+        ClipboardEntry {
+            id: 0,
+            content_type: "text".to_string(),
+            text_content: Some(text.to_string()),
+            image_data: None,
+            image_thumb: None,
+            source_app: Some("TestApp".to_string()),
+            source_app_icon: None,
+            content_hash: hash.to_string(),
+            char_count: Some(text.len() as i64),
+            created_at: created_at.to_string(),
+            is_pinned: pinned,
+            collection_id: None,
+            tags: Vec::new(),
+            ocr_text: None,
+            image_format: None,
+            image_width: None,
+            image_height: None,
+            image_byte_size: None,
+        }
+    }
+
+    fn temp_db(label: &str) -> (Database, std::path::PathBuf) {
+        let dir = std::env::temp_dir().join(format!("copyosity-retention-{label}"));
+        let _ = std::fs::remove_dir_all(&dir);
+        (Database::new(dir.clone()).unwrap(), dir)
+    }
+
+    #[test]
+    fn retention_gate_fires_once_per_interval() {
+        let now = std::time::Instant::now();
+        let mut due = now + RETENTION_SWEEP_INTERVAL;
+        assert!(!retention_due_next(now, &mut due));
+        assert_eq!(due, now + RETENTION_SWEEP_INTERVAL);
+
+        let mut due = now.checked_sub(RETENTION_SWEEP_INTERVAL).unwrap();
+        assert!(retention_due_next(now, &mut due));
+        assert_eq!(due, now + RETENTION_SWEEP_INTERVAL);
+        assert!(!retention_due_next(now, &mut due));
+    }
+
+    #[test]
+    fn retention_sweep_removes_aged_and_keeps_pinned_and_fresh() {
+        let (db, dir) = temp_db("sweep");
+        let ancient = (chrono::Utc::now() - chrono::Duration::days(3)).to_rfc3339();
+        db.set_setting("retention_days", "1").unwrap();
+        db.insert_entry(&aged_entry("old", "sweep_old", false, &ancient))
+            .unwrap();
+        db.insert_entry(&aged_entry("pinned", "sweep_pinned", true, &ancient))
+            .unwrap();
+        db.insert_entry(&aged_entry(
+            "fresh",
+            "sweep_fresh",
+            false,
+            &chrono::Utc::now().to_rfc3339(),
+        ))
+        .unwrap();
+
+        assert_eq!(retention_sweep(&db), Some(1));
+        assert_eq!(retention_sweep(&db), None);
+        assert!(!db.has_entry_with_content_hash("sweep_old").unwrap());
+        assert!(db.has_entry_with_content_hash("sweep_pinned").unwrap());
+        assert!(db.has_entry_with_content_hash("sweep_fresh").unwrap());
+
+        std::fs::remove_dir_all(&dir).unwrap();
     }
 }
