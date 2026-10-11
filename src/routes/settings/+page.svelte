@@ -136,6 +136,9 @@
   const A11Y_NOTICE_VERIFIED = $derived($t("settings.msg.accessibility-verified-paste-automation"));
 
   let accessibilityGranted = $state<boolean | null>(null);
+  // check_accessibility — синхронная команда: без флага соседние тики могут наложиться
+  // и более старый ответ перезапишет более новый.
+  let a11yPollBusy = false;
   let accessibilityNotice = $state("");
   /** User was sent to System Settings; keep enable hint until access is granted. */
   let a11yEnablePending = $state(false);
@@ -362,14 +365,7 @@
   async function handleRecheckAccessibility() {
     const granted = await checkAccessibility(false);
     accessibilityGranted = granted;
-    if (granted) {
-      syncA11yNotice(true, true);
-      return;
-    }
-    await checkAccessibility(true);
-    a11yEnablePending = true;
-    accessibilityGranted = await checkAccessibility(false);
-    syncA11yNotice(accessibilityGranted);
+    syncA11yNotice(granted, a11yEnablePending);
   }
 
   onMount(() => {
@@ -443,7 +439,34 @@
       }
     });
 
+    // Разрешение выдаётся в Системных настройках: после переключения тумблера окно
+    // может не получить фокус снова, и панель остаётся со статусом, прочитанным при монтировании.
+    const a11yPoll = window.setInterval(() => {
+      if (
+        a11yPollBusy
+        || activePane !== "permissions"
+        || accessibilityGranted === null
+        || !platformIsMacOS()
+      ) {
+        return;
+      }
+      a11yPollBusy = true;
+      void checkAccessibility(false)
+        .then((granted) => {
+          if (granted !== accessibilityGranted) {
+            accessibilityGranted = granted;
+            syncA11yNotice(granted, a11yEnablePending);
+          }
+          return undefined;
+        })
+        .catch(() => undefined)
+        .finally(() => {
+          a11yPollBusy = false;
+        });
+    }, 2000);
+
     return () => {
+      window.clearInterval(a11yPoll);
       unlistenPull.then((fn) => fn());
       unlistenPullDone.then((fn) => fn());
       unlistenShown.then((fn) => fn());
@@ -1465,10 +1488,13 @@
                 {#if accessibilityGranted === false}
                   <button class="status-action app-btn" type="button" onclick={handleRequestAccessibility}>
                     {$t("settings.text.request")}</button>
-                {:else if accessibilityGranted === true}
-                  <button class="status-action app-btn" type="button" onclick={handleRecheckAccessibility}>
-                    {$t("settings.text.recheck")}</button>
                 {/if}
+                <button
+                  class="status-action status-action--inline app-btn"
+                  type="button"
+                  onclick={handleRecheckAccessibility}
+                >
+                  {$t("settings.text.recheck")}</button>
               </div>
               {#if accessibilityGranted === false}
                 <div class="status-hint">
