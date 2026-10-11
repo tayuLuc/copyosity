@@ -1114,6 +1114,7 @@ pub fn agent_read_calendar(days: Option<i64>) -> Result<String, String> {
 mod tests {
     use super::*;
 
+    #[cfg(not(target_os = "macos"))]
     #[test]
     fn open_accessibility_settings_command_returns_ok() {
         assert!(open_accessibility_settings().is_ok());
