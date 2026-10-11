@@ -3,9 +3,11 @@
 //! Paste-into-target flow: see `docs/architecture/macos-paste-pipeline.md`.
 
 mod accessibility;
+mod microphone_access;
 mod paste;
 
 pub use accessibility::{accessibility_trusted, open_accessibility_settings};
+pub use microphone_access::{microphone_granted, request_microphone};
 #[cfg(target_os = "macos")]
 pub use paste::spawn_automated_paste;
 

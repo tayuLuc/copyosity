@@ -232,7 +232,8 @@ const en: Dict = {
   "settings.text.check-again": "Check again",
   "settings.text.checking": "Checking...",
   "settings.text.click-request.1": 'Click "',
-  "settings.text.click-request.2": '" to open System Settings, then enable ',
+  "settings.text.click-request.2":
+    " — macOS will ask. If no window appears, open System Settings › Privacy & Security › Accessibility and enable ",
   "settings.text.click-test-then-save.a": "Click ",
   "settings.text.click-test-then-save.b": " → then ",
   "settings.text.clipboard-from-excluded-apps":
@@ -561,6 +562,15 @@ const en: Dict = {
   "settings.text.refresh-m": "Refresh list",
   "settings.text.mic-list-hint":
     "macOS only asks for the microphone when you record. Load the list when you need to choose a device.",
+  "settings.text.microphone-granted": "Microphone access granted",
+  "settings.text.microphone-not-granted": "Microphone access not granted",
+  "settings.text.microphone-access": "Microphone",
+  "settings.text.microphone-record-hint":
+    "macOS asks when a recording starts. If you denied it, allow Copyocity in System Settings › Privacy & Security › Microphone — the prompt does not return.",
+  "settings.msg.microphone-not-granted":
+    "Microphone not granted — voice notes will not record until you allow access.",
+  "settings.msg.microphone-granted": "Microphone access confirmed — voice notes can record.",
+  "settings.text.open-system-settings": "Open System Settings",
 };
 
 const ru: Dict = {
@@ -784,7 +794,8 @@ const ru: Dict = {
   "settings.text.check-again": "Проверить ещё раз",
   "settings.text.checking": "Проверка...",
   "settings.text.click-request.1": 'Нажмите "',
-  "settings.text.click-request.2": '" чтобы открыть «Системные настройки», затем включите ',
+  "settings.text.click-request.2":
+    " — спросит сама macOS. Если окно не появилось, откройте «Системные настройки» → «Конфиденциальность и безопасность» → «Универсальный доступ» и включите ",
   "settings.text.click-test-then-save.a": "Нажмите ",
   "settings.text.click-test-then-save.b": " → затем ",
   "settings.text.clipboard-from-excluded-apps":
@@ -1119,6 +1130,16 @@ const ru: Dict = {
   "menu.window": "Окно",
   "menu.help": "Справка",
   "menu.help.docs": "Документация Copyosity",
+  "settings.text.microphone-granted": "Доступ к микрофону предоставлен",
+  "settings.text.microphone-not-granted": "Доступ к микрофону не предоставлен",
+  "settings.text.microphone-access": "Микрофон",
+  "settings.text.microphone-record-hint":
+    "macOS спрашивает в момент записи. Если вы отказали, разрешите Copyocity в «Системных настройках» → «Конфиденциальность и безопасность» → «Микрофон»: окно больше не появится.",
+  "settings.msg.microphone-not-granted":
+    "Микрофон не выдан — голосовые заметки не запишутся, пока вы не разрешите доступ.",
+  "settings.msg.microphone-granted":
+    "Доступ к микрофону подтверждён — голосовые заметки можно записывать.",
+  "settings.text.open-system-settings": "Открыть Системные настройки",
 };
 
 const es: Dict = {
@@ -1340,7 +1361,8 @@ const es: Dict = {
   "settings.text.check-again": "Comprobar de nuevo",
   "settings.text.checking": "Comprobando...",
   "settings.text.click-request.1": 'Haz clic en "',
-  "settings.text.click-request.2": '" para abrir Ajustes del sistema y activar ',
+  "settings.text.click-request.2":
+    " — lo preguntará macOS. Si no aparece la ventana, abre Ajustes del Sistema › Privacidad y seguridad › Acceso universal y activa ",
   "settings.text.click-test-then-save.a": "Haz clic en ",
   "settings.text.click-test-then-save.b": " → después ",
   "settings.text.clipboard-from-excluded-apps":
@@ -1678,6 +1700,16 @@ const es: Dict = {
   "menu.window": "Ventana",
   "menu.help": "Ayuda",
   "menu.help.docs": "Documentación de Copyosity",
+  "settings.text.microphone-granted": "Acceso al micrófono concedido",
+  "settings.text.microphone-not-granted": "Acceso al micrófono no concedido",
+  "settings.text.microphone-access": "Micrófono",
+  "settings.text.microphone-record-hint":
+    "macOS pregunta al iniciar una grabación. Si lo denegaste, permite Copyocity en Ajustes del Sistema › Privacidad y seguridad › Micrófono: el aviso no volverá.",
+  "settings.msg.microphone-not-granted":
+    "Micrófono no concedido: las notas de voz no se grabarán hasta que concedas acceso.",
+  "settings.msg.microphone-granted":
+    "Acceso al micrófono confirmado: las notas de voz se pueden grabar.",
+  "settings.text.open-system-settings": "Abrir Ajustes del Sistema",
 };
 
 const zh: Dict = {
@@ -1894,7 +1926,8 @@ const zh: Dict = {
   "settings.text.check-again": "重新检查",
   "settings.text.checking": "检查中…",
   "settings.text.click-request.1": "点击「",
-  "settings.text.click-request.2": "」打开系统设置，然后启用 ",
+  "settings.text.click-request.2":
+    " 后由 macOS 询问。若窗口没有出现，请打开「系统设置 › 隐私与安全性 › 辅助功能」并启用 ",
   "settings.text.click-test-then-save.a": "点击 ",
   "settings.text.click-test-then-save.b": " → 然后 ",
   "settings.text.clipboard-from-excluded-apps": "被排除应用的剪贴板内容不会被存储或打标签。",
@@ -2201,6 +2234,14 @@ const zh: Dict = {
   "menu.window": "窗口",
   "menu.help": "帮助",
   "menu.help.docs": "Copyosity 文档",
+  "settings.text.microphone-granted": "已授予麦克风访问权限",
+  "settings.text.microphone-not-granted": "未授予麦克风访问权限",
+  "settings.text.microphone-access": "麦克风",
+  "settings.text.microphone-record-hint":
+    "只有开始录音时 macOS 才会询问。如果你此前拒绝，请在「系统设置 › 隐私与安全性 › 麦克风」中允许 Copyocity：提示不会再出现。",
+  "settings.msg.microphone-not-granted": "麦克风未授权 — 在你允许访问之前，语音笔记无法录制。",
+  "settings.msg.microphone-granted": "麦克风访问已确认 — 可以录制语音笔记。",
+  "settings.text.open-system-settings": "打开系统设置",
 };
 
 const de: Dict = {
@@ -2427,7 +2468,8 @@ const de: Dict = {
   "settings.text.check-again": "Erneut prüfen",
   "settings.text.checking": "Wird geprüft...",
   "settings.text.click-request.1": "Auf „",
-  "settings.text.click-request.2": "“ klicken, um die Systemeinstellungen zu öffnen, und dann ",
+  "settings.text.click-request.2":
+    " — macOS fragt selbst. Erscheint kein Fenster, öffne Systemeinstellungen › Datenschutz & Sicherheit › Bedienungshilfen und aktiviere ",
   "settings.text.click-test-then-save.a": "Auf ",
   "settings.text.click-test-then-save.b": " klicken → dann ",
   "settings.text.clipboard-from-excluded-apps":
@@ -2765,6 +2807,16 @@ const de: Dict = {
   "menu.window": "Fenster",
   "menu.help": "Hilfe",
   "menu.help.docs": "Copyosity-Dokumentation",
+  "settings.text.microphone-granted": "Mikrofonzugriff erteilt",
+  "settings.text.microphone-not-granted": "Mikrofonzugriff nicht erteilt",
+  "settings.text.microphone-access": "Mikrofon",
+  "settings.text.microphone-record-hint":
+    "macOS fragt beim Start einer Aufnahme. Hast du verweigert, erlaube Copyocity unter Systemeinstellungen › Datenschutz & Sicherheit › Mikrofon: die Abfrage kehrt nicht zurück.",
+  "settings.msg.microphone-not-granted":
+    "Mikrofon nicht erteilt — Sprachnotizen werden erst nach der Freigabe aufgenommen.",
+  "settings.msg.microphone-granted":
+    "Mikrofonzugriff bestätigt — Sprachnotizen lassen sich aufnehmen.",
+  "settings.text.open-system-settings": "Systemeinstellungen öffnen",
 };
 
 const fr: Dict = {
@@ -2991,7 +3043,8 @@ const fr: Dict = {
   "settings.text.check-again": "Vérifier à nouveau",
   "settings.text.checking": "Vérification...",
   "settings.text.click-request.1": 'Cliquez sur "',
-  "settings.text.click-request.2": '" pour ouvrir Réglages Système, puis activez ',
+  "settings.text.click-request.2":
+    " — macOS le demandera. Si aucune fenêtre n’apparaît, ouvrez Réglages Système › Confidentialité et sécurité › Accessibilité et activez ",
   "settings.text.click-test-then-save.a": "Cliquez sur ",
   "settings.text.click-test-then-save.b": " → puis ",
   "settings.text.clipboard-from-excluded-apps":
@@ -3332,6 +3385,16 @@ const fr: Dict = {
   "menu.window": "Fenêtre",
   "menu.help": "Aide",
   "menu.help.docs": "Documentation de Copyosity",
+  "settings.text.microphone-granted": "Accès au micro accordé",
+  "settings.text.microphone-not-granted": "Accès au micro non accordé",
+  "settings.text.microphone-access": "Micro",
+  "settings.text.microphone-record-hint":
+    "macOS demande au démarrage d’un enregistrement. Si tu as refusé, autorise Copyocity dans Réglages Système › Confidentialité et sécurité › Micro : l’invite ne reviendra pas.",
+  "settings.msg.microphone-not-granted":
+    "Micro non accordé — les notes vocales ne s’enregistreront pas tant que tu n’auras pas autorisé l’accès.",
+  "settings.msg.microphone-granted":
+    "Accès au micro confirmé — les notes vocales peuvent s’enregistrer.",
+  "settings.text.open-system-settings": "Ouvrir Réglages Système",
 };
 
 const ja: Dict = {
@@ -3555,7 +3618,8 @@ const ja: Dict = {
   "settings.text.check-again": "もう一度確認",
   "settings.text.checking": "確認中...",
   "settings.text.click-request.1": "システム設定を開くには「",
-  "settings.text.click-request.2": "」をクリックし、次を有効に: ",
+  "settings.text.click-request.2":
+    " を押すと macOS が確認します。ウィンドウが表示されない場合は「システム設定 › プライバシーとセキュリティ › アクセシビリティ」で ",
   "settings.text.click-test-then-save.a": "まず ",
   "settings.text.click-test-then-save.b": " をクリック → ",
   "settings.text.clipboard-from-excluded-apps":
@@ -3882,6 +3946,15 @@ const ja: Dict = {
   "menu.window": "ウインドウ",
   "menu.help": "ヘルプ",
   "menu.help.docs": "Copyosity ドキュメント",
+  "settings.text.microphone-granted": "マイクへのアクセスは許可済み",
+  "settings.text.microphone-not-granted": "マイクへのアクセスは未許可",
+  "settings.text.microphone-access": "マイク",
+  "settings.text.microphone-record-hint":
+    "macOS は録音開始時に確認します。拒否した場合は「システム設定 › プライバシーとセキュリティ › マイク」で Copyocity を許可してください。確認は再表示されません。",
+  "settings.msg.microphone-not-granted":
+    "マイクが未許可です。アクセスを許可するまでボイスメモは録音されません。",
+  "settings.msg.microphone-granted": "マイクへのアクセスを確認しました。ボイスメモを録音できます。",
+  "settings.text.open-system-settings": "システム設定を開く",
 };
 
 export const dict: Record<LocaleCode, Dict> = { en, ru, es, zh, de, fr, ja };

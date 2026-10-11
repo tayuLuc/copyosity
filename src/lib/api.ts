@@ -338,6 +338,10 @@ export async function checkAccessibility(prompt = false): Promise<boolean> {
   return invoke("check_accessibility", { prompt });
 }
 
+export async function checkMicrophone(prompt = false): Promise<boolean> {
+  return invoke("check_microphone", { prompt });
+}
+
 export async function openAccessibilitySettings(): Promise<void> {
   return invoke("open_accessibility_settings");
 }

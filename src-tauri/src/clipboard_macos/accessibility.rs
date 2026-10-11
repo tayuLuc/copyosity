@@ -537,8 +537,9 @@ fn accessibility_process_trusted() -> bool {
 ///
 /// Deliberately does *not* open System Settings: this function runs on a check, and a
 /// check happens whenever the Settings window is shown. Jumping the user to the
-/// Privacy pane mid-keystroke is not our call to make — the pane's own "Request" button
-/// (`open_accessibility_settings`) is where that jump belongs.
+/// Privacy pane mid-keystroke is not our call to make — only the pane's own "Request"
+/// button raises the system dialog, and the path into System Settings is a separate
+/// button beside it, taken on purpose.
 #[cfg(target_os = "macos")]
 fn accessibility_show_prompt() {
     unsafe {
