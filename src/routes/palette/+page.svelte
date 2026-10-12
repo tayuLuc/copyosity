@@ -217,7 +217,7 @@
     return new Date(ts).toLocaleDateString();
   }
 
-  // The hub /v1/models list mixes chat models with embedding/reranker models;
+  // The hub /models list mixes chat models with embedding/reranker models;
   // only chat models make sense for the agent, so drop the non-chat ones.
   const NON_CHAT_MODEL = /embed|rerank|^bge|^e5-|jina|frida|giga/i;
   function isChatModel(id: string): boolean {

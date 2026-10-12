@@ -1,6 +1,6 @@
 //! Minimal ReAct agent loop over the AI hub.
 //!
-//! Uses qwen3.6 (native tool-calls) via /v1/chat/completions with a single
+//! Uses qwen3.6 (native tool-calls) via /chat/completions with a single
 //! `web_search` tool backed by the hub Search API. Runs in a background thread
 //! and streams progress to the frontend via Tauri events:
 //!   - "agent-progress" : String (a human-readable step line)
