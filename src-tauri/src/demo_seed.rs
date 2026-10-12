@@ -76,6 +76,7 @@ pub fn seed(db: &Database) -> Result<DemoSeedReport, String> {
             image_width: None,
             image_height: None,
             image_byte_size: None,
+            audio_data: None,
         };
         db.insert_entry(&entry).map_err(|e| e.to_string())?;
     }
@@ -102,6 +103,7 @@ pub fn seed(db: &Database) -> Result<DemoSeedReport, String> {
             image_width: Some(spec.width),
             image_height: Some(spec.height),
             image_byte_size: Some(spec.byte_size),
+            audio_data: None,
         };
         let (id, _) = db.insert_entry(&entry).map_err(|e| e.to_string())?;
         if let Some(ocr) = spec.ocr_text {

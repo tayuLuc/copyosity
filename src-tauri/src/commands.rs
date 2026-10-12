@@ -641,6 +641,9 @@ pub fn copy_entry(db: State<'_, Arc<Database>>, entry_id: i64) -> Result<(), Str
         "image" => {
             write_image_entry(&mut clipboard, &entry, ClipboardWriteMode::Copy)?;
         }
+        "audio" => {
+            write_audio_entry(&mut clipboard, &entry)?;
+        }
         _ => {}
     }
 
@@ -678,9 +681,24 @@ fn write_entry_for_paste(clipboard: &mut Clipboard, entry: &ClipboardEntry) -> R
         "image" => {
             write_image_entry(clipboard, entry, ClipboardWriteMode::Paste)?;
         }
+        "audio" => {
+            write_audio_entry(clipboard, entry)?;
+        }
         _ => {}
     }
     Ok(())
+}
+
+fn write_audio_entry(clipboard: &mut Clipboard, entry: &ClipboardEntry) -> Result<(), String> {
+    let _ = clipboard;
+    let encoded = entry
+        .audio_data
+        .as_deref()
+        .ok_or_else(|| "Audio data is missing".to_owned())?;
+    let bytes = base64::engine::general_purpose::STANDARD
+        .decode(encoded)
+        .map_err(|e| format!("Audio decode failed: {}", e))?;
+    crate::clipboard_macos::write_wav_to_pasteboard(&bytes, true)
 }
 
 fn finish_paste(app: &tauri::AppHandle) {

@@ -92,6 +92,7 @@ describe("i18n dictionary", () => {
       "Web",
       "Agent",
       "FaceTime Audio",
+      "Audio",
       "Text",
       "Image",
       "Images",

@@ -32,7 +32,9 @@
         ? "image"
         : contentType === "text"
           ? "text"
-          : "file",
+          : contentType === "audio"
+            ? "audio"
+            : "file",
   );
 
   const label = $derived(
@@ -43,7 +45,9 @@
           ? $t("overlay.text.kind-text")
           : contentType === "image"
             ? $t("overlay.text.image")
-            : $t("overlay.text.kind-file")),
+            : contentType === "audio"
+              ? $t("overlay.text.kind-audio")
+              : $t("overlay.text.kind-file")),
   );
 
   const isFormatLabel = $derived(contentType === "image" && !!formatLabel && !labelOverride);
@@ -97,6 +101,12 @@
         <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
         <circle cx="8.5" cy="8.5" r="1.5" />
         <polyline points="21 15 16 10 5 21" />
+      {:else if iconKind === "audio"}
+        <path d="M12 3v18" />
+        <path d="M8 6v12" />
+        <path d="M16 6v12" />
+        <path d="M4 10v4" />
+        <path d="M20 10v4" />
       {:else}
         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
         <path d="M14 2v6h6" />

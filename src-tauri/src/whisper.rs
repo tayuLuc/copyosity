@@ -132,7 +132,7 @@ impl RecordingSession {
 }
 
 /// Encode f32 mono PCM samples as a 16-bit WAV byte buffer.
-fn encode_wav(samples: &[f32], sample_rate: u32) -> Result<Vec<u8>, String> {
+pub fn encode_wav(samples: &[f32], sample_rate: u32) -> Result<Vec<u8>, String> {
     let mut cursor = std::io::Cursor::new(Vec::<u8>::new());
     let spec = hound::WavSpec {
         channels: 1,
@@ -155,7 +155,7 @@ fn encode_wav(samples: &[f32], sample_rate: u32) -> Result<Vec<u8>, String> {
 
 /// Send WAV bytes to a Whisper-compatible HTTP server and return the transcript.
 pub fn transcribe_audio(
-    samples: Vec<f32>,
+    samples: &[f32],
     sample_rate: u32,
     url: &str,
     token: &str,
@@ -165,7 +165,7 @@ pub fn transcribe_audio(
         return Ok(String::new());
     }
 
-    let wav_bytes = encode_wav(&samples, sample_rate)?;
+    let wav_bytes = encode_wav(samples, sample_rate)?;
 
     // Build multipart/form-data body manually
     let boundary = "----CopyosityWhisperBoundary7kRx92";
