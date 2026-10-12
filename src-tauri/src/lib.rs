@@ -156,6 +156,7 @@ fn register_voice_cancel(app: &tauri::AppHandle) {
             }
             VOICE_CANCELLED.store(true, std::sync::atomic::Ordering::Relaxed);
             let _ = recording_mutex().lock().unwrap().take();
+            unregister_voice_cancel(&handle);
             let hide_app = handle.clone();
             let _ = handle.run_on_main_thread(move || {
                 hide_voice_overlay(&hide_app);
