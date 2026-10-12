@@ -510,7 +510,12 @@
           void submit();
         }
       } catch (e) {
-        setInvokeFailure(e, tr("palette.msg.voice-input-failed-try"));
+        const reason = String(e);
+        if (reason.includes("not_configured")) {
+          setInvokeFailure(e, tr("overlay.msg.voice-transcription-not-configured"));
+        } else {
+          setInvokeFailure(e, tr("palette.msg.voice-input-failed-try"));
+        }
       }
     } else {
       clearStatusNotice();

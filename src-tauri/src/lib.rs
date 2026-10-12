@@ -2126,6 +2126,12 @@ fn palette_voice_stop(app: tauri::AppHandle) -> Result<String, String> {
     let (samples, sample_rate) = session.finish();
     let db = app.state::<std::sync::Arc<db::Database>>();
     let settings = db.get_app_settings().map_err(|e| e.to_string())?;
+    // A code, so the palette can say what is actually wrong: "try again" is a lie when
+    // nothing is configured, and repeating the attempt changes nothing.
+    transcription::transcription_endpoint(&settings).map_err(|e| {
+        eprintln!("[voice] palette ERROR: {e}");
+        "not_configured".to_string()
+    })?;
     transcribe_with_settings(&settings, samples, sample_rate)
 }
 
