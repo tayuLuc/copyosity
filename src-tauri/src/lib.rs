@@ -1471,7 +1471,7 @@ fn handle_voice_event(app: &tauri::AppHandle, state: ShortcutState) {
                     crate::clipboard_macos::request_microphone();
                     if !crate::clipboard_macos::microphone_granted() {
                         eprintln!("[voice] microphone access denied, not recording");
-                        let _ = app.emit("voice-error", "Microphone access is off");
+                        let _ = app.emit("voice-error", "mic_denied");
                         return;
                     }
                 }
