@@ -52,3 +52,25 @@ pub fn microphone_granted() -> bool {
 
 #[cfg(not(target_os = "macos"))]
 pub fn request_microphone() {}
+
+/// Open the Microphone pane in System Settings. macOS shows its permission dialog once, so this
+/// is the only way back once a prompt was dismissed.
+#[cfg(target_os = "macos")]
+pub fn open_microphone_settings() {
+    const URLS: &[&str] = &[
+        "x-apple.systempreferences:com.apple.settings.PrivacySecurity.extension?Privacy_Microphone",
+        "x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone",
+    ];
+    for url in URLS {
+        if std::process::Command::new("open")
+            .arg(url)
+            .status()
+            .is_ok_and(|s| s.success())
+        {
+            return;
+        }
+    }
+}
+
+#[cfg(not(target_os = "macos"))]
+pub fn open_microphone_settings() {}

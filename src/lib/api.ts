@@ -342,6 +342,10 @@ export async function checkMicrophone(prompt = false): Promise<boolean> {
   return invoke("check_microphone", { prompt });
 }
 
+export async function openMicrophoneSettings(): Promise<void> {
+  return invoke("open_microphone_settings");
+}
+
 export async function openAccessibilitySettings(): Promise<void> {
   return invoke("open_accessibility_settings");
 }

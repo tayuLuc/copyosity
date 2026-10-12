@@ -2,7 +2,7 @@
 
 [[permission]]
 identifier = "settings-window-commands"
-description = "Settings: app config, excluded apps, Ollama, accessibility, history"
+description = "Settings: app config, excluded apps, Ollama, accessibility, microphone, history"
 commands.allow = [
   "get_app_settings",
   "get_platform",
@@ -21,6 +21,8 @@ commands.allow = [
   "get_history_counts",
   "check_accessibility",
   "open_accessibility_settings",
+  "check_microphone",
+  "open_microphone_settings",
   "check_ollama_status",
   "start_ollama_server",
   "pull_ollama_model",
