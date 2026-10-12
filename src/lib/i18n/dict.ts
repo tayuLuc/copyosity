@@ -312,6 +312,12 @@ const en: Dict = {
   "settings.text.tall-panel-docked-to":
     "Tall panel docked to the screen edge instead of the horizontal bottom bar. Opens on the screen where your cursor is (⌘⇧V).",
   "settings.text.test-connection": "Test connection",
+  "settings.text.theme": "Theme",
+  "settings.text.theme-light": "Light",
+  "settings.text.theme-dark": "Dark",
+  "settings.text.theme-system": "System",
+  "settings.text.theme-hint":
+    "Applies immediately to every window. “System” follows the macOS appearance.",
   "settings.text.the-model-will-keep":
     "The model will keep these terms spelled exactly as written.",
   "settings.text.this-fork-updates-itself":
@@ -886,6 +892,12 @@ const ru: Dict = {
   "settings.text.tall-panel-docked-to":
     "Высокая панель у края экрана вместо горизонтальной нижней панели. Открывается на том экране, где курсор (⌘⇧V).",
   "settings.text.test-connection": "Проверить подключение",
+  "settings.text.theme": "Тема",
+  "settings.text.theme-light": "Светлая",
+  "settings.text.theme-dark": "Тёмная",
+  "settings.text.theme-system": "Системная",
+  "settings.text.theme-hint":
+    "Применяется сразу во всех окнах. «Системная» следует за оформлением macOS.",
   "settings.text.the-model-will-keep":
     "Модель будет сохранять эти термины ровно в написанном виде.",
   "settings.text.this-fork-updates-itself":
@@ -1463,6 +1475,12 @@ const es: Dict = {
   "settings.text.tall-panel-docked-to":
     "Panel alto anclado al borde de la pantalla en lugar de la barra inferior horizontal. Se abre en la pantalla donde está el cursor (⌘⇧V).",
   "settings.text.test-connection": "Probar conexión",
+  "settings.text.theme": "Tema",
+  "settings.text.theme-light": "Claro",
+  "settings.text.theme-dark": "Oscuro",
+  "settings.text.theme-system": "Sistema",
+  "settings.text.theme-hint":
+    "Se aplica de inmediato a todas las ventanas. «Sistema» sigue la apariencia de macOS.",
   "settings.text.the-model-will-keep":
     "El modelo mantendrá estos términos escritos exactamente igual.",
   "settings.text.this-fork-updates-itself":
@@ -2027,6 +2045,11 @@ const zh: Dict = {
   "settings.text.tall-panel-docked-to":
     "纵向面板停靠在屏幕边缘，取代底部横向栏。在光标所在的屏幕打开（⌘⇧V）。",
   "settings.text.test-connection": "测试连接",
+  "settings.text.theme": "主题",
+  "settings.text.theme-light": "浅色",
+  "settings.text.theme-dark": "深色",
+  "settings.text.theme-system": "跟随系统",
+  "settings.text.theme-hint": "立即应用到所有窗口。「跟随系统」会配合 macOS 的外观设置。",
   "settings.text.the-model-will-keep": "模型会原样保留这些术语的拼写。",
   "settings.text.this-fork-updates-itself":
     "本分支从自身仓库的 GitHub Releases 自我更新，并用本分支自有密钥签名验证。",
@@ -2590,6 +2613,12 @@ const de: Dict = {
   "settings.text.tall-panel-docked-to":
     "Hohes Panel am Bildschirmrand statt der horizontalen Leiste unten. Öffnet auf dem Bildschirm, auf dem sich der Cursor befindet (⌘⇧V).",
   "settings.text.test-connection": "Verbindung testen",
+  "settings.text.theme": "Erscheinungsbild",
+  "settings.text.theme-light": "Hell",
+  "settings.text.theme-dark": "Dunkel",
+  "settings.text.theme-system": "System",
+  "settings.text.theme-hint":
+    "Gilt sofort für alle Fenster. „System“ folgt dem Erscheinungsbild von macOS.",
   "settings.text.the-model-will-keep": "Diese Begriffe werden exakt wie geschrieben beibehalten.",
   "settings.text.this-fork-updates-itself":
     "Dieser Fork aktualisiert sich aus den eigenen GitHub-Releases, signiert und geprüft mit dem eigenen Fork-Schlüssel.",
@@ -3176,6 +3205,12 @@ const fr: Dict = {
   "settings.text.tall-panel-docked-to":
     "Panneau haut ancré sur le bord de l’écran au lieu de la barre horizontale en bas. S’ouvre sur l’écran où se trouve le curseur (⌘⇧V).",
   "settings.text.test-connection": "Tester la connexion",
+  "settings.text.theme": "Thème",
+  "settings.text.theme-light": "Clair",
+  "settings.text.theme-dark": "Sombre",
+  "settings.text.theme-system": "Système",
+  "settings.text.theme-hint":
+    "S’applique immédiatement à toutes les fenêtres. « Système » suit l’apparence de macOS.",
   "settings.text.the-model-will-keep":
     "Le modèle conservera ces termes écrits exactement tels quels.",
   "settings.text.this-fork-updates-itself":
@@ -3752,6 +3787,12 @@ const ja: Dict = {
   "settings.text.tall-panel-docked-to":
     "横型ボトムバーの代わりに画面端へドックする縦長パネル。カーソルのある画面で開く (⌘⇧V)。",
   "settings.text.test-connection": "接続テスト",
+  "settings.text.theme": "テーマ",
+  "settings.text.theme-light": "ライト",
+  "settings.text.theme-dark": "ダーク",
+  "settings.text.theme-system": "システム",
+  "settings.text.theme-hint":
+    "すべてのウィンドウに即座に適用されます。「システム」は macOS の外観に従います。",
   "settings.text.the-model-will-keep": "これらの語は表記どおりに維持。",
   "settings.text.this-fork-updates-itself":
     "このフォークは自身の GitHub Releases から自己更新し、フォーク固有キーで署名と検証を実施。",

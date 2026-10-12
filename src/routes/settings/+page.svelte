@@ -54,6 +54,8 @@
   import HotkeySettingsSection from "$lib/components/HotkeySettingsSection.svelte";
   import SnippetsEditor from "$lib/components/SnippetsEditor.svelte";
   import { confirmDestructive } from "$lib/confirm";
+  import { isThemeChoice, setTheme, theme } from "$lib/theme";
+  import SegmentControl from "$lib/components/SegmentControl.svelte";
   import {
     coerceSettingsPane,
     isSettingsPane,
@@ -113,6 +115,7 @@
     voice_transcription_enabled: false,
     ai_tagging_enabled: false,
     overlay_shortcut_hints_enabled: true,
+    theme: "system",
   });
   let microphones: AudioInputDevice[] = $state([]);
   let modelCatalog = $state<ModelCatalog>({
@@ -744,6 +747,7 @@
       | "ai_tagging_enabled"
       | "overlay_shortcut_hints_enabled"
       | "board_vertical"
+      | "theme"
     >
   >;
 
@@ -791,6 +795,24 @@
 
   function handleBoardVerticalToggle(enabled: boolean) {
     void persistImmediate({ board_vertical: enabled });
+  }
+
+  const themeSegments = $derived<{ id: string; label: string }[]>([
+    { id: "light", label: $t("settings.text.theme-light") },
+    { id: "dark", label: $t("settings.text.theme-dark") },
+    { id: "system", label: $t("settings.text.theme-system") },
+  ]);
+
+  async function handleThemeSelect(choice: string) {
+    if (!isThemeChoice(choice)) return;
+    // Applied and broadcast before the write returns, so the switch repaints on
+    // click instead of waiting for the round-trip.
+    const previous = settings.theme;
+    setTheme(choice);
+    await persistImmediate({ theme: choice });
+    // persistImmediate rolls `settings` back on a failed write — put the appearance
+    // back too, otherwise every window keeps a palette that was never saved.
+    if (settings.theme !== choice) setTheme(previous);
   }
 
   async function handleRestoreOverlayBoardSizes() {
@@ -2198,6 +2220,27 @@
         </div>
         <div class="form-section-body">
           <div class="form-hint">{$t("general.launchAtLoginHint")}</div>
+        </div>
+      </section>
+
+      <section class="form-section">
+        <div class="form-section-title form-section-title--with-icon">
+          <SectionIcon name="theme" />{$t("settings.text.theme")}
+        </div>
+        <div class="form-section-body">
+          <div class="inset-list">
+            <div class="form-field">
+              <span class="form-label">{$t("settings.text.theme")}</span>
+              <SegmentControl
+                ariaLabel={$t("settings.text.theme")}
+                ariaKind="pressed"
+                items={themeSegments}
+                value={$theme}
+                onSelect={(id) => void handleThemeSelect(id)}
+              />
+            </div>
+          </div>
+          <div class="form-hint">{$t("settings.text.theme-hint")}</div>
         </div>
       </section>
 

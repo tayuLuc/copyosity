@@ -109,6 +109,8 @@ describe("i18n dictionary", () => {
       "Space",
       "Tab",
       "Copy",
+      // German keeps the English spelling for the appearance option (das System).
+      "System",
     ]);
     const echo = [];
     for (const code of codes) {

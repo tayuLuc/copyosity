@@ -1,3 +1,5 @@
+import type { ThemeChoice } from "./theme";
+
 export interface ClipboardEntry {
   id: number;
   content_type: string;
@@ -86,6 +88,8 @@ export interface AppSettings {
   voice_transcription_enabled: boolean;
   ai_tagging_enabled: boolean;
   overlay_shortcut_hints_enabled: boolean;
+  /** "light" | "dark" | "system" — the backend coerces anything else to "system". */
+  theme: ThemeChoice;
 }
 
 export interface AudioInputDevice {

@@ -57,6 +57,18 @@ pub struct AppSettings {
     /// Render the clipboard board vertically (a tall mini-clipboard docked to the
     /// screen edge) instead of the default horizontal bottom bar.
     pub board_vertical: bool,
+    /// Interface appearance: "light", "dark" or "system" (follow the OS appearance).
+    pub theme: String,
+}
+
+/// Normalize a persisted `theme` value. Unknown values collapse to "system" so a
+/// stale or hand-edited row can never leave the UI without a usable theme.
+fn normalize_theme(raw: Option<&str>) -> &'static str {
+    match raw {
+        Some("light") => "light",
+        Some("dark") => "dark",
+        _ => "system",
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -743,6 +755,7 @@ impl Database {
             .get_setting("board_vertical")?
             .map(|v| v == "true")
             .unwrap_or(false);
+        let theme = normalize_theme(self.get_setting("theme")?.as_deref()).to_string();
 
         Ok(AppSettings {
             ollama_model,
@@ -769,6 +782,7 @@ impl Database {
             voice_dictionary,
             voice_selected_text,
             board_vertical,
+            theme,
         })
     }
 
@@ -799,6 +813,7 @@ impl Database {
         voice_dictionary: Option<&str>,
         voice_selected_text: Option<bool>,
         board_vertical: Option<bool>,
+        theme: Option<&str>,
     ) -> Result<AppSettings, rusqlite::Error> {
         if let Some(model) = ollama_model {
             self.set_setting("ollama_model", model.trim())?;
@@ -892,6 +907,9 @@ impl Database {
         }
         if let Some(enabled) = board_vertical {
             self.set_setting("board_vertical", if enabled { "true" } else { "false" })?;
+        }
+        if let Some(value) = theme {
+            self.set_setting("theme", normalize_theme(Some(value)))?;
         }
 
         self.get_app_settings()
@@ -2126,11 +2144,25 @@ mod tests {
     }
 
     #[test]
+    fn theme_defaults_to_system_and_rejects_unknown_values() {
+        let db = test_db();
+        assert_eq!(db.get_app_settings().unwrap().theme, "system");
+
+        db.set_setting("theme", "dark").unwrap();
+        assert_eq!(db.get_app_settings().unwrap().theme, "dark");
+
+        // A hand-edited or stale row must not leave the UI without a palette.
+        db.set_setting("theme", "solarized").unwrap();
+        assert_eq!(db.get_app_settings().unwrap().theme, "system");
+    }
+
+    #[test]
     fn update_settings() {
         let db = test_db();
         db.update_app_settings(
             Some("custom-model"),
             Some(7),
+            None,
             None,
             None,
             None,
@@ -2624,6 +2656,7 @@ mod tests {
             None,
             None,
             None,
+            None,
         )
         .unwrap();
         assert!(db.get_app_settings().unwrap().hub_enabled);
@@ -2639,6 +2672,7 @@ mod tests {
             None,
             None,
             Some(false),
+            None,
             None,
             None,
             None,

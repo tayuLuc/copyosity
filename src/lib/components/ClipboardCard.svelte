@@ -1242,7 +1242,7 @@
   .type-preview-btn:hover:not(:disabled) {
     color: var(--color-text-bright);
     background: var(--surface-15);
-    border-color: rgb(var(--rgb-white) / 20%);
+    border-color: rgb(var(--rgb-tint) / 20%);
   }
 
   .type-preview-btn:active:not(:disabled) {

@@ -1,5 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 
+import type { ThemeChoice } from "./theme";
 import type {
   AppSettings,
   AudioInputDevice,
@@ -140,6 +141,7 @@ export async function updateAppSettings(opts: {
   voice_transcription_enabled?: boolean | null;
   ai_tagging_enabled?: boolean | null;
   overlay_shortcut_hints_enabled?: boolean | null;
+  theme?: ThemeChoice | null;
 }): Promise<AppSettings> {
   return invoke("update_app_settings", {
     ollamaModel: opts.ollama_model ?? null,
@@ -166,6 +168,7 @@ export async function updateAppSettings(opts: {
     voiceTranscriptionEnabled: opts.voice_transcription_enabled ?? null,
     aiTaggingEnabled: opts.ai_tagging_enabled ?? null,
     overlayShortcutHintsEnabled: opts.overlay_shortcut_hints_enabled ?? null,
+    theme: opts.theme ?? null,
   });
 }
 

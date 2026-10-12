@@ -2,6 +2,8 @@
   import { onMount } from "svelte";
   import { followLocaleChanges } from "$lib/i18n";
   import { initInputModality } from "$lib/input-modality";
+  import { getAppSettings } from "$lib/api";
+  import { adoptTheme, followThemeChanges } from "$lib/theme";
   import "$lib/styles/tokens.css";
   import "$lib/styles/window-chrome.css";
   import "$lib/styles/focus-rings.css";
@@ -16,14 +18,19 @@
   onMount(initInputModality);
 
   onMount(() => {
-    let unlisten: (() => void) | undefined;
+    const unlisteners: (() => void)[] = [];
     let stopped = false;
-    void followLocaleChanges()
-      .then((fn) => (stopped ? fn() : (unlisten = fn)))
+    const release = (fn: () => void) => (stopped ? fn() : unlisteners.push(fn));
+    void followLocaleChanges().then(release).catch(() => undefined);
+    void followThemeChanges().then(release).catch(() => undefined);
+    // The stored choice is the source of truth; the localStorage copy already
+    // painted the right palette, so this only corrects a stale or missing mirror.
+    void getAppSettings()
+      .then((settings) => adoptTheme(settings.theme))
       .catch(() => undefined);
     return () => {
       stopped = true;
-      unlisten?.();
+      for (const unlisten of unlisteners) unlisten();
     };
   });
 </script>

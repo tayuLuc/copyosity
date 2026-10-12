@@ -400,6 +400,7 @@ pub fn update_app_settings(
     voice_dictionary: Option<String>,
     voice_selected_text: Option<bool>,
     board_vertical: Option<bool>,
+    theme: Option<String>,
 ) -> Result<AppSettings, String> {
     if let Some(model) = ollama_model.as_deref() {
         ollama::validate_model_name(model)?;
@@ -442,6 +443,7 @@ pub fn update_app_settings(
             voice_dictionary.as_deref(),
             voice_selected_text,
             board_vertical,
+            theme.as_deref(),
         )
         .map_err(|e| {
             if hub_enabled.is_some() {
