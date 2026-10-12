@@ -2,13 +2,7 @@
 export default {
   extends: ["stylelint-config-standard", "stylelint-config-html/svelte"],
   plugins: ["stylelint-order", "stylelint-declaration-strict-value"],
-  ignoreFiles: [
-    "dist/**",
-    "build/**",
-    ".svelte-kit/**",
-    "node_modules/**",
-    "src-tauri/**",
-  ],
+  ignoreFiles: ["dist/**", "build/**", ".svelte-kit/**", "node_modules/**", "src-tauri/**"],
   rules: {
     // Oxfmt owns formatting and blank lines — avoid fighting the formatter.
     "at-rule-empty-line-before": null,
