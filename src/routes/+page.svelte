@@ -853,7 +853,13 @@
 
     // Voice transcription failures (e.g. a hub 429 asking to raise the tariff).
     const unlistenVoiceError = listen<string>("voice-error", (e) => {
-      void notify(tr("overlay.msg.voice-transcription-failed"), e.payload);
+      const detail =
+        e.payload === "not_configured"
+          ? tr("overlay.msg.voice-transcription-not-configured")
+          : e.payload === "request_failed"
+            ? tr("overlay.msg.voice-transcription-request-failed")
+            : tr("overlay.msg.voice-transcription-failed");
+      void notify(tr("overlay.msg.voice-transcription-failed"), detail);
     });
 
     const handleKeydown = (e: KeyboardEvent) => {
