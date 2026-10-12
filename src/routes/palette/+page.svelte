@@ -1048,7 +1048,7 @@
     background: var(--surface-agent-muted);
     color: var(--color-text-primary);
     padding: 8px 12px;
-    border-radius: 14px 14px 4px 14px;
+    border-radius: 14px 14px 4px;
     max-width: 85%;
     white-space: pre-wrap;
   }
