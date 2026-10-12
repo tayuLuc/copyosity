@@ -133,6 +133,54 @@ fn transcribe_with_settings(
     )
 }
 
+/// Set while the user cancelled the current recording so the worker can drop the samples.
+static VOICE_CANCELLED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+static VOICE_CANCEL_SHORTCUT: std::sync::OnceLock<std::sync::Mutex<Option<Shortcut>>> =
+    std::sync::OnceLock::new();
+
+fn voice_cancel_mutex() -> &'static std::sync::Mutex<Option<Shortcut>> {
+    VOICE_CANCEL_SHORTCUT.get_or_init(|| std::sync::Mutex::new(None))
+}
+
+/// Escape cancels the recording or the transcription in flight. Registered only while the
+/// capsule is up, so it is released again as soon as the capsule is hidden.
+fn register_voice_cancel(app: &tauri::AppHandle) {
+    let escape = Shortcut::new(None, Code::Escape);
+    let handle = app.clone();
+    if app
+        .global_shortcut()
+        .on_shortcut(escape, move |_app, _shortcut, event| {
+            if event.state != ShortcutState::Pressed {
+                return;
+            }
+            VOICE_CANCELLED.store(true, std::sync::atomic::Ordering::Relaxed);
+            let _ = recording_mutex().lock().unwrap().take();
+            unregister_voice_cancel(&handle);
+            let hide_app = handle.clone();
+            let _ = handle.run_on_main_thread(move || {
+                hide_voice_overlay(&hide_app);
+            });
+        })
+        .is_err()
+    {
+        return;
+    }
+    if let Ok(mut current) = voice_cancel_mutex().lock() {
+        if let Some(old) = current.replace(escape) {
+            let _ = app.global_shortcut().unregister(old);
+        }
+    }
+}
+
+fn unregister_voice_cancel(app: &tauri::AppHandle) {
+    if let Ok(mut current) = voice_cancel_mutex().lock() {
+        if let Some(old) = current.take() {
+            let _ = app.global_shortcut().unregister(old);
+        }
+    }
+}
+
 static CURRENT_VOICE_SHORTCUT: std::sync::OnceLock<std::sync::Mutex<Option<Shortcut>>> =
     std::sync::OnceLock::new();
 
@@ -308,6 +356,32 @@ fn handle_quick_menu_event(app: &tauri::AppHandle, id: &str) {
     }
 }
 
+#[cfg(test)]
+mod parse_shortcut_tests {
+    use super::*;
+
+    #[test]
+    fn accepts_function_keys() {
+        assert!(parse_shortcut("f5").is_some());
+        assert!(parse_shortcut("cmd+f5").is_some());
+        assert!(parse_shortcut("option+shift+f12").is_some());
+        assert!(parse_shortcut("F20").is_some());
+    }
+
+    #[test]
+    fn rejects_unknown_keys() {
+        assert!(parse_shortcut("f0").is_none());
+        assert!(parse_shortcut("fn").is_none());
+        assert!(parse_shortcut("globe").is_none());
+    }
+
+    #[test]
+    fn keeps_the_letters_and_space_working() {
+        assert!(parse_shortcut("option+space").is_some());
+        assert!(parse_shortcut("cmd+shift+c").is_some());
+    }
+}
+
 /// Parse a string like "option+space", "cmd+space", "ctrl+alt+space" into a Shortcut.
 fn parse_shortcut(s: &str) -> Option<Shortcut> {
     let lower = s.to_lowercase();
@@ -328,6 +402,26 @@ fn parse_shortcut(s: &str) -> Option<Shortcut> {
             "space" => key_code = Some(Code::Space),
             "tab" => key_code = Some(Code::Tab),
             "enter" | "return" => key_code = Some(Code::Enter),
+            "f1" => key_code = Some(Code::F1),
+            "f2" => key_code = Some(Code::F2),
+            "f3" => key_code = Some(Code::F3),
+            "f4" => key_code = Some(Code::F4),
+            "f5" => key_code = Some(Code::F5),
+            "f6" => key_code = Some(Code::F6),
+            "f7" => key_code = Some(Code::F7),
+            "f8" => key_code = Some(Code::F8),
+            "f9" => key_code = Some(Code::F9),
+            "f10" => key_code = Some(Code::F10),
+            "f11" => key_code = Some(Code::F11),
+            "f12" => key_code = Some(Code::F12),
+            "f13" => key_code = Some(Code::F13),
+            "f14" => key_code = Some(Code::F14),
+            "f15" => key_code = Some(Code::F15),
+            "f16" => key_code = Some(Code::F16),
+            "f17" => key_code = Some(Code::F17),
+            "f18" => key_code = Some(Code::F18),
+            "f19" => key_code = Some(Code::F19),
+            "f20" => key_code = Some(Code::F20),
             k if k.len() == 1 => {
                 let c = k.chars().next().unwrap();
                 key_code = match c {
@@ -1378,6 +1472,8 @@ fn handle_voice_event(app: &tauri::AppHandle, state: ShortcutState) {
                             "[voice] recording started, sample_rate={}",
                             session.sample_rate
                         );
+                        VOICE_CANCELLED.store(false, std::sync::atomic::Ordering::Relaxed);
+                        register_voice_cancel(app);
                         show_voice_overlay(app);
                         let level_arc = session.level.clone();
                         let emit_handle = app.clone();
@@ -1412,7 +1508,21 @@ fn handle_voice_event(app: &tauri::AppHandle, state: ShortcutState) {
                     let _ = win.emit("voice-transcribing", ());
                 }
                 std::thread::spawn(move || {
+                    // hide_voice_overlay touches AppKit (NSPanel); this closure runs on a
+                    // worker thread, so hop to the main thread — calling NSPanel.hide() off
+                    // the main thread crashes the app after every transcription.
+                    let hide = || {
+                        unregister_voice_cancel(&app);
+                        let hide_app = app.clone();
+                        let _ = app.run_on_main_thread(move || {
+                            hide_voice_overlay(&hide_app);
+                        });
+                    };
                     let (samples, sample_rate) = session.finish();
+                    if VOICE_CANCELLED.load(std::sync::atomic::Ordering::Relaxed) {
+                        hide();
+                        return;
+                    }
                     eprintln!(
                         "[voice] stopped, {} samples at {}Hz ({:.1}s)",
                         samples.len(),
@@ -1424,6 +1534,7 @@ fn handle_voice_event(app: &tauri::AppHandle, state: ShortcutState) {
                         Ok(s) => s,
                         Err(e) => {
                             eprintln!("[voice] failed to load settings: {}", e);
+                            hide();
                             return;
                         }
                     };
@@ -1432,6 +1543,8 @@ fn handle_voice_event(app: &tauri::AppHandle, state: ShortcutState) {
                             Ok(pair) => pair,
                             Err(e) => {
                                 eprintln!("[voice] ERROR: {e}");
+                                let _ = app.emit("voice-error", e);
+                                hide();
                                 return;
                             }
                         };
@@ -1505,13 +1618,7 @@ fn handle_voice_event(app: &tauri::AppHandle, state: ShortcutState) {
                             let _ = app.emit("voice-error", e);
                         }
                     }
-                    // hide_voice_overlay touches AppKit (NSPanel); this closure runs on a
-                    // worker thread, so hop to the main thread — calling NSPanel.hide() off
-                    // the main thread crashes the app after every transcription.
-                    let hide_app = app.clone();
-                    let _ = app.run_on_main_thread(move || {
-                        hide_voice_overlay(&hide_app);
-                    });
+                    hide();
                 });
             }
         }
@@ -1539,6 +1646,7 @@ fn ensure_voice_overlay(app: &tauri::AppHandle) {
         .resizable(false)
         .decorations(false)
         .transparent(true)
+        .shadow(false)
         .skip_taskbar(true)
         .visible(false)
         .center();

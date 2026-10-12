@@ -13,7 +13,7 @@
 
 <div class="form-hint form-hint--stacked">
   <span class="form-hint-line">
-    Use: <code>cmd</code>, <code>option</code>, <code>ctrl</code>, <code>shift</code> + key.
+    Use: <code>cmd</code>, <code>option</code>, <code>ctrl</code>, <code>shift</code> + key or an <code>f1</code>–<code>f20</code> function key.
   </span>
   <span class="form-hint-line">
     Examples:
