@@ -72,7 +72,8 @@ git push --no-verify origin HEAD
 
 echo "==> [4/10] build both arches (Developer-ID signed)"
 export RELEASE_CONFIG=1
-export TAURI_SIGNING_PRIVATE_KEY="$(cat .tauri/copyosity-updater.key)"
+TAURI_SIGNING_PRIVATE_KEY="$(cat .tauri/copyosity-updater.key)"
+export TAURI_SIGNING_PRIVATE_KEY
 export TAURI_SIGNING_PRIVATE_KEY_PASSWORD=""
 # build-macos.sh's own DMG step fails under the sandbox; the signed .app is what
 # finalize needs, so tolerate that non-zero exit.
