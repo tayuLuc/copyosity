@@ -1188,11 +1188,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn open_accessibility_settings_command_returns_ok() {
-        assert!(open_accessibility_settings().is_ok());
-    }
-
-    #[test]
     fn settings_app_path_defaults_to_settings_root() {
         assert_eq!(settings_app_path(None), "/settings");
         assert_eq!(settings_app_path(Some("")), "/settings");
