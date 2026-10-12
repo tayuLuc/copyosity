@@ -1022,7 +1022,7 @@ pub fn check_accessibility(prompt: bool) -> Result<bool, String> {
 
 /// Microphone authorization. `prompt: true` asks macOS to show the dialog; the status read never
 /// prompts, and the app never opens System Settings itself.
-#[tauri::command]
+#[tauri::command(async)]
 pub fn check_microphone(prompt: bool) -> Result<bool, String> {
     if prompt {
         crate::clipboard_macos::request_microphone();
