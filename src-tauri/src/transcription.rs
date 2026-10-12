@@ -59,6 +59,7 @@ mod tests {
             voice_dictionary: String::new(),
             voice_selected_text: false,
             board_vertical: false,
+            theme: "system".into(),
         }
     }
 

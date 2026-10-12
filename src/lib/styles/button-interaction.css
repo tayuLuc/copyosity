@@ -84,7 +84,7 @@ button.app-btn.is-busy .app-btn-spinner-icon {
 }
 
 .app-btn-spinner-icon--palette {
-  border-color: rgb(var(--rgb-white) / 25%);
+  border-color: rgb(var(--rgb-tint) / 25%);
   border-top-color: var(--color-palette-link);
 }
 

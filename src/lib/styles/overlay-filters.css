@@ -156,6 +156,6 @@
   margin: 0 var(--space-segment-inset);
   border-radius: 1px;
   background: var(--border-emphasis);
-  box-shadow: 0 0 0 1px rgb(var(--rgb-white) / 6%);
+  box-shadow: 0 0 0 1px rgb(var(--rgb-tint) / 6%);
   opacity: 0.95;
 }
