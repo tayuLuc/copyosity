@@ -576,6 +576,9 @@ const en: Dict = {
   "settings.text.microphone-unreadable": "Microphone status could not be read",
   "settings.msg.microphone-unreadable":
     "The app could not read the microphone permission. Restart Copyocity; if it repeats, reinstall the current version.",
+  "overlay.msg.voice-transcription-not-configured":
+    "Transcription is not configured. Set it up in Settings.",
+  "overlay.msg.voice-transcription-request-failed": "The transcription service did not answer.",
 };
 
 const ru: Dict = {
@@ -1150,6 +1153,9 @@ const ru: Dict = {
   "settings.text.microphone-unreadable": "Не удалось прочитать статус микрофона",
   "settings.msg.microphone-unreadable":
     "Приложение не смогло прочитать разрешение на микрофон. Перезапустите Copyocity; если повторится — переустановите текущую версию.",
+  "overlay.msg.voice-transcription-not-configured":
+    "Транскрипция не настроена. Настройте её в настройках.",
+  "overlay.msg.voice-transcription-request-failed": "Сервис транскрипции не ответил.",
 };
 
 const es: Dict = {
@@ -1725,6 +1731,9 @@ const es: Dict = {
   "settings.text.microphone-unreadable": "No se pudo leer el estado del micrófono",
   "settings.msg.microphone-unreadable":
     "La aplicación no pudo leer el permiso del micrófono. Reinicia Copyocity; si se repite, reinstala la versión actual.",
+  "overlay.msg.voice-transcription-not-configured":
+    "La transcripción no está configurada. Configúrala en Ajustes.",
+  "overlay.msg.voice-transcription-request-failed": "El servicio de transcripción no respondió.",
 };
 
 const zh: Dict = {
@@ -2262,6 +2271,8 @@ const zh: Dict = {
   "settings.text.microphone-unreadable": "无法读取麦克风状态",
   "settings.msg.microphone-unreadable":
     "应用无法读取麦克风权限。请重启 Copyocity；若仍然出现，请重装当前版本。",
+  "overlay.msg.voice-transcription-not-configured": "未配置转录服务，请在设置中配置。",
+  "overlay.msg.voice-transcription-request-failed": "转录服务没有响应。",
 };
 
 const de: Dict = {
@@ -2842,6 +2853,10 @@ const de: Dict = {
   "settings.text.microphone-unreadable": "Mikrofonstatus konnte nicht gelesen werden",
   "settings.msg.microphone-unreadable":
     "Die App konnte die Mikrofonberechtigung nicht lesen. Starte Copyocity neu; tritt es erneut auf, installiere die aktuelle Version neu.",
+  "overlay.msg.voice-transcription-not-configured":
+    "Die Transkription ist nicht eingerichtet. Richte sie in den Einstellungen ein.",
+  "overlay.msg.voice-transcription-request-failed":
+    "Der Transkriptionsdienst hat nicht geantwortet.",
 };
 
 const fr: Dict = {
@@ -3425,6 +3440,9 @@ const fr: Dict = {
   "settings.text.microphone-unreadable": "Impossible de lire l’état du micro",
   "settings.msg.microphone-unreadable":
     "L’application n’a pas pu lire l’autorisation du micro. Relancez Copyocity ; si cela recommence, réinstallez la version actuelle.",
+  "overlay.msg.voice-transcription-not-configured":
+    "La transcription n’est pas configurée. Configurez-la dans les réglages.",
+  "overlay.msg.voice-transcription-request-failed": "Le service de transcription n’a pas répondu.",
 };
 
 const ja: Dict = {
@@ -3990,6 +4008,9 @@ const ja: Dict = {
   "settings.text.microphone-unreadable": "マイクの状態を読み取れませんでした",
   "settings.msg.microphone-unreadable":
     "アプリがマイクの権限を読み取れませんでした。Copyocity を再起動してください。繰り返す場合は現行バージョンを再インストールしてください。",
+  "overlay.msg.voice-transcription-not-configured":
+    "文字起こしが設定されていません。設定から構成してください。",
+  "overlay.msg.voice-transcription-request-failed": "文字起こしサービスが応答しませんでした。",
 };
 
 export const dict: Record<LocaleCode, Dict> = { en, ru, es, zh, de, fr, ja };

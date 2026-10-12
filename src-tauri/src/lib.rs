@@ -1543,7 +1543,7 @@ fn handle_voice_event(app: &tauri::AppHandle, state: ShortcutState) {
                             Ok(pair) => pair,
                             Err(e) => {
                                 eprintln!("[voice] ERROR: {e}");
-                                let _ = app.emit("voice-error", e);
+                                let _ = app.emit("voice-error", "not_configured");
                                 hide();
                                 return;
                             }
@@ -1613,9 +1613,10 @@ fn handle_voice_event(app: &tauri::AppHandle, state: ShortcutState) {
                         }
                         Ok(_) => eprintln!("[voice] transcription returned empty text"),
                         Err(e) => {
+                            // Surface to the user, but without the upstream body: it can carry the
+                            // endpoint address, which must not reach a system notification.
                             eprintln!("[voice] transcription ERROR: {}", e);
-                            // Surface to the user (e.g. a hub 429 raise-tariff hint).
-                            let _ = app.emit("voice-error", e);
+                            let _ = app.emit("voice-error", "request_failed");
                         }
                     }
                     hide();
