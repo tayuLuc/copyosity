@@ -1412,6 +1412,15 @@ fn handle_voice_event(app: &tauri::AppHandle, state: ShortcutState) {
                     let _ = win.emit("voice-transcribing", ());
                 }
                 std::thread::spawn(move || {
+                    // hide_voice_overlay touches AppKit (NSPanel); this closure runs on a
+                    // worker thread, so hop to the main thread — calling NSPanel.hide() off
+                    // the main thread crashes the app after every transcription.
+                    let hide = || {
+                        let hide_app = app.clone();
+                        let _ = app.run_on_main_thread(move || {
+                            hide_voice_overlay(&hide_app);
+                        });
+                    };
                     let (samples, sample_rate) = session.finish();
                     eprintln!(
                         "[voice] stopped, {} samples at {}Hz ({:.1}s)",
@@ -1424,6 +1433,7 @@ fn handle_voice_event(app: &tauri::AppHandle, state: ShortcutState) {
                         Ok(s) => s,
                         Err(e) => {
                             eprintln!("[voice] failed to load settings: {}", e);
+                            hide();
                             return;
                         }
                     };
@@ -1432,6 +1442,8 @@ fn handle_voice_event(app: &tauri::AppHandle, state: ShortcutState) {
                             Ok(pair) => pair,
                             Err(e) => {
                                 eprintln!("[voice] ERROR: {e}");
+                                let _ = app.emit("voice-error", e);
+                                hide();
                                 return;
                             }
                         };
@@ -1505,13 +1517,7 @@ fn handle_voice_event(app: &tauri::AppHandle, state: ShortcutState) {
                             let _ = app.emit("voice-error", e);
                         }
                     }
-                    // hide_voice_overlay touches AppKit (NSPanel); this closure runs on a
-                    // worker thread, so hop to the main thread — calling NSPanel.hide() off
-                    // the main thread crashes the app after every transcription.
-                    let hide_app = app.clone();
-                    let _ = app.run_on_main_thread(move || {
-                        hide_voice_overlay(&hide_app);
-                    });
+                    hide();
                 });
             }
         }
@@ -1539,6 +1545,7 @@ fn ensure_voice_overlay(app: &tauri::AppHandle) {
         .resizable(false)
         .decorations(false)
         .transparent(true)
+        .shadow(false)
         .skip_taskbar(true)
         .visible(false)
         .center();

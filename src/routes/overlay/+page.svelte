@@ -121,6 +121,9 @@
     backdrop-filter: blur(var(--blur-voice-capsule));
     -webkit-backdrop-filter: blur(var(--blur-voice-capsule));
     border-radius: var(--radius-pill);
+    /* Капсула занимает всё окно, поэтому размытие фона без обрезки рисует
+       прямоугольник, выглядывающий за прозрачные углы пилюли. */
+    clip-path: inset(0 round var(--radius-pill));
     border: 1px solid var(--border-soft);
     box-shadow: var(--shadow-voice-capsule);
   }
