@@ -125,6 +125,9 @@
        прямоугольник, выглядывающий за прозрачные углы пилюли. */
     clip-path: inset(0 round var(--radius-pill));
     border: 1px solid var(--border-soft);
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
   }
 
   .dot {
