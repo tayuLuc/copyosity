@@ -399,10 +399,14 @@ fn parse_shortcut(s: &str) -> Option<Shortcut> {
             "option" | "alt" => mods |= Modifiers::ALT,
             "ctrl" | "control" => mods |= Modifiers::CONTROL,
             "shift" => mods |= Modifiers::SHIFT,
+            "space" => key_code = Some(Code::Space),
+            "tab" => key_code = Some(Code::Tab),
+            "enter" | "return" => key_code = Some(Code::Enter),
             "f1" => key_code = Some(Code::F1),
             "f2" => key_code = Some(Code::F2),
             "f3" => key_code = Some(Code::F3),
             "f4" => key_code = Some(Code::F4),
+            "f5" => key_code = Some(Code::F5),
             "f6" => key_code = Some(Code::F6),
             "f7" => key_code = Some(Code::F7),
             "f8" => key_code = Some(Code::F8),
@@ -418,10 +422,6 @@ fn parse_shortcut(s: &str) -> Option<Shortcut> {
             "f18" => key_code = Some(Code::F18),
             "f19" => key_code = Some(Code::F19),
             "f20" => key_code = Some(Code::F20),
-            "f5" => key_code = Some(Code::F5),
-            "space" => key_code = Some(Code::Space),
-            "tab" => key_code = Some(Code::Tab),
-            "enter" | "return" => key_code = Some(Code::Enter),
             k if k.len() == 1 => {
                 let c = k.chars().next().unwrap();
                 key_code = match c {
