@@ -355,6 +355,32 @@ fn handle_quick_menu_event(app: &tauri::AppHandle, id: &str) {
     }
 }
 
+#[cfg(test)]
+mod parse_shortcut_tests {
+    use super::*;
+
+    #[test]
+    fn accepts_function_keys() {
+        assert!(parse_shortcut("f5").is_some());
+        assert!(parse_shortcut("cmd+f5").is_some());
+        assert!(parse_shortcut("option+shift+f12").is_some());
+        assert!(parse_shortcut("F20").is_some());
+    }
+
+    #[test]
+    fn rejects_unknown_keys() {
+        assert!(parse_shortcut("f0").is_none());
+        assert!(parse_shortcut("fn").is_none());
+        assert!(parse_shortcut("globe").is_none());
+    }
+
+    #[test]
+    fn keeps_the_letters_and_space_working() {
+        assert!(parse_shortcut("option+space").is_some());
+        assert!(parse_shortcut("cmd+shift+c").is_some());
+    }
+}
+
 /// Parse a string like "option+space", "cmd+space", "ctrl+alt+space" into a Shortcut.
 fn parse_shortcut(s: &str) -> Option<Shortcut> {
     let lower = s.to_lowercase();
@@ -372,6 +398,26 @@ fn parse_shortcut(s: &str) -> Option<Shortcut> {
             "option" | "alt" => mods |= Modifiers::ALT,
             "ctrl" | "control" => mods |= Modifiers::CONTROL,
             "shift" => mods |= Modifiers::SHIFT,
+            "f1" => key_code = Some(Code::F1),
+            "f2" => key_code = Some(Code::F2),
+            "f3" => key_code = Some(Code::F3),
+            "f4" => key_code = Some(Code::F4),
+            "f6" => key_code = Some(Code::F6),
+            "f7" => key_code = Some(Code::F7),
+            "f8" => key_code = Some(Code::F8),
+            "f9" => key_code = Some(Code::F9),
+            "f10" => key_code = Some(Code::F10),
+            "f11" => key_code = Some(Code::F11),
+            "f12" => key_code = Some(Code::F12),
+            "f13" => key_code = Some(Code::F13),
+            "f14" => key_code = Some(Code::F14),
+            "f15" => key_code = Some(Code::F15),
+            "f16" => key_code = Some(Code::F16),
+            "f17" => key_code = Some(Code::F17),
+            "f18" => key_code = Some(Code::F18),
+            "f19" => key_code = Some(Code::F19),
+            "f20" => key_code = Some(Code::F20),
+            "f5" => key_code = Some(Code::F5),
             "space" => key_code = Some(Code::Space),
             "tab" => key_code = Some(Code::Tab),
             "enter" | "return" => key_code = Some(Code::Enter),
