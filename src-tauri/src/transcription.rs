@@ -60,6 +60,7 @@ mod tests {
             voice_selected_text: false,
             board_vertical: false,
             theme: "system".into(),
+            voice_toggle_record: false,
         }
     }
 

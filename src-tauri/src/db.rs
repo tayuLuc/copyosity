@@ -59,6 +59,9 @@ pub struct AppSettings {
     pub board_vertical: bool,
     /// Interface appearance: "light", "dark" or "system" (follow the OS appearance).
     pub theme: String,
+    /// Make the voice hotkey a toggle: one press starts recording, the next press
+    /// stops it, instead of recording only while the key is held.
+    pub voice_toggle_record: bool,
 }
 
 /// Normalize a persisted `theme` value. Unknown values collapse to "system" so a
@@ -770,6 +773,10 @@ impl Database {
             .map(|v| v == "true")
             .unwrap_or(false);
         let theme = normalize_theme(self.get_setting("theme")?.as_deref()).to_string();
+        let voice_toggle_record = self
+            .get_setting("voice_toggle_record")?
+            .map(|v| v == "true")
+            .unwrap_or(false);
 
         Ok(AppSettings {
             ollama_model,
@@ -797,6 +804,7 @@ impl Database {
             voice_selected_text,
             board_vertical,
             theme,
+            voice_toggle_record,
         })
     }
 
@@ -828,6 +836,7 @@ impl Database {
         voice_selected_text: Option<bool>,
         board_vertical: Option<bool>,
         theme: Option<&str>,
+        voice_toggle_record: Option<bool>,
     ) -> Result<AppSettings, rusqlite::Error> {
         if let Some(model) = ollama_model {
             self.set_setting("ollama_model", model.trim())?;
@@ -924,6 +933,12 @@ impl Database {
         }
         if let Some(value) = theme {
             self.set_setting("theme", normalize_theme(Some(value)))?;
+        }
+        if let Some(enabled) = voice_toggle_record {
+            self.set_setting(
+                "voice_toggle_record",
+                if enabled { "true" } else { "false" },
+            )?;
         }
 
         self.get_app_settings()
@@ -2205,6 +2220,7 @@ mod tests {
             None,
             None,
             None,
+            None,
         )
         .unwrap();
         let s = db.get_app_settings().unwrap();
@@ -2678,6 +2694,7 @@ mod tests {
             None,
             None,
             None,
+            None,
         )
         .unwrap();
         assert!(db.get_app_settings().unwrap().hub_enabled);
@@ -2693,6 +2710,7 @@ mod tests {
             None,
             None,
             Some(false),
+            None,
             None,
             None,
             None,
