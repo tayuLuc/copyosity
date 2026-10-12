@@ -259,7 +259,7 @@ pub fn record_audio_entry(app: &AppHandle, db: &Arc<Database>, wav_bytes: &[u8])
         image_format: None,
         image_width: None,
         image_height: None,
-        image_byte_size: None,
+        image_byte_size: Some(wav_bytes.len() as i64),
         audio_data: Some(base64::Engine::encode(
             &base64::engine::general_purpose::STANDARD,
             wav_bytes,

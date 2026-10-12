@@ -131,6 +131,13 @@ impl RecordingSession {
     }
 }
 
+/// Upper bound for a stored recording. A WAV grows by ~96 KB per second and the entry
+/// write holds the database mutex, so an unbounded one would stall the whole app.
+pub const MAX_AUDIO_BYTES: usize = 20 * 1024 * 1024;
+
+/// Bytes a canonical 16-bit mono WAV header occupies.
+pub const WAV_HEADER_BYTES: usize = 44;
+
 /// Encode f32 mono PCM samples as a 16-bit WAV byte buffer.
 pub fn encode_wav(samples: &[f32], sample_rate: u32) -> Result<Vec<u8>, String> {
     let mut cursor = std::io::Cursor::new(Vec::<u8>::new());

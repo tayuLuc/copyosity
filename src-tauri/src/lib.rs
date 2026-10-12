@@ -133,44 +133,94 @@ fn transcribe_with_settings(
     )
 }
 
-/// Payload of the `voice-error` event: the failure code plus whether the recording
-/// itself survived (stored in history and put on the pasteboard).
+/// Payload of the `voice-error` event: the failure code plus what survived of the
+/// recording itself.
 #[derive(serde::Serialize, Clone)]
 struct VoiceErrorPayload {
     code: &'static str,
     audio_saved: bool,
+    audio_trimmed: bool,
+}
+
+/// What survived a failed transcription: `saved` = the recording is in history or on the
+/// pasteboard, `trimmed` = it exceeded `whisper::MAX_AUDIO_BYTES` and was cut to fit.
+#[derive(Default)]
+struct KeptAudio {
+    saved: bool,
+    trimmed: bool,
+}
+
+fn emit_voice_error(app: &tauri::AppHandle, code: &'static str, audio: KeptAudio) {
+    let _ = app.emit(
+        "voice-error",
+        VoiceErrorPayload {
+            code,
+            audio_saved: audio.saved,
+            audio_trimmed: audio.trimmed,
+        },
+    );
 }
 
 /// Keep a failed voice recording: store the original WAV in history and put the same
-/// bytes on the general pasteboard as raw data (no temp file). Returns true when the
-/// bytes reached the pasteboard.
+/// bytes on the general pasteboard as raw data (no temp file).
 fn save_voice_audio(
     app: &tauri::AppHandle,
     db: &std::sync::Arc<db::Database>,
     samples: &[f32],
     sample_rate: u32,
-) -> bool {
+) -> KeptAudio {
     if samples.is_empty() {
-        return false;
+        return KeptAudio::default();
     }
+    let (samples, trimmed) = cap_recording(samples);
+
     let wav = match whisper::encode_wav(samples, sample_rate) {
         Ok(bytes) => bytes,
         Err(e) => {
             eprintln!("[voice] failed to encode recording: {}", e);
-            return false;
+            return KeptAudio::default();
         }
     };
-    clipboard_monitor::record_audio_entry(app, db, &wav);
-    if clipboard_macos::write_wav_to_pasteboard(&wav, true).is_err() {
-        eprintln!("[voice] failed to put the recording on the pasteboard (still in history)");
-        return false;
+
+    let stored = clipboard_monitor::record_audio_entry(app, db, &wav).is_some();
+    let pasted = put_wav_on_pasteboard(&wav);
+    KeptAudio {
+        saved: stored || pasted,
+        trimmed,
     }
-    #[cfg(target_os = "macos")]
-    {
-        let count = clipboard_macos::change_count();
-        clipboard_macos::mark_own_clipboard_write(count);
+}
+
+/// Cut a recording that would exceed `whisper::MAX_AUDIO_BYTES` down to what fits, so one
+/// long hold cannot stall every other database caller.
+fn cap_recording(samples: &[f32]) -> (&[f32], bool) {
+    let max_samples = whisper::MAX_AUDIO_BYTES.saturating_sub(whisper::WAV_HEADER_BYTES) / 2;
+    if samples.len() <= max_samples {
+        (samples, false)
+    } else {
+        eprintln!(
+            "[voice] recording of {} samples cut to {} to stay under {} bytes",
+            samples.len(),
+            max_samples,
+            whisper::MAX_AUDIO_BYTES
+        );
+        (&samples[..max_samples], true)
     }
-    true
+}
+
+/// Put the recording on the general pasteboard. The previous contents come back if the
+/// write fails, so a failed attempt cannot leave the user with an empty clipboard.
+fn put_wav_on_pasteboard(wav: &[u8]) -> bool {
+    let snapshot = clipboard_macos::capture_pasteboard_snapshot();
+    if clipboard_macos::write_wav_to_pasteboard(wav, true).is_ok() {
+        clipboard_macos::mark_current_write();
+        return true;
+    }
+    eprintln!("[voice] failed to put the recording on the pasteboard");
+    if let Some(snapshot) = snapshot {
+        clipboard_macos::restore_pasteboard_snapshot(snapshot);
+        clipboard_macos::mark_current_write();
+    }
+    false
 }
 
 /// Set while the user cancelled the current recording so the worker can drop the samples.
@@ -1511,13 +1561,7 @@ fn handle_voice_event(app: &tauri::AppHandle, state: ShortcutState) {
                     crate::clipboard_macos::request_microphone();
                     if !crate::clipboard_macos::microphone_granted() {
                         eprintln!("[voice] microphone access denied, not recording");
-                        let _ = app.emit(
-                            "voice-error",
-                            VoiceErrorPayload {
-                                code: "mic_denied",
-                                audio_saved: false,
-                            },
-                        );
+                        emit_voice_error(app, "mic_denied", KeptAudio::default());
                         return;
                     }
                 }
@@ -1575,6 +1619,9 @@ fn handle_voice_event(app: &tauri::AppHandle, state: ShortcutState) {
                         });
                     };
                     let (samples, sample_rate) = session.finish();
+                    // Claimed here so every exit below clears it: a stale target pid would
+                    // aim the next recording's paste at the app that was focused back then.
+                    let voice_target_pid = VOICE_TARGET_PID.swap(0, Ordering::Relaxed);
                     if VOICE_CANCELLED.load(std::sync::atomic::Ordering::Relaxed) {
                         hide();
                         return;
@@ -1599,15 +1646,8 @@ fn handle_voice_event(app: &tauri::AppHandle, state: ShortcutState) {
                             Ok(pair) => pair,
                             Err(e) => {
                                 eprintln!("[voice] ERROR: {e}");
-                                let audio_saved =
-                                    save_voice_audio(&app, &db, &samples, sample_rate);
-                                let _ = app.emit(
-                                    "voice-error",
-                                    VoiceErrorPayload {
-                                        code: "not_configured",
-                                        audio_saved,
-                                    },
-                                );
+                                let audio = save_voice_audio(&app, &db, &samples, sample_rate);
+                                emit_voice_error(&app, "not_configured", audio);
                                 hide();
                                 return;
                             }
@@ -1663,41 +1703,34 @@ fn handle_voice_event(app: &tauri::AppHandle, state: ShortcutState) {
                             std::thread::sleep(std::time::Duration::from_millis(100));
                             #[cfg(target_os = "macos")]
                             {
-                                let voice_pid = VOICE_TARGET_PID.swap(0, Ordering::Relaxed);
-                                if voice_pid > 0 {
-                                    clipboard_macos::remember_paste_target_for_pid(voice_pid);
+                                if voice_target_pid > 0 {
+                                    clipboard_macos::remember_paste_target_for_pid(
+                                        voice_target_pid,
+                                    );
                                 }
                                 clipboard_macos::spawn_automated_paste(false);
                             }
                             #[cfg(not(target_os = "macos"))]
                             {
-                                let target_pid = VOICE_TARGET_PID.swap(0, Ordering::Relaxed);
-                                simulate_cmd_v(target_pid);
+                                simulate_cmd_v(voice_target_pid);
                             }
                         }
                         Ok(_) => {
-                            eprintln!("[voice] transcription returned empty text");
-                            let audio_saved = save_voice_audio(&app, &db, &samples, sample_rate);
-                            let _ = app.emit(
-                                "voice-error",
-                                VoiceErrorPayload {
-                                    code: "empty",
-                                    audio_saved,
-                                },
-                            );
+                            // An empty transcript from a real recording is a failure worth
+                            // keeping the audio for; an accidental tap recorded nothing at all,
+                            // and must stay silent.
+                            if !samples.is_empty() {
+                                eprintln!("[voice] transcription returned empty text");
+                                let audio = save_voice_audio(&app, &db, &samples, sample_rate);
+                                emit_voice_error(&app, "empty", audio);
+                            }
                         }
                         Err(e) => {
                             // Surface to the user, but without the upstream body: it can carry the
                             // endpoint address, which must not reach a system notification.
                             eprintln!("[voice] transcription ERROR: {}", e);
-                            let audio_saved = save_voice_audio(&app, &db, &samples, sample_rate);
-                            let _ = app.emit(
-                                "voice-error",
-                                VoiceErrorPayload {
-                                    code: "request_failed",
-                                    audio_saved,
-                                },
-                            );
+                            let audio = save_voice_audio(&app, &db, &samples, sample_rate);
+                            emit_voice_error(&app, "request_failed", audio);
                         }
                     }
                     hide();

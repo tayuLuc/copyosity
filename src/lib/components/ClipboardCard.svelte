@@ -602,7 +602,9 @@
   const imageFooterMeta = $derived(
     entry.content_type === "image"
       ? resolveImageFooterMetaParts(entry.image_width, entry.image_height, entry.image_byte_size)
-      : null,
+      : entry.content_type === "audio"
+        ? resolveImageFooterMetaParts(null, null, entry.image_byte_size)
+        : null,
   );
   const canPreview = $derived(entry.content_type === "text" || entry.content_type === "image");
 

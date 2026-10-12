@@ -584,6 +584,8 @@ const en: Dict = {
     "Microphone access is off. Grant it in the window that just opened.",
   "overlay.msg.voice-audio-saved":
     "The recording was kept: it is on your clipboard and in history.",
+  "overlay.msg.voice-audio-trimmed":
+    "The recording was too long and was cut short; the kept part is on your clipboard and in history.",
 };
 
 const ru: Dict = {
@@ -1165,6 +1167,8 @@ const ru: Dict = {
   "overlay.msg.voice-microphone-denied":
     "Доступ к микрофону выключен. Разрешите его в открывшемся окне.",
   "overlay.msg.voice-audio-saved": "Запись сохранена: она в буфере обмена и в истории.",
+  "overlay.msg.voice-audio-trimmed":
+    "Запись оказалась слишком длинной и была обрезана; сохранённая часть в буфере обмена и в истории.",
 };
 
 const es: Dict = {
@@ -1748,6 +1752,8 @@ const es: Dict = {
     "El acceso al micrófono está desactivado. Concede acceso en la ventana que se acaba de abrir.",
   "overlay.msg.voice-audio-saved":
     "Se guardó la grabación: está en el portapapeles y en el historial.",
+  "overlay.msg.voice-audio-trimmed":
+    "La grabación era demasiado larga y se recortó; la parte guardada está en el portapapeles y en el historial.",
 };
 
 const zh: Dict = {
@@ -2290,6 +2296,8 @@ const zh: Dict = {
   "overlay.msg.voice-transcription-request-failed": "转录服务没有响应。",
   "overlay.msg.voice-microphone-denied": "麦克フォン访问已关闭，请在刚打开的窗口中授权。",
   "overlay.msg.voice-audio-saved": "录音已保留：已复制到剪贴板并保存在历史记录中。",
+  "overlay.msg.voice-audio-trimmed":
+    "录音过长，已被截断；保留的部分已复制到剪贴板并保存在历史记录中。",
 };
 
 const de: Dict = {
@@ -2879,6 +2887,8 @@ const de: Dict = {
     "Mikrofonzugriff ist aus. Erlauben Sie ihn im gerade geöffneten Fenster.",
   "overlay.msg.voice-audio-saved":
     "Die Aufnahme wurde behalten: Sie liegt in der Zwischenablage und im Verlauf.",
+  "overlay.msg.voice-audio-trimmed":
+    "Die Aufnahme war zu lang und wurde gekürzt; der behaltene Teil liegt in der Zwischenablage und im Verlauf.",
 };
 
 const fr: Dict = {
@@ -3470,6 +3480,8 @@ const fr: Dict = {
     "L’accès au micro est désactivé. Autorisez-le dans la fenêtre qui vient de s’ouvrir.",
   "overlay.msg.voice-audio-saved":
     "L’enregistrement a été conservé : il est dans le presse-papiers et dans l’historique.",
+  "overlay.msg.voice-audio-trimmed":
+    "L’enregistrement était trop long et a été tronqué ; la partie conservée est dans le presse-papiers et dans l’historique.",
 };
 
 const ja: Dict = {
@@ -4042,6 +4054,8 @@ const ja: Dict = {
   "overlay.msg.voice-microphone-denied":
     "マイクへのアクセスがオフです。開いたウィンドウで許可してください。",
   "overlay.msg.voice-audio-saved": "録音を保持しました：クリップボードと履歴に保存されています。",
+  "overlay.msg.voice-audio-trimmed":
+    "録音が長すぎたため切り詰めました。残した部分はクリップボードと履歴に保存されています。",
 };
 
 export const dict: Record<LocaleCode, Dict> = { en, ru, es, zh, de, fr, ja };

@@ -27,6 +27,8 @@ use std::sync::atomic::{AtomicBool, AtomicI32, AtomicI64, AtomicU64, Ordering};
 use std::sync::Mutex;
 
 #[cfg(target_os = "macos")]
+use objc2::rc::Retained;
+#[cfg(target_os = "macos")]
 use objc2_app_kit::{NSPasteboard, NSURLNSPasteboardSupport, NSWorkspace};
 #[cfg(target_os = "macos")]
 use objc2_foundation::{ns_string, NSArray, NSData, NSString, NSURL};
@@ -228,21 +230,20 @@ pub fn write_gif_to_pasteboard(_bytes: &[u8], _exclude_from_history: bool) -> Re
     Err("GIF pasteboard write is only supported on macOS".to_string())
 }
 
-/// Write WAV bytes to the general pasteboard. Every declared type is set: apps that
-/// understand only one of them (QuickTime `com.microsoft.waveform-audio`, Finder
-/// `public.wav`, the generic `public.audio`) still get the recording.
+/// Write WAV bytes to the general pasteboard. Both declared types are set, so an app
+/// that understands only one of them (`public.wav`, the generic `public.audio`) still
+/// gets the recording.
 #[cfg(target_os = "macos")]
 pub fn write_wav_to_pasteboard(bytes: &[u8], exclude_from_history: bool) -> Result<(), String> {
     let pasteboard = NSPasteboard::generalPasteboard();
     pasteboard.clearContents();
 
     let ns_data = NSData::with_bytes(bytes);
-    let waveform = ns_string!("com.microsoft.waveform-audio");
     let public_wav = ns_string!("public.wav");
     let public_audio = ns_string!("public.audio");
 
     let mut ok = false;
-    for uti in [waveform, public_wav, public_audio] {
+    for uti in [public_wav, public_audio] {
         ok |= pasteboard.setData_forType(Some(&ns_data), uti);
     }
 
@@ -261,6 +262,52 @@ pub fn write_wav_to_pasteboard(bytes: &[u8], exclude_from_history: bool) -> Resu
 #[cfg(not(target_os = "macos"))]
 pub fn write_wav_to_pasteboard(_bytes: &[u8], _exclude_from_history: bool) -> Result<(), String> {
     Err("WAV pasteboard write is only supported on macOS".to_string())
+}
+
+/// Contents of the general pasteboard, kept so a failed write can put back whatever the
+/// user had copied. Every declared type is captured; promised types report no data and
+/// are simply not restored.
+#[cfg(target_os = "macos")]
+pub struct PasteboardSnapshot {
+    payloads: Vec<(String, Retained<NSData>)>,
+}
+
+#[cfg(target_os = "macos")]
+pub fn capture_pasteboard_snapshot() -> Option<PasteboardSnapshot> {
+    let pasteboard = NSPasteboard::generalPasteboard();
+    let types = pasteboard.types()?;
+    let mut payloads = Vec::new();
+    for ty in types.iter() {
+        if let Some(data) = pasteboard.dataForType(&ty) {
+            payloads.push((ty.to_string(), data));
+        }
+    }
+    (!payloads.is_empty()).then_some(PasteboardSnapshot { payloads })
+}
+
+#[cfg(target_os = "macos")]
+pub fn restore_pasteboard_snapshot(snapshot: PasteboardSnapshot) {
+    let pasteboard = NSPasteboard::generalPasteboard();
+    pasteboard.clearContents();
+    for (ty, data) in snapshot.payloads {
+        let ty = NSString::from_str(&ty);
+        pasteboard.setData_forType(Some(&data), &ty);
+    }
+}
+
+#[cfg(not(target_os = "macos"))]
+pub fn capture_pasteboard_snapshot() -> Option<()> {
+    None
+}
+
+#[cfg(not(target_os = "macos"))]
+pub fn restore_pasteboard_snapshot(_snapshot: ()) {}
+
+/// Mark whatever sits on the pasteboard right now as our own write, so the monitor does
+/// not capture it back as a new copy.
+pub fn mark_current_write() {
+    #[cfg(target_os = "macos")]
+    mark_own_clipboard_write(change_count());
 }
 
 /// nspasteboard.org markers: password managers (Concealed), one-shot writes (Transient) and
