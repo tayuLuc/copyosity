@@ -2198,17 +2198,21 @@
 
 {#if isDirty}
   <div class="dirty-bar">
-    <span class="dirty-label">{$t("settings.text.unsaved-changes")}</span>
-    <div class="dirty-actions">
+    <div class="dirty-bar-inner">
+      <span class="dirty-label">{$t("settings.text.unsaved-changes")}</span>
+      <div class="dirty-actions">
       <button class="dirty-reset" type="button" onclick={resetSettings}>{$t("settings.text.reset")}</button>
       <button class="dirty-save" type="button" disabled={savingSettings} onclick={saveSettings}>
         {savingSettings ? $t("settings.msg.saving") : $t("settings.text.save")}
       </button>
+      </div>
     </div>
   </div>
 {:else if settingsNotice}
   <div class="dirty-bar saved">
-    <span class="dirty-label">{settingsNotice}</span>
+    <div class="dirty-bar-inner">
+      <span class="dirty-label">{settingsNotice}</span>
+    </div>
   </div>
 {/if}
 
@@ -2318,13 +2322,20 @@
     background: var(--color-danger-soft);
   }
 
+  /* Полоса прокрутки принадлежит окну, а не колонке: иначе в широком окне она
+     стоит посреди экрана, а справа от неё пустое место. */
   .settings-content {
     padding: 36px 20px 88px;
-    max-width: 540px;
     width: 100%;
     min-width: 0;
     min-height: 0;
     overflow: hidden auto;
+  }
+
+  /* Колонка содержимого: комфортная ширина строки, по центру реальной ширины окна. */
+  .settings-content > * {
+    max-width: 540px;
+    margin-inline: auto;
   }
 
   .pane-head {
@@ -2361,19 +2372,28 @@
     color: var(--color-warning-text);
   }
 
+  /* Полоса остаётся на всю ширину окна — это её фон, — но содержимое выравнивается по той
+     же колонке, что и панели настроек: иначе в широком окне надпись и кнопка уезжают
+     от карточек. */
   .dirty-bar {
     position: fixed;
     left: 184px;
     right: 0;
     bottom: 0;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--control-chevron-inset);
     padding: var(--overlay-grid-pad-y) var(--overlay-header-pad-block);
     background: var(--surface-bar);
     backdrop-filter: blur(12px);
     border-top: 1px solid var(--border-muted);
+  }
+
+  .dirty-bar-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--control-chevron-inset);
+    width: 100%;
+    max-width: 540px;
+    margin-inline: auto;
   }
 
   .dirty-bar.saved {
