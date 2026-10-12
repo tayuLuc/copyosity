@@ -579,6 +579,8 @@ const en: Dict = {
   "overlay.msg.voice-transcription-not-configured":
     "Transcription is not configured. Set it up in Settings.",
   "overlay.msg.voice-transcription-request-failed": "The transcription service did not answer.",
+  "overlay.msg.voice-microphone-denied":
+    "Microphone access is off. Grant it in the window that just opened.",
 };
 
 const ru: Dict = {
@@ -1156,6 +1158,8 @@ const ru: Dict = {
   "overlay.msg.voice-transcription-not-configured":
     "Транскрипция не настроена. Настройте её в настройках.",
   "overlay.msg.voice-transcription-request-failed": "Сервис транскрипции не ответил.",
+  "overlay.msg.voice-microphone-denied":
+    "Доступ к микрофону выключен. Разрешите его в открывшемся окне.",
 };
 
 const es: Dict = {
@@ -1734,6 +1738,8 @@ const es: Dict = {
   "overlay.msg.voice-transcription-not-configured":
     "La transcripción no está configurada. Configúrala en Ajustes.",
   "overlay.msg.voice-transcription-request-failed": "El servicio de transcripción no respondió.",
+  "overlay.msg.voice-microphone-denied":
+    "El acceso al micrófono está desactivado. Concede acceso en la ventana que se acaba de abrir.",
 };
 
 const zh: Dict = {
@@ -2273,6 +2279,7 @@ const zh: Dict = {
     "应用无法读取麦克风权限。请重启 Copyocity；若仍然出现，请重装当前版本。",
   "overlay.msg.voice-transcription-not-configured": "未配置转录服务，请在设置中配置。",
   "overlay.msg.voice-transcription-request-failed": "转录服务没有响应。",
+  "overlay.msg.voice-microphone-denied": "麦克フォン访问已关闭，请在刚打开的窗口中授权。",
 };
 
 const de: Dict = {
@@ -2857,6 +2864,8 @@ const de: Dict = {
     "Die Transkription ist nicht eingerichtet. Richte sie in den Einstellungen ein.",
   "overlay.msg.voice-transcription-request-failed":
     "Der Transkriptionsdienst hat nicht geantwortet.",
+  "overlay.msg.voice-microphone-denied":
+    "Mikrofonzugriff ist aus. Erlauben Sie ihn im gerade geöffneten Fenster.",
 };
 
 const fr: Dict = {
@@ -3443,6 +3452,8 @@ const fr: Dict = {
   "overlay.msg.voice-transcription-not-configured":
     "La transcription n’est pas configurée. Configurez-la dans les réglages.",
   "overlay.msg.voice-transcription-request-failed": "Le service de transcription n’a pas répondu.",
+  "overlay.msg.voice-microphone-denied":
+    "L’accès au micro est désactivé. Autorisez-le dans la fenêtre qui vient de s’ouvrir.",
 };
 
 const ja: Dict = {
@@ -4011,6 +4022,8 @@ const ja: Dict = {
   "overlay.msg.voice-transcription-not-configured":
     "文字起こしが設定されていません。設定から構成してください。",
   "overlay.msg.voice-transcription-request-failed": "文字起こしサービスが応答しませんでした。",
+  "overlay.msg.voice-microphone-denied":
+    "マイクへのアクセスがオフです。開いたウィンドウで許可してください。",
 };
 
 export const dict: Record<LocaleCode, Dict> = { en, ru, es, zh, de, fr, ja };

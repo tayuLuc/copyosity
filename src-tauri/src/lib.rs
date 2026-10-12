@@ -1465,6 +1465,16 @@ fn handle_voice_event(app: &tauri::AppHandle, state: ShortcutState) {
                     .and_then(|db| db.get_app_settings().ok())
                     .map(|s| s.selected_microphone)
                     .filter(|s| !s.is_empty());
+                // Ask, then confirm: recording into a denied microphone yields an empty buffer
+                // and a silent no-op transcript, which looks like the app is simply not working.
+                if !crate::clipboard_macos::microphone_granted() {
+                    crate::clipboard_macos::request_microphone();
+                    if !crate::clipboard_macos::microphone_granted() {
+                        eprintln!("[voice] microphone access denied, not recording");
+                        let _ = app.emit("voice-error", "mic_denied");
+                        return;
+                    }
+                }
                 eprintln!("[voice] starting recording, mic={:?}", mic_name);
                 match whisper::RecordingSession::start(mic_name.as_deref()) {
                     Ok(session) => {

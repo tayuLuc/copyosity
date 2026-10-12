@@ -853,6 +853,16 @@
 
     // Voice transcription failures (e.g. a hub 429 asking to raise the tariff).
     const unlistenVoiceError = listen<string>("voice-error", (e) => {
+      if (e.payload === "mic_denied") {
+        // A notification cannot carry a button, so take the user where one exists:
+        // the Accesses pane of our own Settings, which has "Open System Settings".
+        void notify(
+          tr("overlay.msg.voice-transcription-failed"),
+          tr("overlay.msg.voice-microphone-denied"),
+        );
+        void invoke("open_settings_window", { initialPane: "access" });
+        return;
+      }
       const detail =
         e.payload === "not_configured"
           ? tr("overlay.msg.voice-transcription-not-configured")
