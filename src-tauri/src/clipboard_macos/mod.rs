@@ -7,7 +7,7 @@ mod microphone_access;
 mod paste;
 
 pub use accessibility::{accessibility_trusted, open_accessibility_settings};
-pub use microphone_access::{microphone_granted, request_microphone};
+pub use microphone_access::{microphone_granted, open_microphone_settings, request_microphone};
 #[cfg(target_os = "macos")]
 pub use paste::spawn_automated_paste;
 

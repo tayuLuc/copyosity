@@ -36,6 +36,7 @@
     checkAccessibility,
     checkMicrophone,
     openAccessibilitySettings,
+    openMicrophoneSettings,
     checkOllamaStatus,
     unloadOllamaModel,
     startOllamaServer,
@@ -1610,11 +1611,16 @@
                     <span class="status-text">
                       {microphoneUnreadable ? $t("settings.text.microphone-unreadable") : microphoneGranted === null ? $t("settings.text.checking") : microphoneGranted ? $t("settings.text.microphone-granted") : $t("settings.text.microphone-not-granted")}
                     </span>
-                    {#if microphoneGranted === false}
+                    {#if microphoneGranted !== true}
                       <button class="status-action app-btn" type="button" onclick={handleRequestMicrophone}>
                         {$t("settings.text.request")}</button>
-                    {:else}
-                      <button class="status-action app-btn" type="button" onclick={handleRecheckMicrophone}>
+                    {/if}
+                    {#if microphoneGranted !== false || microphoneUnreadable}
+                      <button
+                        class="status-action status-action--inline app-btn"
+                        type="button"
+                        onclick={handleRecheckMicrophone}
+                      >
                         {$t("settings.text.recheck")}</button>
                     {/if}
                   </div>
@@ -1622,6 +1628,14 @@
                     <div class="status-hint">
                       {$t("settings.text.microphone-hint")}<br />
                       {$t("settings.text.microphone-record-hint")}
+                    </div>
+                    <div class="status-hint">
+                      <button
+                        class="status-action status-action--inline app-btn"
+                        type="button"
+                        onclick={openMicrophoneSettings}
+                      >
+                        {$t("settings.text.open-system-settings")}</button>
                     </div>
                   {/if}
                   {#if microphoneUnreadable}
@@ -2356,7 +2370,7 @@
 
   /* Колонка содержимого: комфортная ширина строки, по центру реальной ширины окна. */
   .settings-content > * {
-    max-width: 540px;
+    max-width: 740px;
     margin-inline: auto;
   }
 
@@ -2414,7 +2428,7 @@
     justify-content: space-between;
     gap: var(--control-chevron-inset);
     width: 100%;
-    max-width: 540px;
+    max-width: 740px;
     margin-inline: auto;
   }
 

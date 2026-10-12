@@ -239,8 +239,8 @@ fn activate_for_settings_window(app: &tauri::AppHandle) {
     }
 }
 
-/// Sidebar (184px) + content max-width (540px) + horizontal padding.
-const SETTINGS_WINDOW_WIDTH: f64 = 760.0;
+/// Sidebar (184px) + content max-width (740px) + horizontal padding, rounded down.
+const SETTINGS_WINDOW_WIDTH: f64 = 960.0;
 const SETTINGS_WINDOW_HEIGHT: f64 = 720.0;
 const SETTINGS_WINDOW_MIN_WIDTH: f64 = 680.0;
 const SETTINGS_WINDOW_MIN_HEIGHT: f64 = 560.0;
@@ -1028,6 +1028,12 @@ pub fn check_microphone(prompt: bool) -> Result<bool, String> {
         crate::clipboard_macos::request_microphone();
     }
     Ok(crate::clipboard_macos::microphone_granted())
+}
+
+#[tauri::command]
+pub fn open_microphone_settings() -> Result<(), String> {
+    crate::clipboard_macos::open_microphone_settings();
+    Ok(())
 }
 
 #[tauri::command]
