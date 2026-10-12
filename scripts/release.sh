@@ -31,9 +31,9 @@ python3 - "$VERSION" <<'PY'
 import re, sys
 v = sys.argv[1]
 targets = [
-    ("src-tauri/tauri.conf.json", r'("version":\s*")[0-9][0-9.]*(")'),
-    ("package.json",              r'("version":\s*")[0-9][0-9.]*(")'),
-    ("src-tauri/Cargo.toml",      r'(^version\s*=\s*")[0-9][0-9.]*(")'),
+    ("src-tauri/tauri.conf.json", r'("version":\s*")[0-9][0-9A-Za-z.-]*(")'),
+    ("package.json",              r'("version":\s*")[0-9][0-9A-Za-z.-]*(")'),
+    ("src-tauri/Cargo.toml",      r'(^version\s*=\s*")[0-9][0-9A-Za-z.-]*(")'),
 ]
 for path, pat in targets:
     s = open(path).read()
