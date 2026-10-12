@@ -1,0 +1,3 @@
+# Source paths are built at runtime from each script's own directory, so shellcheck
+# cannot follow them. These notes are about resolution, not about the code.
+disable=SC1091

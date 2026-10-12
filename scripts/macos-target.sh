@@ -61,10 +61,13 @@ macos_resolve_target() {
   fi
 
   APP_BUNDLE="$TARGET_DIR/bundle/macos/Copyosity.app"
+  export APP_BUNDLE
   DMG_BASENAME="Copyosity_${version}_${MACOS_ARCH_LABEL}.dmg"
   DIST_DIR="$root/dist/macos"
   DIST_DMG="$DIST_DIR/$DMG_BASENAME"
+  export DIST_DMG
   DIST_APP="$DIST_DIR/Copyosity_${MACOS_ARCH_LABEL}.app"
+  export DIST_APP
 }
 
 macos_ensure_rust_target() {

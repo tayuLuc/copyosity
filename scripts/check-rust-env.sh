@@ -5,10 +5,12 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 RUN_RUST="$ROOT_DIR/scripts/run-rust.sh"
 
+# shellcheck disable=SC2016  # the string is evaluated by $RUN_RUST
 wrapper="$("$RUN_RUST" 'printf %s "${RUSTC_WRAPPER:-}"')"
 
 if command -v sccache >/dev/null 2>&1; then
   expected="$(command -v sccache)"
+  # shellcheck disable=SC2016  # the string is evaluated by $RUN_RUST
   disabled_wrapper="$(COPYOSITY_DISABLE_SCCACHE=1 "$RUN_RUST" 'printf %s "${RUSTC_WRAPPER:-}"')"
 
   if [[ "${COPYOSITY_DISABLE_SCCACHE:-0}" != "1" ]]; then

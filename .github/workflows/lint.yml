@@ -41,9 +41,6 @@ jobs:
           VALIDATE_ALL_CODEBASE: "true"
           APPLY_FIXES: "none"
           ENABLE_LINTERS: ACTION_ACTIONLINT,ACTION_ZIZMOR,YAML_YAMLLINT,BASH_SHELLCHECK
-          # Non-blocking while the findings are worked through; 9 of the 17 are
-          # unavoidable SC1091 notes from sourcing paths built at runtime.
-          DISABLE_ERRORS_LINTERS: BASH_SHELLCHECK
           ACTION_ZIZMOR_UNSECURED_ENV_VARIABLES: GITHUB_TOKEN
 
       - name: Upload the reports
