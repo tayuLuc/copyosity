@@ -174,7 +174,7 @@ export async function hubTestConnection(url?: string, token?: string): Promise<n
   return invoke("hub_test_connection", { url: url ?? null, token: token ?? null });
 }
 
-/** List available hub model ids (from /v1/models). */
+/** List available hub model ids (from /models). */
 export async function hubListModels(url?: string, token?: string): Promise<string[]> {
   return invoke("hub_list_models", { url: url ?? null, token: token ?? null });
 }

@@ -1029,7 +1029,7 @@
     }
   });
 
-  // ---- Hub model list (from /v1/models) ----
+  // ---- Hub model list (from /models) ----
   let hubModels = $state<string[]>([]);
   let modelsLoading = $state(false);
   async function loadHubModels() {

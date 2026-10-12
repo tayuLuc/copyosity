@@ -50,7 +50,7 @@ pub fn test_connection(base_url: &str, token: &str) -> Result<usize, String> {
     Ok(count)
 }
 
-/// List available model ids from the hub (`GET /v1/models`).
+/// List available model ids from the hub (`GET /models`).
 pub fn list_models(base_url: &str, token: &str) -> Result<Vec<String>, String> {
     let base = normalize_base(base_url);
     if base.is_empty() {
@@ -203,7 +203,7 @@ pub fn tag_text(base_url: &str, token: &str, model: &str, text: &str) -> Option<
     }
 }
 
-/// Web search via the hub Search API (`POST /v1/search/web`). Returns a
+/// Web search via the hub Search API (`POST /search/web`). Returns a
 /// human-readable, formatted result list ready to show in the palette.
 pub fn web_search(base_url: &str, token: &str, query: &str, limit: u32) -> Result<String, String> {
     let base = normalize_base(base_url);
