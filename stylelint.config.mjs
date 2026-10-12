@@ -8,10 +8,6 @@ export default {
     ".svelte-kit/**",
     "node_modules/**",
     "src-tauri/**",
-    // Upstream emerald theme routes (v0.5.1) — literal colors until token migration.
-    "src/routes/palette/**",
-    "src/routes/overlay/**",
-    "src/routes/settings/**",
   ],
   rules: {
     // Oxfmt owns formatting and blank lines — avoid fighting the formatter.
