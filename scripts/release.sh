@@ -135,4 +135,9 @@ ad=$(python3 -c "import tarfile;print(len([x for x in tarfile.open('$OUT/Copyosi
 echo "  github tag  : $gh_ver"
 echo "  channel ver : $chan_ver"
 echo "  tarball AppleDouble entries (must be 0): $ad"
-[ "$chan_ver" = "$VERSION" ] && [ "$ad" = "0" ] && echo "RELEASE $VERSION OK" || { echo "RELEASE VERIFY FAILED" >&2; exit 1; }
+if [ "$chan_ver" = "$VERSION" ] && [ "$ad" = "0" ]; then
+  echo "RELEASE $VERSION OK"
+else
+  echo "RELEASE VERIFY FAILED" >&2
+  exit 1
+fi
