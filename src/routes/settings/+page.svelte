@@ -138,10 +138,13 @@
 
   let accessibilityGranted = $state<boolean | null>(null);
   let microphoneGranted = $state<boolean | null>(null);
+  /** Отдельное состояние для «не удалось определить»: без него строка навсегда «Проверка...». */
+  let microphoneUnreadable = $state(false);
   let micEnablePending = $state(false);
   // check_accessibility — синхронная команда: без флага соседние тики могут наложиться
   // и более старый ответ перезапишет более новый.
   let a11yPollBusy = false;
+  const MIC_STATUS_TIMEOUT_MS = 4000;
   let accessibilityNotice = $state("");
   /** User was sent to System Settings; keep enable hint until access is granted. */
   let a11yEnablePending = $state(false);
@@ -369,18 +372,38 @@
   let microphonesLoading = $state(false);
 
   async function updateMicrophoneStatus() {
-    microphoneGranted = await checkMicrophone(false);
+    try {
+      microphoneGranted = await withTimeout(checkMicrophone(false), MIC_STATUS_TIMEOUT_MS);
+      microphoneUnreadable = false;
+    } catch {
+      // Отказ или зависание — это ответ, а не «проверка»: без него строка остаётся в ожидании навсегда.
+      microphoneUnreadable = true;
+    }
     return microphoneGranted;
   }
 
+  function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+    return Promise.race([
+      promise,
+      new Promise<never>((_resolve, reject) =>
+        window.setTimeout(() => reject(new Error("timeout")), ms),
+      ),
+    ]);
+  }
+
   async function handleRequestMicrophone() {
-    await checkMicrophone(true);
+    try {
+      await checkMicrophone(true);
+    } catch {
+      // Запрос не прошёл — состояние всё равно перечитываем, чтобы строка не зависла.
+    }
     micEnablePending = true;
+    await updateMicrophoneStatus();
   }
 
   async function handleRecheckMicrophone() {
-    microphoneGranted = await checkMicrophone(false);
     micEnablePending = false;
+    await updateMicrophoneStatus();
   }
 
   async function handleLoadMicrophones() {
@@ -1538,25 +1561,23 @@
                 {#if accessibilityGranted === false}
                   <button class="status-action app-btn" type="button" onclick={handleRequestAccessibility}>
                     {$t("settings.text.request")}</button>
+                {:else}
+                  <button class="status-action app-btn" type="button" onclick={handleRecheckAccessibility}>
+                    {$t("settings.text.recheck")}</button>
                 {/if}
-                <button
-                  class="status-action status-action--inline app-btn"
-                  type="button"
-                  onclick={handleRecheckAccessibility}
-                >
-                  {$t("settings.text.recheck")}</button>
               </div>
               {#if accessibilityGranted === false}
                 <div class="status-hint">
                   {$t("settings.text.required-for-paste")}<br />
-                  {$t("settings.text.click-request.1")}{$t("settings.text.request")}{$t("settings.text.click-request.2")}
-                  <strong>Copyocity</strong>
+                  {$t("settings.text.click-request.1")}{$t("settings.text.request")}{$t("settings.text.click-request.2")}<strong>Copyocity</strong>.
+                </div>
+                <div class="status-hint">
                   <button
                     class="status-action status-action--inline app-btn"
                     type="button"
                     onclick={openAccessibilitySettings}
                   >
-                    {$t("settings.text.open-system-settings")}</button><strong>Copyosity</strong>.
+                    {$t("settings.text.open-system-settings")}</button>
                 </div>
               {/if}
               {#if accessibilityNotice}
@@ -1582,23 +1603,20 @@
                   <div class="status-row">
                     <span
                       class="status-dot"
-                      class:ok={microphoneGranted === true}
-                      class:fail={microphoneGranted === false}
-                      class:checking={microphoneGranted === null}
+                      class:ok={microphoneGranted === true && !microphoneUnreadable}
+                      class:fail={microphoneGranted === false && !microphoneUnreadable}
+                      class:checking={microphoneGranted === null && !microphoneUnreadable}
                     ></span>
                     <span class="status-text">
-                      {microphoneGranted === null ? $t("settings.text.checking") : microphoneGranted ? $t("settings.text.microphone-granted") : $t("settings.text.microphone-not-granted")}
+                      {microphoneUnreadable ? $t("settings.text.microphone-unreadable") : microphoneGranted === null ? $t("settings.text.checking") : microphoneGranted ? $t("settings.text.microphone-granted") : $t("settings.text.microphone-not-granted")}
                     </span>
                     {#if microphoneGranted === false}
                       <button class="status-action app-btn" type="button" onclick={handleRequestMicrophone}>
                         {$t("settings.text.request")}</button>
+                    {:else}
+                      <button class="status-action app-btn" type="button" onclick={handleRecheckMicrophone}>
+                        {$t("settings.text.recheck")}</button>
                     {/if}
-                    <button
-                      class="status-action status-action--inline app-btn"
-                      type="button"
-                      onclick={handleRecheckMicrophone}
-                    >
-                      {$t("settings.text.recheck")}</button>
                   </div>
                   {#if microphoneGranted === false}
                     <div class="status-hint">
@@ -1606,7 +1624,11 @@
                       {$t("settings.text.microphone-record-hint")}
                     </div>
                   {/if}
-                  {#if micEnablePending && microphoneGranted === false}
+                  {#if microphoneUnreadable}
+                    <div class="status-hint warn">
+                      {$t("settings.msg.microphone-unreadable")}
+                    </div>
+                  {:else if micEnablePending && microphoneGranted === false}
                     <div class="status-hint warn">
                       {$t("settings.msg.microphone-not-granted")}
                     </div>
@@ -1841,7 +1863,7 @@
                     </div>
                   {:else if ollamaStatus.model_installed}
                     <div class="status-hint">
-                      {$t("settings.text.click-request.1")}{$t("settings.text.test")}{$t("settings.text.click-test-verify.2")}
+                      {$t("settings.text.click-test-verify.1")}{$t("settings.text.test")}{$t("settings.text.click-test-verify.2")}
                     </div>
                   {/if}
                 </div>
@@ -2074,7 +2096,7 @@
                 <path d="M17 10.5v8" />
                 <path d="M13 14.5h8" />
               </svg>
-              <span class="app-btn-label">{chooseApplicationActionLabel}</span>
+              <span class="app-btn-label">{chooseApplicationActionLabel()}</span>
               {@render busySpinner()}
             </button>
 

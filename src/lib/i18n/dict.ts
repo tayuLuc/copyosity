@@ -233,7 +233,7 @@ const en: Dict = {
   "settings.text.checking": "Checking...",
   "settings.text.click-request.1": 'Click "',
   "settings.text.click-request.2":
-    " — macOS will ask. If no window appears, open System Settings › Privacy & Security › Accessibility and enable ",
+    '" — macOS will ask. If no window appears, open System Settings › Privacy & Security › Accessibility and enable ',
   "settings.text.click-test-then-save.a": "Click ",
   "settings.text.click-test-then-save.b": " → then ",
   "settings.text.clipboard-from-excluded-apps":
@@ -500,6 +500,7 @@ const en: Dict = {
   "settings.text.test-result": "Test result: {tags}",
   "settings.text.the-model-did":
     "The model did not return tags. Try a different model or check Ollama logs.",
+  "settings.text.click-test-verify.1": 'Click "',
   "settings.text.click-test-verify.2": '" to verify that the model can tag clipboard content.',
   "settings.text.fits": "Fits",
   "settings.text.installed-suffix": " · Installed",
@@ -571,6 +572,10 @@ const en: Dict = {
     "Microphone not granted — voice notes will not record until you allow access.",
   "settings.msg.microphone-granted": "Microphone access confirmed — voice notes can record.",
   "settings.text.open-system-settings": "Open System Settings",
+  "settings.text.microphone-hint": "macOS asks for the microphone the first time you record.",
+  "settings.text.microphone-unreadable": "Microphone status could not be read",
+  "settings.msg.microphone-unreadable":
+    "The app could not read the microphone permission. Restart Copyocity; if it repeats, reinstall the current version.",
 };
 
 const ru: Dict = {
@@ -795,7 +800,7 @@ const ru: Dict = {
   "settings.text.checking": "Проверка...",
   "settings.text.click-request.1": 'Нажмите "',
   "settings.text.click-request.2":
-    " — спросит сама macOS. Если окно не появилось, откройте «Системные настройки» → «Конфиденциальность и безопасность» → «Универсальный доступ» и включите ",
+    '" — спросит сама macOS. Если окно не появилось, откройте «Системные настройки» → «Конфиденциальность и безопасность» → «Универсальный доступ» и включите ',
   "settings.text.click-test-then-save.a": "Нажмите ",
   "settings.text.click-test-then-save.b": " → затем ",
   "settings.text.clipboard-from-excluded-apps":
@@ -1067,6 +1072,7 @@ const ru: Dict = {
   "settings.text.test-result": "Результат теста: {tags}",
   "settings.text.the-model-did":
     "Модель не вернула теги. Попробуй другую модель или проверь журналы Ollama.",
+  "settings.text.click-test-verify.1": 'Нажмите "',
   "settings.text.click-test-verify.2":
     '" чтобы убедиться, что модель умеет тегировать содержимое буфера обмена.',
   "settings.text.fits": "Подходит",
@@ -1140,6 +1146,10 @@ const ru: Dict = {
   "settings.msg.microphone-granted":
     "Доступ к микрофону подтверждён — голосовые заметки можно записывать.",
   "settings.text.open-system-settings": "Открыть Системные настройки",
+  "settings.text.microphone-hint": "macOS спросит о микрофоне при первой записи.",
+  "settings.text.microphone-unreadable": "Не удалось прочитать статус микрофона",
+  "settings.msg.microphone-unreadable":
+    "Приложение не смогло прочитать разрешение на микрофон. Перезапустите Copyocity; если повторится — переустановите текущую версию.",
 };
 
 const es: Dict = {
@@ -1362,7 +1372,7 @@ const es: Dict = {
   "settings.text.checking": "Comprobando...",
   "settings.text.click-request.1": 'Haz clic en "',
   "settings.text.click-request.2":
-    " — lo preguntará macOS. Si no aparece la ventana, abre Ajustes del Sistema › Privacidad y seguridad › Acceso universal y activa ",
+    '" — lo preguntará macOS. Si no aparece la ventana, abre Ajustes del Sistema › Privacidad y seguridad › Acceso universal y activa ',
   "settings.text.click-test-then-save.a": "Haz clic en ",
   "settings.text.click-test-then-save.b": " → después ",
   "settings.text.clipboard-from-excluded-apps":
@@ -1637,6 +1647,7 @@ const es: Dict = {
   "settings.text.test-result": "Resultado de la prueba: {tags}",
   "settings.text.the-model-did":
     "El modelo no devolvió etiquetas. Prueba con otro modelo o revisa los registros de Ollama.",
+  "settings.text.click-test-verify.1": 'Haz clic en "',
   "settings.text.click-test-verify.2":
     '" para verificar que el modelo puede etiquetar el contenido del portapapeles.',
   "settings.text.fits": "Cabe",
@@ -1710,6 +1721,10 @@ const es: Dict = {
   "settings.msg.microphone-granted":
     "Acceso al micrófono confirmado: las notas de voz se pueden grabar.",
   "settings.text.open-system-settings": "Abrir Ajustes del Sistema",
+  "settings.text.microphone-hint": "macOS pedirá el micrófono la primera vez que grabes.",
+  "settings.text.microphone-unreadable": "No se pudo leer el estado del micrófono",
+  "settings.msg.microphone-unreadable":
+    "La aplicación no pudo leer el permiso del micrófono. Reinicia Copyocity; si se repite, reinstala la versión actual.",
 };
 
 const zh: Dict = {
@@ -1927,7 +1942,7 @@ const zh: Dict = {
   "settings.text.checking": "检查中…",
   "settings.text.click-request.1": "点击「",
   "settings.text.click-request.2":
-    " 后由 macOS 询问。若窗口没有出现，请打开「系统设置 › 隐私与安全性 › 辅助功能」并启用 ",
+    "」 后由 macOS 询问。若窗口没有出现，请打开「系统设置 › 隐私与安全性 › 辅助功能」并启用 ",
   "settings.text.click-test-then-save.a": "点击 ",
   "settings.text.click-test-then-save.b": " → 然后 ",
   "settings.text.clipboard-from-excluded-apps": "被排除应用的剪贴板内容不会被存储或打标签。",
@@ -2174,6 +2189,7 @@ const zh: Dict = {
     "正在发送测试请求…首次运行时模型需要载入内存，最多可能耗时 60 秒。",
   "settings.text.test-result": "测试结果：{tags}",
   "settings.text.the-model-did": "模型未返回标签。请换一个模型或查看 Ollama 日志。",
+  "settings.text.click-test-verify.1": "点击「",
   "settings.text.click-test-verify.2": "」以验证模型能否为剪贴板内容打标签。",
   "settings.text.fits": "合适",
   "settings.text.installed-suffix": " · 已安装",
@@ -2242,6 +2258,10 @@ const zh: Dict = {
   "settings.msg.microphone-not-granted": "麦克风未授权 — 在你允许访问之前，语音笔记无法录制。",
   "settings.msg.microphone-granted": "麦克风访问已确认 — 可以录制语音笔记。",
   "settings.text.open-system-settings": "打开系统设置",
+  "settings.text.microphone-hint": "macOS 会在首次录音时请求麦克风权限。",
+  "settings.text.microphone-unreadable": "无法读取麦克风状态",
+  "settings.msg.microphone-unreadable":
+    "应用无法读取麦克风权限。请重启 Copyocity；若仍然出现，请重装当前版本。",
 };
 
 const de: Dict = {
@@ -2469,7 +2489,7 @@ const de: Dict = {
   "settings.text.checking": "Wird geprüft...",
   "settings.text.click-request.1": "Auf „",
   "settings.text.click-request.2":
-    " — macOS fragt selbst. Erscheint kein Fenster, öffne Systemeinstellungen › Datenschutz & Sicherheit › Bedienungshilfen und aktiviere ",
+    "“ — macOS fragt selbst. Erscheint kein Fenster, öffne Systemeinstellungen › Datenschutz & Sicherheit › Bedienungshilfen und aktiviere ",
   "settings.text.click-test-then-save.a": "Auf ",
   "settings.text.click-test-then-save.b": " klicken → dann ",
   "settings.text.clipboard-from-excluded-apps":
@@ -2744,6 +2764,7 @@ const de: Dict = {
   "settings.text.test-result": "Testergebnis: {tags}",
   "settings.text.the-model-did":
     "Das Modell hat keine Tags zurückgegeben. Versuche ein anderes Modell oder prüfe die Ollama-Protokolle.",
+  "settings.text.click-test-verify.1": "Auf „",
   "settings.text.click-test-verify.2":
     "“ klicken, um zu prüfen, dass das Modell Inhalte der Zwischenablage taggen kann.",
   "settings.text.fits": "Passt",
@@ -2817,6 +2838,10 @@ const de: Dict = {
   "settings.msg.microphone-granted":
     "Mikrofonzugriff bestätigt — Sprachnotizen lassen sich aufnehmen.",
   "settings.text.open-system-settings": "Systemeinstellungen öffnen",
+  "settings.text.microphone-hint": "macOS fragt beim ersten Aufnehmen nach dem Mikrofon.",
+  "settings.text.microphone-unreadable": "Mikrofonstatus konnte nicht gelesen werden",
+  "settings.msg.microphone-unreadable":
+    "Die App konnte die Mikrofonberechtigung nicht lesen. Starte Copyocity neu; tritt es erneut auf, installiere die aktuelle Version neu.",
 };
 
 const fr: Dict = {
@@ -3044,7 +3069,7 @@ const fr: Dict = {
   "settings.text.checking": "Vérification...",
   "settings.text.click-request.1": 'Cliquez sur "',
   "settings.text.click-request.2":
-    " — macOS le demandera. Si aucune fenêtre n’apparaît, ouvrez Réglages Système › Confidentialité et sécurité › Accessibilité et activez ",
+    '" — macOS le demandera. Si aucune fenêtre n’apparaît, ouvrez Réglages Système › Confidentialité et sécurité › Accessibilité et activez ',
   "settings.text.click-test-then-save.a": "Cliquez sur ",
   "settings.text.click-test-then-save.b": " → puis ",
   "settings.text.clipboard-from-excluded-apps":
@@ -3321,6 +3346,7 @@ const fr: Dict = {
   "settings.text.test-result": "Résultat du test : {tags}",
   "settings.text.the-model-did":
     "Le modèle n’a pas renvoyé de tags. Essayez un autre modèle ou consultez les journaux Ollama.",
+  "settings.text.click-test-verify.1": 'Cliquez sur "',
   "settings.text.click-test-verify.2":
     '" pour vérifier que le modèle sait étiqueter le contenu du presse-papiers.',
   "settings.text.fits": "Convient",
@@ -3395,6 +3421,10 @@ const fr: Dict = {
   "settings.msg.microphone-granted":
     "Accès au micro confirmé — les notes vocales peuvent s’enregistrer.",
   "settings.text.open-system-settings": "Ouvrir Réglages Système",
+  "settings.text.microphone-hint": "macOS demande le micro à la première utilisation.",
+  "settings.text.microphone-unreadable": "Impossible de lire l’état du micro",
+  "settings.msg.microphone-unreadable":
+    "L’application n’a pas pu lire l’autorisation du micro. Relancez Copyocity ; si cela recommence, réinstallez la version actuelle.",
 };
 
 const ja: Dict = {
@@ -3619,7 +3649,7 @@ const ja: Dict = {
   "settings.text.checking": "確認中...",
   "settings.text.click-request.1": "システム設定を開くには「",
   "settings.text.click-request.2":
-    " を押すと macOS が確認します。ウィンドウが表示されない場合は「システム設定 › プライバシーとセキュリティ › アクセシビリティ」で ",
+    "」 を押すと macOS が確認します。ウィンドウが表示されない場合は「システム設定 › プライバシーとセキュリティ › アクセシビリティ」で ",
   "settings.text.click-test-then-save.a": "まず ",
   "settings.text.click-test-then-save.b": " をクリック → ",
   "settings.text.clipboard-from-excluded-apps":
@@ -3881,6 +3911,7 @@ const ja: Dict = {
   "settings.text.test-result": "テスト結果: {tags}",
   "settings.text.the-model-did":
     "モデルがタグを返しませんでした。別のモデルを試すか、Ollama のログを確認してください。",
+  "settings.text.click-test-verify.1": "システム設定を開くには「",
   "settings.text.click-test-verify.2":
     "」をクリックして、モデルがクリップボードの内容にタグ付けできることを確認します。",
   "settings.text.fits": "適合",
@@ -3955,6 +3986,10 @@ const ja: Dict = {
     "マイクが未許可です。アクセスを許可するまでボイスメモは録音されません。",
   "settings.msg.microphone-granted": "マイクへのアクセスを確認しました。ボイスメモを録音できます。",
   "settings.text.open-system-settings": "システム設定を開く",
+  "settings.text.microphone-hint": "macOS は初回録音時にマイクへのアクセスを求めます。",
+  "settings.text.microphone-unreadable": "マイクの状態を読み取れませんでした",
+  "settings.msg.microphone-unreadable":
+    "アプリがマイクの権限を読み取れませんでした。Copyocity を再起動してください。繰り返す場合は現行バージョンを再インストールしてください。",
 };
 
 export const dict: Record<LocaleCode, Dict> = { en, ru, es, zh, de, fr, ja };
