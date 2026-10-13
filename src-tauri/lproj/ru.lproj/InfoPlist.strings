@@ -1,0 +1,3 @@
+"NSMicrophoneUsageDescription" = "Copyosity использует микрофон для записи голоса и его расшифровки.";
+"NSAppleEventsUsageDescription" = "Copyosity управляет приложениями «Заметки», «Напоминания» и «Календарь», чтобы сохранять и читать ваши записи.";
+"NSCalendarsUsageDescription" = "Copyosity читает предстоящие события «Календаря», чтобы использовать их как контекст.";
