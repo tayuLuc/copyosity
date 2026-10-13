@@ -201,17 +201,35 @@ pub fn record_text_entry(
     if text.trim().is_empty() {
         return None;
     }
-    let content_hash = entry_content_hash(&hash_bytes(text.as_bytes()));
-    let entry = ClipboardEntry {
+    match db.insert_entry(&text_entry(text, source_app)) {
+        Ok((id, _)) => {
+            let _ = app.emit("history-changed", ());
+            Some(id)
+        }
+        Err(e) => {
+            eprintln!("[voice] failed to record transcript in history: {e}");
+            None
+        }
+    }
+}
+
+/// Build the stored entry for a text payload. Line endings are normalised before the text
+/// is stored and before it is fingerprinted — exactly as the pasteboard capture path does —
+/// so a CR-separated transcript renders line-by-line under `white-space: pre-line` and
+/// dedups against a copy of the same text.
+fn text_entry(text: &str, source_app: Option<String>) -> ClipboardEntry {
+    let normalized = normalize_line_endings(text);
+    let char_count = normalized.len() as i64;
+    ClipboardEntry {
         id: 0,
         content_type: "text".to_owned(),
-        text_content: Some(text.to_owned()),
+        text_content: Some(normalized.into_owned()),
         image_data: None,
         image_thumb: None,
         source_app,
         source_app_icon: None,
-        content_hash,
-        char_count: Some(text.len() as i64),
+        content_hash: text_entry_hash(text),
+        char_count: Some(char_count),
         created_at: chrono::Utc::now().to_rfc3339(),
         is_pinned: false,
         collection_id: None,
@@ -222,16 +240,6 @@ pub fn record_text_entry(
         image_height: None,
         image_byte_size: None,
         audio_data: None,
-    };
-    match db.insert_entry(&entry) {
-        Ok((id, _)) => {
-            let _ = app.emit("history-changed", ());
-            Some(id)
-        }
-        Err(e) => {
-            eprintln!("[voice] failed to record transcript in history: {e}");
-            None
-        }
     }
 }
 
@@ -280,11 +288,22 @@ pub fn record_audio_entry(app: &AppHandle, db: &Arc<Database>, wav_bytes: &[u8])
 
 /// Finder separates multiple copied items with CR and Windows sources use CRLF;
 /// only LF is a line break for the stored text, its character count and its renderers.
+/// A lone CR maps one byte to one byte, but every CRLF collapses to a single LF — so
+/// normalisation shortens CRLF text by one byte per occurrence, and the stored
+/// `char_count` shrinks with it. Stored text is never longer than what was captured.
 fn normalize_line_endings(text: &str) -> Cow<'_, str> {
     if !text.contains('\r') {
         return Cow::Borrowed(text);
     }
     Cow::Owned(text.replace("\r\n", "\n").replace('\r', "\n"))
+}
+
+/// Fingerprint of a text entry. Every text entry point — the pasteboard capture in
+/// `try_capture_from_clipboard`, its hash-only twin `probe_clipboard_hash`, and
+/// `record_text_entry` for voice transcripts — routes through here, so one logical
+/// text yields one `content_hash` and the dedup lookup in `db.rs` collapses it.
+fn text_entry_hash(text: &str) -> String {
+    entry_content_hash(&hash_bytes(normalize_line_endings(text).as_bytes()))
 }
 
 /// Content fingerprint for dedup when pasteboard changeCount bumps but payload is unchanged.
@@ -309,7 +328,7 @@ pub fn probe_clipboard_hash(clipboard: &mut Clipboard) -> Option<String> {
 
     if let Ok(text) = clipboard.get_text() {
         if !text.is_empty() {
-            return Some(hash_bytes(normalize_line_endings(&text).as_bytes()));
+            return Some(text_entry_hash(&text));
         }
     }
 
@@ -578,15 +597,17 @@ fn try_capture_from_clipboard(clipboard: &mut Clipboard, ctx: &CaptureContext) -
     }
 
     // 4. Plain text — skip Finder filename stubs when image paths were unavailable.
-    if let Ok(text) = clipboard.get_text() {
-        let text = normalize_line_endings(&text);
+    if let Ok(raw) = clipboard.get_text() {
+        let text = normalize_line_endings(&raw);
         if text.is_empty() {
             return None;
         }
         if is_probable_image_filename(&text) {
             return None;
         }
-        let base_hash = hash_bytes(text.as_bytes());
+        // Fingerprint the raw payload through the shared helper, exactly as
+        // `record_text_entry` does, so both text entry points hash the same bytes.
+        let base_hash = text_entry_hash(&raw);
         return ctx.try_text(text.into_owned(), base_hash, source_bundle_id, source_app);
     }
 
@@ -864,7 +885,45 @@ mod tests {
         let normalized = normalize_line_endings(copied);
         assert!(!normalized.contains('\r'));
         assert_eq!(normalized.lines().count(), 4);
+        // Byte length survives a lone CR, one byte in and one byte out. CRLF does not:
+        // it shortens the text, which the test below pins down.
         assert_eq!(normalized.len(), copied.len());
+    }
+
+    /// The property a lone-CR fixture cannot show: a CRLF collapses to a single LF, so
+    /// normalisation is NOT byte-neutral and the stored `char_count` drops with it.
+    #[test]
+    fn crlf_normalization_drops_one_byte_per_occurrence() {
+        let copied = "a\r\nb\r\nc";
+        let normalized = normalize_line_endings(copied);
+        assert_eq!(normalized, "a\nb\nc");
+        assert_eq!(copied.len() - normalized.len(), 2);
+        assert_eq!(normalized.lines().count(), 3);
+    }
+
+    /// Both text entry points must fingerprint the same bytes: the pasteboard capture
+    /// (`try_capture_from_clipboard`, whose hash-only twin is `probe_clipboard_hash`) and the
+    /// voice-transcript path (`record_text_entry`). When they disagree, the dedup lookup in
+    /// `db.rs` misses and one logical text lands in history as two rows.
+    #[test]
+    fn text_entry_paths_agree_on_cr_separated_text() {
+        let raw = "kapitan-ai-1\rkapitan-ai-2\rkapitan-reference";
+        let lf = "kapitan-ai-1\nkapitan-ai-2\nkapitan-reference";
+        // Guard: the fixture must be one normalisation actually changes, or the equality
+        // below would hold for the wrong reason.
+        assert_ne!(hash_bytes(raw.as_bytes()), hash_bytes(lf.as_bytes()));
+
+        // Capture path: pasteboard bytes are normalised, then fingerprinted.
+        let captured = text_entry_hash(raw);
+        // Externally-produced text path: the entry `record_text_entry` stores.
+        let recorded = text_entry(raw, Some("Voice".to_owned()));
+
+        assert_eq!(recorded.content_hash, captured);
+        assert_eq!(recorded.content_hash, text_entry_hash(lf));
+        assert_ne!(recorded.content_hash, hash_bytes(raw.as_bytes()));
+        // Same normalisation for what the user reads: no run-on lines under `pre-line`.
+        assert_eq!(recorded.text_content.as_deref(), Some(lf));
+        assert_eq!(recorded.char_count, Some(lf.len() as i64));
     }
 
     #[test]
