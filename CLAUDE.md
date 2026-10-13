@@ -69,7 +69,7 @@ build both arches signed (`RELEASE_CONFIG=1`, updater key) → `scripts/finalize
 `latest.json` → tag → `gh release create` → `scripts/publish-mirrors.sh`
 (vkovalskii.com mirror) → verify both endpoints + assert 0 AppleDouble entries.
 Artifacts land in `dist/updater/<version>/` (git-ignored). The landing page is
-served from `main:/docs` at vakovalskii.github.io/copyosity — Pages redeploys on
+served from `main:/docs` at tayuLuc.github.io/copyosity — Pages redeploys on
 push, so the download buttons point at the just-released DMGs automatically.
 
 **Gotcha:** `make check` runs `oxfmt --check` over everything **including

@@ -15,7 +15,7 @@
 [![Svelte](https://img.shields.io/badge/Svelte-5-FF3E00?logo=svelte&logoColor=white)](https://svelte.dev/)
 [![Rust](https://img.shields.io/badge/Rust-000000?logo=rust&logoColor=white)](https://www.rust-lang.org/)
 
-**Website: [vakovalskii.github.io/copyosity](https://vakovalskii.github.io/copyosity/)** · [Download the latest release](https://github.com/tayuLuc/copyosity/releases/latest)
+**Website: [tayuLuc.github.io/copyosity](https://tayuLuc.github.io/copyosity/)** · [Download the latest release](https://github.com/tayuLuc/copyosity/releases/latest)
 
 A fast, native macOS clipboard manager with on-device intelligence.
 
@@ -25,7 +25,7 @@ exposes a command palette for web search and multi-turn agent chat — all from 
 floating panel you summon with a hotkey. It runs as a menu-bar app and stays out
 of your way until you need it.
 
-**🍎 Apple Silicon and Intel Macs** — separate signed DMGs for `aarch64` (M-series) and `x86_64` (Intel).
+**🍎 Apple Silicon and Intel Macs** — separate DMGs for `aarch64` (M-series) and `x86_64` (Intel).
 
 Built with Tauri 2, Svelte 5, Rust, and SQLite.
 
@@ -242,21 +242,19 @@ Shipped capabilities, grouped by area:
 
 ## Platform support
 
-| Platform                             | Status           | Install / builds                                                                                                                                                                              |
-| ------------------------------------ | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 🍎 **macOS** (Apple Silicon & Intel) | ✅ Supported     | Signed, notarized DMGs + `*.app.tar.gz` updater bundles on [Releases](https://github.com/tayuLuc/copyosity/releases/latest)                                                                   |
-| 🪟 **Windows** (x64)                 | ⚠️ Experimental  | `*_x64_en-US.msi` and `*_x64-setup.exe` on the same [Releases](https://github.com/tayuLuc/copyosity/releases/latest) page; built via [windows-build.yml](.github/workflows/windows-build.yml) |
-| 🐧 **Linux**                         | ❌ Not supported | No CI builds or releases                                                                                                                                                                      |
+| Platform                             | Status           | Install / builds                                                                                             |
+| ------------------------------------ | ---------------- | ------------------------------------------------------------------------------------------------------------ |
+| 🍎 **macOS** (Apple Silicon & Intel) | ✅ Supported     | `*.dmg` + `*.app.tar.gz` updater bundles on [Releases](https://github.com/tayuLuc/copyosity/releases/latest) |
+| 🐧 **Linux**                         | ❌ Not supported | No CI builds or releases                                                                                     |
 
 Copyosity is a **macOS-native** app: `NSPanel` overlay, pasteboard monitoring,
 `CGEvent` paste injection, Vision OCR, Apple Events, and menu-bar tray behavior
 (see [macos-tray-menu.md](docs/architecture/macos-tray-menu.md)).
 
-On Windows, macOS-only modules compile to **inert stubs** — the app may install
-and launch, but clipboard capture, paste-into-other-apps, OCR, quick menu, and
-most integrations do not work. CI also runs [`build-windows`](.github/workflows/ci.yml)
-(`cargo check` on every PR, `continue-on-error`) to track compile health.
-**Do not use Windows builds for daily work** until a real port ships.
+On Windows, macOS-only modules compile to **inert stubs**: clipboard capture,
+paste-into-other-apps, OCR, quick menu, and most integrations do not work. CI also
+runs [`build-windows`](.github/workflows/ci.yml) (`cargo check` on every PR,
+`continue-on-error`) to track compile health.
 
 Linux has no build pipeline; the same stubs would apply if it compiled, but
 nothing is published or tested.
@@ -293,24 +291,10 @@ Requires **macOS 12+** on **Apple Silicon** (M1 and later) or **Intel** (x86_64)
    permission (needed to paste into other apps) and, depending on the features you use,
    **Microphone**, **Automation** (Notes/Reminders/Calendar), and screen access.
 
-The build is signed with a Developer ID certificate and notarized + stapled by
-Apple, so Gatekeeper opens it without warnings (and offline).
-
 macOS will also ask for:
 
 - ⚠️ **Accessibility** — needed for paste automation (Cmd+V simulation) and global shortcuts. After rebuilding or reinstalling the app, remove Copyosity from the list and add it again if double-click paste stops working.
 - **Input Monitoring** — may be required for reliable hotkey detection
-
-### 🪟 Windows (experimental)
-
-| Format | Download                    |
-| ------ | --------------------------- |
-| MSI    | `Copyosity_*_x64_en-US.msi` |
-| Setup  | `Copyosity_*_x64-setup.exe` |
-
-⚠️ Windows builds ship on the same release page but are **experimental** — see
-[Platform support](#platform-support) above. Expect a hollow shell: the app
-installs and launches, but most clipboard-manager features are not implemented yet.
 
 <a id="keyboard-shortcuts"></a>
 
@@ -433,10 +417,6 @@ See [docs/architecture/macos-paste-pipeline.md](docs/architecture/macos-paste-pi
 make build-macos-intel   # Intel Mac .app + DMG → dist/macos/
 make build-macos-arm     # Apple Silicon (on M-series or cross-target)
 make build-macos         # Native arch for current Mac
-
-make release-macos-intel # Signed + notarized Intel DMG (Developer ID)
-make release-macos       # Signed + notarized, native arch
-make notarize-info       # Check notarization status
 ```
 
 Artifacts for local testing land in `dist/macos/` (for example `Copyosity_<version>_x86_64.dmg`, where `<version>` is the current `package.json` version).
