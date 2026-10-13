@@ -194,6 +194,15 @@
     });
   }
 
+  function announceDeleteFailure() {
+    clearCopyAnnouncement();
+    requestAnimationFrame(() => {
+      if (!mounted) return;
+      copyAnnouncement = tr("card.msg.delete-failed");
+      clearCopyAnnouncementSoon();
+    });
+  }
+
   function clearCopiedFeedback() {
     copied = false;
     if (copiedResetTimer !== undefined) {
@@ -380,10 +389,9 @@
     try {
       await deleteEntry(entry.id);
       ondeleted?.();
-    } catch (err) {
-      // `delete_entry` maps a failed write to a rejected invoke. Without this the rejection
-      // escapes as an unhandled promise rejection: the card stays on screen with no reason given.
-      console.error("failed to delete the entry", err);
+    } catch {
+      if (!mounted) return;
+      announceDeleteFailure();
     } finally {
       releaseMouseActionFocus();
     }
