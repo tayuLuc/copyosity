@@ -2192,6 +2192,44 @@ mod tests {
     }
 
     #[test]
+    fn voice_toggle_record_defaults_to_hold_and_round_trips_through_update() {
+        let db = test_db();
+        // Absent row: the hotkey keeps its hold-to-record behaviour.
+        assert!(!db.get_app_settings().unwrap().voice_toggle_record);
+
+        db.update_app_settings(
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            Some(true),
+        )
+        .unwrap();
+        assert!(db.get_app_settings().unwrap().voice_toggle_record);
+    }
+
+    #[test]
     fn update_settings() {
         let db = test_db();
         db.update_app_settings(
