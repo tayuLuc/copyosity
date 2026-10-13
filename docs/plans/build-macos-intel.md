@@ -52,7 +52,7 @@ Why the fork diverged on build tooling and macOS clipboard/paste before the upst
 - [x] **Monitor 300 ms** — `changeCount` only as event, not part of hash
 - [x] **objc2** — rewrite `clipboard_macos`; remove `objc` crate where possible (including AX in `commands.rs`)
 - [x] **Capabilities split** — `main.json` / `settings.json` / `voice_overlay.json`; explicit `allow-*` (palette added in **0.5.1**)
-- [x] **Security hardening** — Ollama model name validation before `ollama pull`; `cargo audit` in release CI
+- [x] **Security hardening** — Ollama model name validation before `ollama pull`
 - [x] **Perf** — single `get_frontmost_app` in `file_list` loop; image file size limit (~20 MB)
 - [x] **Verification** — `make check`, `cargo test`, `make build-macos-intel` green
 
@@ -153,7 +153,6 @@ Transcription puts text in the clipboard and simulates Cmd+V; shared macOS paste
 | Tauri ACL          | Separate capabilities per window (`main` / `settings` / `voice_overlay`; `palette` in **0.5.1**) |
 | objc               | Migrate `clipboard_macos.rs` to **objc2**                                                        |
 | Ollama             | Model name validation (allowlist/regex) before `ollama pull`                                     |
-| Release CI         | `cargo audit` before artifacts ship                                                              |
 | Perf               | Single `get_frontmost_app` per `file_list` batch; ~20 MB limit for `encode_image_file`           |
 
 Per-window command scoping (approx.):

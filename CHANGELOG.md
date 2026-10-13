@@ -278,7 +278,6 @@ Fork merge release: upstream **v0.5.1** plus macOS clipboard/paste pipeline, ove
 
 - Per-window IPC command scoping via Tauri capabilities (`main` / `settings` / `voice_overlay` / `palette`).
 - Ollama model name validation before `ollama pull` and settings persistence.
-- `cargo audit` in the release workflow before artifacts ship.
 - Tauri 2.11 upstream IPC ACL hardening.
 
 ## [0.5.1] - 2026-06-30

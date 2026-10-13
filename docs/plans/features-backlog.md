@@ -83,8 +83,6 @@ Fork merge release: upstream **v0.5.1** integrated with fork overlay, paste pipe
 
 - [x] **Validate Ollama model names before** `ollama pull` — `ollama::validate_model_name` (trim, length ≤ 128, safe character set) before pull and settings persistence. `pull_ollama_model` stays on the settings capability set only.
 
-- [x] `cargo audit` **in release workflow** — dependency audit step in GitHub Actions before release artifacts ship.
-
 - [x] **Per-window IPC command scoping** — sensitive commands limited per window: `paste_entry` / `activate_entry` on `main` only; `clear_history`, `start_ollama_server`, exclusion editing on `settings` only; `voice_overlay` events-only; palette scoped to hub search/agent/voice IPC.
 
 ### Fork — developer toolchain
