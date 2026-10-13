@@ -234,6 +234,7 @@ static VOICE_CANCELLED: std::sync::atomic::AtomicBool = std::sync::atomic::Atomi
 #[cfg(target_os = "macos")]
 pub(crate) fn cancel_voice_recording(app: &tauri::AppHandle) {
     VOICE_CANCELLED.store(true, std::sync::atomic::Ordering::Relaxed);
+    reset_voice_toggle_guard();
     let _ = recording_mutex().lock().unwrap().take();
     let hide_app = app.clone();
     let _ = app.run_on_main_thread(move || {
@@ -1447,6 +1448,65 @@ fn maybe_polish(settings: &db::AppSettings, raw: &str) -> String {
     }
 }
 
+/// Minimum spacing between two toggle-mode presses. A re-delivered key-down lands well
+/// inside this window; a deliberate press-to-stop does not.
+const VOICE_TOGGLE_DEBOUNCE_MS: i64 = 350;
+
+/// Timestamp of the last press seen in toggle mode, or -1 when there is none.
+static VOICE_LAST_TOGGLE_MS: std::sync::atomic::AtomicI64 = std::sync::atomic::AtomicI64::new(-1);
+
+static VOICE_CLOCK_ZERO: std::sync::OnceLock<std::time::Instant> = std::sync::OnceLock::new();
+
+fn voice_clock_ms() -> i64 {
+    VOICE_CLOCK_ZERO
+        .get_or_init(std::time::Instant::now)
+        .elapsed()
+        .as_millis() as i64
+}
+
+/// Forget the toggle-mode press history, so the next press is served no matter when it lands.
+fn reset_voice_toggle_guard() {
+    VOICE_LAST_TOGGLE_MS.store(-1, Ordering::Relaxed);
+}
+
+/// Resolve the state a voice-hotkey event must actually drive, `None` dropping the event,
+/// together with the guard timestamp to store back.
+///
+/// Toggle mode: releasing the key that started the recording must not stop it, and the next
+/// press stops it. A stopping press therefore takes the release path, because the start path
+/// would reset VOICE_* and re-capture the target app. A press that arrives within the debounce
+/// window of the previous one is a re-delivered key-down from a held key, not a second intent,
+/// so it is dropped; the guard then moves to the new press, so a key held down cannot re-arm
+/// itself once the window has passed.
+///
+/// Hold mode returns the event untouched and clears the guard.
+fn voice_event_decision(
+    state: ShortcutState,
+    toggle: bool,
+    recording: bool,
+    last_press_ms: i64,
+    now_ms: i64,
+) -> (Option<ShortcutState>, i64) {
+    if !toggle {
+        return (Some(state), -1);
+    }
+    match state {
+        ShortcutState::Released => (None, last_press_ms),
+        ShortcutState::Pressed => {
+            if last_press_ms >= 0 && now_ms.saturating_sub(last_press_ms) < VOICE_TOGGLE_DEBOUNCE_MS
+            {
+                return (None, now_ms);
+            }
+            let next = if recording {
+                ShortcutState::Released
+            } else {
+                ShortcutState::Pressed
+            };
+            (Some(next), now_ms)
+        }
+    }
+}
+
 fn handle_voice_event(app: &tauri::AppHandle, state: ShortcutState) {
     eprintln!(
         "[voice] event: {:?}",
@@ -1459,15 +1519,16 @@ fn handle_voice_event(app: &tauri::AppHandle, state: ShortcutState) {
         .try_state::<std::sync::Arc<db::Database>>()
         .and_then(|db| db.get_app_settings().ok())
         .is_some_and(|s| s.voice_toggle_record);
-    // Toggle mode: releasing the key that started the recording must not stop it,
-    // and the next press stops it. A stopping press therefore takes the release
-    // path, because the start path would reset VOICE_* and re-capture the target app.
     let recording = recording_mutex().lock().unwrap().is_some();
-    let state = match (state, toggle) {
-        (ShortcutState::Released, true) => return,
-        (ShortcutState::Pressed, true) if recording => ShortcutState::Released,
-        (state, _) => state,
-    };
+    let (next, guard) = voice_event_decision(
+        state,
+        toggle,
+        recording,
+        VOICE_LAST_TOGGLE_MS.load(Ordering::Relaxed),
+        voice_clock_ms(),
+    );
+    VOICE_LAST_TOGGLE_MS.store(guard, Ordering::Relaxed);
+    let Some(state) = next else { return };
     match state {
         ShortcutState::Pressed => {
             // Capture the app that is frontmost right now, before we touch any
@@ -2645,6 +2706,137 @@ pub(crate) fn position_window_bottom(window: &tauri::WebviewWindow, height_px: f
     apply_overlay_size_limits(window, vertical, height_px);
     let _ = window.set_size(PhysicalSize::new(win_width, win_height));
     let _ = window.set_position(PhysicalPosition::new(x, y));
+}
+
+#[cfg(test)]
+mod voice_toggle_tests {
+    use super::*;
+
+    /// Guard value meaning "no press seen yet".
+    const NEVER: i64 = -1;
+
+    #[test]
+    fn toggle_press_inside_the_window_does_not_flip_the_state() {
+        let (first, guard) =
+            voice_event_decision(ShortcutState::Pressed, true, false, NEVER, 1_000);
+        assert_eq!(first, Some(ShortcutState::Pressed));
+        // Key repeat 40ms later while the key is still down.
+        let (next, guard) = voice_event_decision(ShortcutState::Pressed, true, true, guard, 1_040);
+        assert_eq!(next, None);
+        assert_eq!(guard, 1_040);
+    }
+
+    #[test]
+    fn toggle_press_inside_the_window_does_not_restart_after_a_stop() {
+        let (_, guard) = voice_event_decision(ShortcutState::Pressed, true, false, NEVER, 0);
+        let (stop, guard) = voice_event_decision(ShortcutState::Pressed, true, true, guard, 1_000);
+        assert_eq!(stop, Some(ShortcutState::Released));
+        let (next, _) = voice_event_decision(ShortcutState::Pressed, true, false, guard, 1_100);
+        assert_eq!(next, None);
+    }
+
+    #[test]
+    fn toggle_press_at_the_window_edge_flips_normally() {
+        let (next, guard) = voice_event_decision(
+            ShortcutState::Pressed,
+            true,
+            true,
+            1_000,
+            1_000 + VOICE_TOGGLE_DEBOUNCE_MS,
+        );
+        assert_eq!(next, Some(ShortcutState::Released));
+        assert_eq!(guard, 1_000 + VOICE_TOGGLE_DEBOUNCE_MS);
+    }
+
+    #[test]
+    fn toggle_press_well_after_the_window_flips_normally() {
+        let (next, guard) = voice_event_decision(ShortcutState::Pressed, true, true, 1_000, 1_900);
+        assert_eq!(next, Some(ShortcutState::Released));
+        assert_eq!(guard, 1_900);
+    }
+
+    #[test]
+    fn a_held_key_never_toggles_twice() {
+        // Two seconds of key repeat at ~33ms intervals must produce exactly one toggle,
+        // whatever the repeat delay was: every repeat also moves the guard forward.
+        let (first, mut guard) =
+            voice_event_decision(ShortcutState::Pressed, true, false, NEVER, 0);
+        assert_eq!(first, Some(ShortcutState::Pressed));
+        let mut recording = true;
+        let mut toggles = 1;
+        for now in (33..2_000).step_by(33) {
+            let (next, moved) =
+                voice_event_decision(ShortcutState::Pressed, true, recording, guard, now);
+            guard = moved;
+            if let Some(state) = next {
+                recording = state == ShortcutState::Pressed;
+                toggles += 1;
+            }
+        }
+        assert_eq!(toggles, 1);
+        assert!(recording, "a held key must leave the recording running");
+    }
+
+    #[test]
+    fn toggle_release_never_stops_the_recording() {
+        let (next, guard) = voice_event_decision(ShortcutState::Released, true, true, 1_000, 1_400);
+        assert_eq!(next, None);
+        assert_eq!(guard, 1_000);
+    }
+
+    #[test]
+    fn escape_cancel_clears_the_guard_so_the_next_press_starts_a_new_take() {
+        let (started, cancelled_at) =
+            voice_event_decision(ShortcutState::Pressed, true, false, NEVER, 1_000);
+        assert_eq!(started, Some(ShortcutState::Pressed));
+        VOICE_LAST_TOGGLE_MS.store(cancelled_at, Ordering::Relaxed);
+        // Left alone, the press that restarts a take 120ms after a cancel is swallowed.
+        let (swallowed, _) = voice_event_decision(
+            ShortcutState::Pressed,
+            true,
+            false,
+            VOICE_LAST_TOGGLE_MS.load(Ordering::Relaxed),
+            1_120,
+        );
+        assert_eq!(swallowed, None);
+
+        reset_voice_toggle_guard();
+        let (next, _) = voice_event_decision(
+            ShortcutState::Pressed,
+            true,
+            false,
+            VOICE_LAST_TOGGLE_MS.load(Ordering::Relaxed),
+            1_120,
+        );
+        assert_eq!(next, Some(ShortcutState::Pressed));
+    }
+
+    #[test]
+    fn hold_mode_press_while_recording_reaches_the_start_path() {
+        // Hold mode never converts a press into a stop: the second press still arrives as
+        // Pressed, and the start arm leaves the running recording alone.
+        let (next, guard) = voice_event_decision(ShortcutState::Pressed, false, true, 5_000, 5_010);
+        assert_eq!(next, Some(ShortcutState::Pressed));
+        assert_eq!(guard, NEVER);
+    }
+
+    #[test]
+    fn hold_mode_release_still_finishes_the_recording() {
+        let (next, guard) =
+            voice_event_decision(ShortcutState::Released, false, true, 5_000, 9_000);
+        assert_eq!(next, Some(ShortcutState::Released));
+        assert_eq!(guard, NEVER);
+    }
+
+    #[test]
+    fn turning_toggle_mode_off_mid_take_drops_a_stale_guard() {
+        let (next, guard) =
+            voice_event_decision(ShortcutState::Released, false, true, 1_000, 1_100);
+        assert_eq!(next, Some(ShortcutState::Released));
+        assert_eq!(guard, NEVER);
+        let (next, _) = voice_event_decision(ShortcutState::Pressed, false, false, guard, 1_150);
+        assert_eq!(next, Some(ShortcutState::Pressed));
+    }
 }
 
 #[cfg(test)]
