@@ -220,6 +220,7 @@ pub fn record_text_entry(
         image_width: None,
         image_height: None,
         image_byte_size: None,
+        audio_data: None,
     };
     match db.insert_entry(&entry) {
         Ok((id, _)) => {
@@ -228,6 +229,49 @@ pub fn record_text_entry(
         }
         Err(e) => {
             eprintln!("[voice] failed to record transcript in history: {e}");
+            None
+        }
+    }
+}
+
+/// Record the original voice recording as an `audio` entry, so a failed transcription
+/// leaves the WAV bytes retrievable instead of dropping them with the samples.
+/// Returns the entry id on success.
+pub fn record_audio_entry(app: &AppHandle, db: &Arc<Database>, wav_bytes: &[u8]) -> Option<i64> {
+    if wav_bytes.is_empty() {
+        return None;
+    }
+    let entry = ClipboardEntry {
+        id: 0,
+        content_type: "audio".to_owned(),
+        text_content: None,
+        image_data: None,
+        image_thumb: None,
+        source_app: Some("Voice".to_owned()),
+        source_app_icon: None,
+        content_hash: entry_content_hash(&hash_bytes(wav_bytes)),
+        char_count: None,
+        created_at: chrono::Utc::now().to_rfc3339(),
+        is_pinned: false,
+        collection_id: None,
+        tags: Vec::new(),
+        ocr_text: None,
+        image_format: None,
+        image_width: None,
+        image_height: None,
+        image_byte_size: Some(wav_bytes.len() as i64),
+        audio_data: Some(base64::Engine::encode(
+            &base64::engine::general_purpose::STANDARD,
+            wav_bytes,
+        )),
+    };
+    match db.insert_entry(&entry) {
+        Ok((id, _)) => {
+            let _ = app.emit("history-changed", ());
+            Some(id)
+        }
+        Err(e) => {
+            eprintln!("[voice] failed to record audio in history: {e}");
             None
         }
     }
@@ -328,6 +372,7 @@ impl CaptureContext {
             image_width: Some(encoded.width),
             image_height: Some(encoded.height),
             image_byte_size: Some(encoded.byte_size),
+            audio_data: None,
         };
 
         match self.db.insert_entry(&entry) {
@@ -433,6 +478,7 @@ impl CaptureContext {
             image_width: None,
             image_height: None,
             image_byte_size: None,
+            audio_data: None,
         };
 
         match self.db.insert_entry(&entry) {
@@ -996,6 +1042,7 @@ mod tests {
             image_width: None,
             image_height: None,
             image_byte_size: None,
+            audio_data: None,
         }
     }
 

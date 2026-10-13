@@ -413,6 +413,7 @@ const en: Dict = {
   "overlay.text.kind-text": "Text",
   "overlay.text.kind-images": "Images",
   "overlay.text.kind-file": "File",
+  "overlay.text.kind-audio": "Audio",
   "overlay.text.kind-image-short": "IMG",
   "overlay.hint.pin": "Pin",
   "overlay.hint.unpin": "Unpin",
@@ -587,6 +588,10 @@ const en: Dict = {
   "overlay.msg.voice-transcription-request-failed": "The transcription service did not answer.",
   "overlay.msg.voice-microphone-denied":
     "Microphone access is off. Grant it in the window that just opened.",
+  "overlay.msg.voice-audio-saved":
+    "The recording was kept: it is on your clipboard and in history.",
+  "overlay.msg.voice-audio-trimmed":
+    "The recording was too long and was cut short; the kept part is on your clipboard and in history.",
 };
 
 const ru: Dict = {
@@ -996,6 +1001,7 @@ const ru: Dict = {
   "overlay.text.kind-text": "Текст",
   "overlay.text.kind-images": "Изображения",
   "overlay.text.kind-file": "Файл",
+  "overlay.text.kind-audio": "Аудио",
   "overlay.text.kind-image-short": "Рис.",
   "overlay.hint.pin": "Закрепить",
   "overlay.hint.unpin": "Открепить",
@@ -1172,6 +1178,9 @@ const ru: Dict = {
   "overlay.msg.voice-transcription-request-failed": "Сервис транскрипции не ответил.",
   "overlay.msg.voice-microphone-denied":
     "Доступ к микрофону выключен. Разрешите его в открывшемся окне.",
+  "overlay.msg.voice-audio-saved": "Запись сохранена: она в буфере обмена и в истории.",
+  "overlay.msg.voice-audio-trimmed":
+    "Запись оказалась слишком длинной и была обрезана; сохранённая часть в буфере обмена и в истории.",
 };
 
 const es: Dict = {
@@ -1580,6 +1589,7 @@ const es: Dict = {
   "overlay.text.kind-text": "Texto",
   "overlay.text.kind-images": "Imágenes",
   "overlay.text.kind-file": "Archivo",
+  "overlay.text.kind-audio": "Audio",
   "overlay.text.kind-image-short": "IMG",
   "overlay.hint.pin": "Fijar",
   "overlay.hint.unpin": "Quitar fijado",
@@ -1758,6 +1768,10 @@ const es: Dict = {
   "overlay.msg.voice-transcription-request-failed": "El servicio de transcripción no respondió.",
   "overlay.msg.voice-microphone-denied":
     "El acceso al micrófono está desactivado. Concede acceso en la ventana que se acaba de abrir.",
+  "overlay.msg.voice-audio-saved":
+    "Se guardó la grabación: está en el portapapeles y en el historial.",
+  "overlay.msg.voice-audio-trimmed":
+    "La grabación era demasiado larga y se recortó; la parte guardada está en el portapapeles y en el historial.",
 };
 
 const zh: Dict = {
@@ -2141,6 +2155,7 @@ const zh: Dict = {
   "overlay.text.kind-text": "文本",
   "overlay.text.kind-images": "图片",
   "overlay.text.kind-file": "文件",
+  "overlay.text.kind-audio": "音频",
   "overlay.text.kind-image-short": "图",
   "overlay.hint.pin": "置顶",
   "overlay.hint.unpin": "取消置顶",
@@ -2303,6 +2318,9 @@ const zh: Dict = {
   "overlay.msg.voice-transcription-not-configured": "未配置转录服务，请在设置中配置。",
   "overlay.msg.voice-transcription-request-failed": "转录服务没有响应。",
   "overlay.msg.voice-microphone-denied": "麦克フォン访问已关闭，请在刚打开的窗口中授权。",
+  "overlay.msg.voice-audio-saved": "录音已保留：已复制到剪贴板并保存在历史记录中。",
+  "overlay.msg.voice-audio-trimmed":
+    "录音过长，已被截断；保留的部分已复制到剪贴板并保存在历史记录中。",
 };
 
 const de: Dict = {
@@ -2717,6 +2735,7 @@ const de: Dict = {
   "overlay.text.kind-text": "Text",
   "overlay.text.kind-images": "Bilder",
   "overlay.text.kind-file": "Datei",
+  "overlay.text.kind-audio": "Audio",
   "overlay.text.kind-image-short": "IMG",
   "overlay.hint.pin": "Anheften",
   "overlay.hint.unpin": "Lösen",
@@ -2895,6 +2914,10 @@ const de: Dict = {
     "Der Transkriptionsdienst hat nicht geantwortet.",
   "overlay.msg.voice-microphone-denied":
     "Mikrofonzugriff ist aus. Erlauben Sie ihn im gerade geöffneten Fenster.",
+  "overlay.msg.voice-audio-saved":
+    "Die Aufnahme wurde behalten: Sie liegt in der Zwischenablage und im Verlauf.",
+  "overlay.msg.voice-audio-trimmed":
+    "Die Aufnahme war zu lang und wurde gekürzt; der behaltene Teil liegt in der Zwischenablage und im Verlauf.",
 };
 
 const fr: Dict = {
@@ -3310,6 +3333,7 @@ const fr: Dict = {
   "overlay.text.kind-text": "Texte",
   "overlay.text.kind-images": "Images",
   "overlay.text.kind-file": "Fichier",
+  "overlay.text.kind-audio": "Audio",
   "overlay.text.kind-image-short": "IMG",
   "overlay.hint.pin": "Épingler",
   "overlay.hint.unpin": "Détacher",
@@ -3489,6 +3513,10 @@ const fr: Dict = {
   "overlay.msg.voice-transcription-request-failed": "Le service de transcription n’a pas répondu.",
   "overlay.msg.voice-microphone-denied":
     "L’accès au micro est désactivé. Autorisez-le dans la fenêtre qui vient de s’ouvrir.",
+  "overlay.msg.voice-audio-saved":
+    "L’enregistrement a été conservé : il est dans le presse-papiers et dans l’historique.",
+  "overlay.msg.voice-audio-trimmed":
+    "L’enregistrement était trop long et a été tronqué ; la partie conservée est dans le presse-papiers et dans l’historique.",
 };
 
 const ja: Dict = {
@@ -3887,6 +3915,7 @@ const ja: Dict = {
   "overlay.text.kind-text": "テキスト",
   "overlay.text.kind-images": "画像",
   "overlay.text.kind-file": "ファイル",
+  "overlay.text.kind-audio": "音声",
   "overlay.text.kind-image-short": "IMG",
   "overlay.hint.pin": "ピン留め",
   "overlay.hint.unpin": "ピン留め解除",
@@ -4065,6 +4094,9 @@ const ja: Dict = {
   "overlay.msg.voice-transcription-request-failed": "文字起こしサービスが応答しませんでした。",
   "overlay.msg.voice-microphone-denied":
     "マイクへのアクセスがオフです。開いたウィンドウで許可してください。",
+  "overlay.msg.voice-audio-saved": "録音を保持しました：クリップボードと履歴に保存されています。",
+  "overlay.msg.voice-audio-trimmed":
+    "録音が長すぎたため切り詰めました。残した部分はクリップボードと履歴に保存されています。",
 };
 
 export const dict: Record<LocaleCode, Dict> = { en, ru, es, zh, de, fr, ja };

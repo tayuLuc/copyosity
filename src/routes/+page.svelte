@@ -852,8 +852,12 @@
     });
 
     // Voice transcription failures (e.g. a hub 429 asking to raise the tariff).
-    const unlistenVoiceError = listen<string>("voice-error", (e) => {
-      if (e.payload === "mic_denied") {
+    const unlistenVoiceError = listen<{
+      code: string;
+      audio_saved: boolean;
+      audio_trimmed: boolean;
+    }>("voice-error", (e) => {
+      if (e.payload.code === "mic_denied") {
         // A notification cannot carry a button, so take the user where one exists:
         // the Accesses pane of our own Settings, which has "Open System Settings".
         void notify(
@@ -863,10 +867,13 @@
         void invoke("open_settings_window", { initialPane: "access" });
         return;
       }
-      const detail =
-        e.payload === "not_configured"
+      const detail = e.payload.audio_saved
+        ? e.payload.audio_trimmed
+          ? tr("overlay.msg.voice-audio-trimmed")
+          : tr("overlay.msg.voice-audio-saved")
+        : e.payload.code === "not_configured"
           ? tr("overlay.msg.voice-transcription-not-configured")
-          : e.payload === "request_failed"
+          : e.payload.code === "request_failed"
             ? tr("overlay.msg.voice-transcription-request-failed")
             : tr("overlay.msg.voice-transcription-failed");
       void notify(tr("overlay.msg.voice-transcription-failed"), detail);

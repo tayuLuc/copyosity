@@ -115,6 +115,9 @@ pub struct ClipboardEntry {
     pub image_height: Option<i64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub image_byte_size: Option<i64>,
+    /// Original voice recording, base64-encoded WAV. Set on `audio` entries only.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub audio_data: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -435,7 +438,8 @@ impl Database {
                 image_format TEXT,
                 image_width INTEGER,
                 image_height INTEGER,
-                image_byte_size INTEGER
+                image_byte_size INTEGER,
+                audio_data BLOB
             );
 
             CREATE INDEX IF NOT EXISTS idx_entries_created_at ON clipboard_entries(created_at DESC);
@@ -564,6 +568,16 @@ impl Database {
                 PRAGMA user_version = 4;
                 ",
             )?;
+        }
+
+        // v5: original voice recording kept as a BLOB, so a failed transcription
+        // leaves the audio retrievable instead of discarding it.
+        if version < 5 {
+            let _ = conn.execute(
+                "ALTER TABLE clipboard_entries ADD COLUMN audio_data BLOB",
+                [],
+            );
+            conn.execute_batch("PRAGMA user_version = 5;")?;
         }
 
         Ok(())
@@ -978,8 +992,8 @@ impl Database {
         let text_content_search = entry.text_content.as_deref().map(lowercase_search_text);
 
         conn.execute(
-            "INSERT INTO clipboard_entries (content_type, text_content, text_content_search, image_data, image_thumb, source_app, source_app_icon, content_hash, char_count, created_at, is_pinned, collection_id, image_format, image_width, image_height, image_byte_size)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16)",
+            "INSERT INTO clipboard_entries (content_type, text_content, text_content_search, image_data, image_thumb, source_app, source_app_icon, content_hash, char_count, created_at, is_pinned, collection_id, image_format, image_width, image_height, image_byte_size, audio_data)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17)",
             params![
                 entry.content_type,
                 entry.text_content,
@@ -997,6 +1011,7 @@ impl Database {
                 entry.image_width,
                 entry.image_height,
                 entry.image_byte_size,
+                entry.audio_data,
             ],
         )?;
 
@@ -1074,6 +1089,7 @@ impl Database {
                     image_width: row.get(15)?,
                     image_height: row.get(16)?,
                     image_byte_size: row.get(17)?,
+                    audio_data: None,
                 })
             })?
             .collect::<Result<Vec<_>, _>>()?;
@@ -1664,7 +1680,7 @@ impl Database {
             "SELECT id, content_type, text_content, image_data, image_thumb, source_app, source_app_icon,
                     content_hash, char_count, created_at, is_pinned, collection_id,
                     COALESCE((SELECT GROUP_CONCAT(tag, '|') FROM clipboard_tags WHERE entry_id = clipboard_entries.id), '') as tags,
-                    ocr_text, image_format, image_width, image_height, image_byte_size
+                    ocr_text, image_format, image_width, image_height, image_byte_size, audio_data
              FROM clipboard_entries
              WHERE id = ?1",
             params![entry_id],
@@ -1693,6 +1709,7 @@ impl Database {
                     image_width: row.get(15)?,
                     image_height: row.get(16)?,
                     image_byte_size: row.get(17)?,
+                    audio_data: row.get(18)?,
                 })
             },
         )
@@ -1767,6 +1784,7 @@ impl Database {
                 image_width: None,
                 image_height: None,
                 image_byte_size: None,
+                audio_data: None,
             };
             resolve_image_meta(&mut entry);
             updates.push((
@@ -1908,7 +1926,8 @@ mod tests {
                 image_format TEXT,
                 image_width INTEGER,
                 image_height INTEGER,
-                image_byte_size INTEGER
+                image_byte_size INTEGER,
+                audio_data BLOB
             );
             CREATE INDEX IF NOT EXISTS idx_entries_content_hash ON clipboard_entries(content_hash);
             CREATE TABLE IF NOT EXISTS settings (
@@ -1955,6 +1974,7 @@ mod tests {
             image_width: None,
             image_height: None,
             image_byte_size: None,
+            audio_data: None,
         }
     }
 
@@ -2306,6 +2326,7 @@ mod tests {
             image_width: Some(1),
             image_height: Some(1),
             image_byte_size: Some(68),
+            audio_data: None,
         }
     }
 
