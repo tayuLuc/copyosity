@@ -4,6 +4,11 @@ name: CI
 #
 #  - check-macos:    the real gate. Runs `make check` (frontend typecheck/lint/tests
 #                    plus Rust compile, Clippy, fmt, and tests) on Apple Silicon.
+#  - audit:          ADVISORY. `cargo audit` over src-tauri/Cargo.lock, on
+#                    third-party crates we do not control, so it is marked
+#                    `continue-on-error`: a fresh upstream advisory must not
+#                    block an unrelated PR. Its result goes to the job summary
+#                    and to an annotation, never to a silently green job.
 #  - build-windows:  EXPERIMENTAL. Copyosity is a macOS-native app (NSPanel,
 #                    CGEvent, Vision OCR, Apple Events). On Windows those modules
 #                    fall back to inert stubs, so this is at best a hollow,
@@ -54,6 +59,32 @@ jobs:
         env:
           HUSKY: "0"
         run: make check
+
+  audit:
+    name: Cargo audit (advisory)
+    runs-on: macos-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          persist-credentials: false
+
+      - uses: dtolnay/rust-toolchain@686976e191b89faba57d3206551f0f330d8cb249
+
+      - name: Install cargo-audit
+        run: cargo install cargo-audit --locked
+
+      - name: cargo audit
+        id: audit
+        working-directory: src-tauri
+        run: |
+          set -uo pipefail
+          echo '### cargo audit' >> "$GITHUB_STEP_SUMMARY"
+          cargo audit 2>&1 | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Report advisories
+        if: steps.audit.outcome == 'failure'
+        run: echo "::error title=cargo audit::advisories found"
 
   build-windows:
     name: Build (Windows, experimental — hollow shell)
