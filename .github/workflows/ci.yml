@@ -83,7 +83,7 @@ jobs:
           cargo audit 2>&1 | tee -a "$GITHUB_STEP_SUMMARY"
 
       - name: Report advisories
-        if: steps.audit.outcome == 'failure'
+        if: always() && steps.audit.outcome == 'failure'
         run: echo "::error title=cargo audit::advisories found"
 
   build-windows:
