@@ -1,6 +1,7 @@
 use arboard::Clipboard;
 use image::{DynamicImage, GenericImageView, ImageBuffer, ImageFormat, Rgba};
 use sha2::{Digest, Sha256};
+use std::borrow::Cow;
 use std::io::Cursor;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -277,6 +278,15 @@ pub fn record_audio_entry(app: &AppHandle, db: &Arc<Database>, wav_bytes: &[u8])
     }
 }
 
+/// Finder separates multiple copied items with CR and Windows sources use CRLF;
+/// only LF is a line break for the stored text, its character count and its renderers.
+fn normalize_line_endings(text: &str) -> Cow<'_, str> {
+    if !text.contains('\r') {
+        return Cow::Borrowed(text);
+    }
+    Cow::Owned(text.replace("\r\n", "\n").replace('\r', "\n"))
+}
+
 /// Content fingerprint for dedup when pasteboard changeCount bumps but payload is unchanged.
 pub fn probe_clipboard_hash(clipboard: &mut Clipboard) -> Option<String> {
     // Keep the same priority order as `try_capture_from_clipboard`.
@@ -299,7 +309,7 @@ pub fn probe_clipboard_hash(clipboard: &mut Clipboard) -> Option<String> {
 
     if let Ok(text) = clipboard.get_text() {
         if !text.is_empty() {
-            return Some(hash_bytes(text.as_bytes()));
+            return Some(hash_bytes(normalize_line_endings(&text).as_bytes()));
         }
     }
 
@@ -569,6 +579,7 @@ fn try_capture_from_clipboard(clipboard: &mut Clipboard, ctx: &CaptureContext) -
 
     // 4. Plain text — skip Finder filename stubs when image paths were unavailable.
     if let Ok(text) = clipboard.get_text() {
+        let text = normalize_line_endings(&text);
         if text.is_empty() {
             return None;
         }
@@ -576,7 +587,7 @@ fn try_capture_from_clipboard(clipboard: &mut Clipboard, ctx: &CaptureContext) -
             return None;
         }
         let base_hash = hash_bytes(text.as_bytes());
-        return ctx.try_text(text, base_hash, source_bundle_id, source_app);
+        return ctx.try_text(text.into_owned(), base_hash, source_bundle_id, source_app);
     }
 
     None
@@ -825,6 +836,24 @@ mod tests {
         let short = hash_bytes(b"abcdefghijklmnop");
         let long = hash_bytes(b"abcdefghijklmnop-extra");
         assert_ne!(short, long);
+    }
+
+    #[test]
+    fn line_endings_normalize_to_lf() {
+        assert_eq!(normalize_line_endings("a\r\nb\rc\nd"), "a\nb\nc\nd");
+        assert!(matches!(
+            normalize_line_endings("already clean"),
+            Cow::Borrowed(_)
+        ));
+    }
+
+    #[test]
+    fn finder_multi_item_copy_keeps_one_line_per_item() {
+        let copied = "kapitan-ai-1\rkapitan-ai-2\rkapitan-new\rkapitan-reference";
+        let normalized = normalize_line_endings(copied);
+        assert!(!normalized.contains('\r'));
+        assert_eq!(normalized.lines().count(), 4);
+        assert_eq!(normalized.len(), copied.len());
     }
 
     #[test]
