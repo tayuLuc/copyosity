@@ -730,7 +730,10 @@ pub fn start_clipboard_monitor(app: AppHandle) {
             });
 
             if retention_due_next(std::time::Instant::now(), &mut retention_due)
-                && retention_sweep(&db).is_some()
+                && retention_sweep(&db, |message| {
+                    let _ = app.emit("retention-failed", message);
+                })
+                .is_some()
             {
                 let _ = app.emit("history-changed", ());
             }
@@ -748,11 +751,18 @@ fn retention_due_next(now: std::time::Instant, due: &mut std::time::Instant) -> 
     true
 }
 
-fn retention_sweep(db: &Database) -> Option<u64> {
+/// Returns the number of entries removed, or `None` when nothing matched.
+///
+/// `on_failure` receives the error whenever a sweep could not run. The caller passes an emitter
+/// so the failure reaches the webview: `stderr` is not a usable channel for this app, because
+/// launchd starts it without a log destination, so a retention failure was otherwise invisible
+/// while history grew without bound.
+fn retention_sweep(db: &Database, on_failure: impl Fn(&str)) -> Option<u64> {
     let days = match db.get_app_settings() {
         Ok(settings) => settings.retention_days,
         Err(err) => {
             eprintln!("[clipboard] retention: settings unreadable, {err}");
+            on_failure(&err.to_string());
             return None;
         }
     };
@@ -764,6 +774,7 @@ fn retention_sweep(db: &Database) -> Option<u64> {
         }
         Err(err) => {
             eprintln!("[clipboard] retention: delete failed, {err}");
+            on_failure(&err.to_string());
             None
         }
     }
@@ -1081,6 +1092,13 @@ mod tests {
         (Database::new(dir.clone()).unwrap(), dir)
     }
 
+    /// Runs `retention_sweep`, collecting every reported failure into `failures`.
+    fn sweep(db: &Database, failures: &std::cell::RefCell<Vec<String>>) -> Option<u64> {
+        retention_sweep(db, |message: &str| {
+            failures.borrow_mut().push(message.to_owned());
+        })
+    }
+
     #[test]
     fn retention_gate_fires_once_per_interval() {
         let now = std::time::Instant::now();
@@ -1111,11 +1129,33 @@ mod tests {
         ))
         .unwrap();
 
-        assert_eq!(retention_sweep(&db), Some(1));
-        assert_eq!(retention_sweep(&db), None);
+        let failures = std::cell::RefCell::new(Vec::new());
+        assert_eq!(sweep(&db, &failures), Some(1));
+        assert_eq!(sweep(&db, &failures), None);
+        assert!(failures.borrow().is_empty());
         assert!(!db.has_entry_with_content_hash("sweep_old").unwrap());
         assert!(db.has_entry_with_content_hash("sweep_pinned").unwrap());
         assert!(db.has_entry_with_content_hash("sweep_fresh").unwrap());
+
+        std::fs::remove_dir_all(&dir).unwrap();
+    }
+
+    /// A sweep that cannot delete must report its error instead of returning the same `None` a
+    /// no-op sweep returns — otherwise a dead retention loop looks like a healthy one.
+    #[test]
+    fn retention_sweep_reports_delete_failure() {
+        let (db, dir) = temp_db("failure");
+        db.conn
+            .lock()
+            .unwrap()
+            .execute_batch("DROP TABLE clipboard_entries;")
+            .unwrap();
+
+        let failures = std::cell::RefCell::new(Vec::new());
+        assert_eq!(sweep(&db, &failures), None);
+        let failures = failures.borrow();
+        assert_eq!(failures.len(), 1);
+        assert!(!failures[0].is_empty());
 
         std::fs::remove_dir_all(&dir).unwrap();
     }
