@@ -105,6 +105,10 @@ const en: Dict = {
   "overlay.msg.try-another-tag-or": "Try another tag or clear the filter",
   "overlay.msg.voice-transcription-failed": "Voice transcription failed",
   "overlay.msg.retention-failed": "Retention cleanup failed",
+  "overlay.msg.retention-settings-unreadable":
+    "The retention setting could not be read — history keeps growing.",
+  "overlay.msg.retention-delete-failed":
+    "Old entries could not be deleted — history keeps growing.",
   "overlay.text.all-tags": "All tags",
   "overlay.text.couldn-t-load-more": "Couldn't load more entries",
   "overlay.text.fetching-the-next-page": "Fetching the next page of matching entries",
@@ -694,6 +698,9 @@ const ru: Dict = {
   "overlay.msg.try-another-tag-or": "Выберите другой тег или сбросьте фильтр",
   "overlay.msg.voice-transcription-failed": "Не удалось транскрибировать речь",
   "overlay.msg.retention-failed": "Не удалось выполнить очистку истории",
+  "overlay.msg.retention-settings-unreadable":
+    "Не удалось прочитать срок хранения — история растёт.",
+  "overlay.msg.retention-delete-failed": "Не удалось удалить старые записи — история растёт.",
   "overlay.text.all-tags": "Все теги",
   "overlay.text.couldn-t-load-more": "Не удалось загрузить дополнительные записи",
   "overlay.text.fetching-the-next-page": "Загрузка следующей страницы подходящих записей",
@@ -1289,6 +1296,10 @@ const es: Dict = {
   "overlay.msg.try-another-tag-or": "Prueba con otra etiqueta o limpia el filtro",
   "overlay.msg.voice-transcription-failed": "La transcripción de voz falló",
   "overlay.msg.retention-failed": "No se pudo limpiar el historial",
+  "overlay.msg.retention-settings-unreadable":
+    "No se pudo leer el período de retención: el historial sigue creciendo.",
+  "overlay.msg.retention-delete-failed":
+    "No se pudieron borrar las entradas antiguas: el historial sigue creciendo.",
   "overlay.text.all-tags": "Todas las etiquetas",
   "overlay.text.couldn-t-load-more": "No se pudieron cargar más elementos",
   "overlay.text.fetching-the-next-page": "Obteniendo la siguiente página de coincidencias",
@@ -1887,6 +1898,8 @@ const zh: Dict = {
   "overlay.msg.try-another-tag-or": "尝试其他标签或清除筛选",
   "overlay.msg.voice-transcription-failed": "语音转写失败",
   "overlay.msg.retention-failed": "历史记录清理失败",
+  "overlay.msg.retention-settings-unreadable": "无法读取保留期限，历史记录会持续增长。",
+  "overlay.msg.retention-delete-failed": "无法删除旧记录，历史记录会持续增长。",
   "overlay.text.all-tags": "全部标签",
   "overlay.text.couldn-t-load-more": "无法加载更多条目",
   "overlay.text.fetching-the-next-page": "正在获取下一页匹配条目",
@@ -2443,6 +2456,10 @@ const de: Dict = {
   "overlay.msg.try-another-tag-or": "Anderes Tag wählen oder Filter zurücksetzen",
   "overlay.msg.voice-transcription-failed": "Sprachtranskription fehlgeschlagen",
   "overlay.msg.retention-failed": "Bereinigung des Verlaufs fehlgeschlagen",
+  "overlay.msg.retention-settings-unreadable":
+    "Die Aufbewahrungsdauer konnte nicht gelesen werden — der Verlauf wächst weiter.",
+  "overlay.msg.retention-delete-failed":
+    "Alte Einträge konnten nicht gelöscht werden — der Verlauf wächst weiter.",
   "overlay.text.all-tags": "Alle Tags",
   "overlay.text.couldn-t-load-more": "Einträge konnten nicht nachgeladen werden",
   "overlay.text.fetching-the-next-page": "Nächste Seite passender Einträge wird geladen",
@@ -3046,6 +3063,10 @@ const fr: Dict = {
   "overlay.msg.try-another-tag-or": "Essayez un autre tag ou effacez le filtre",
   "overlay.msg.voice-transcription-failed": "Échec de la transcription vocale",
   "overlay.msg.retention-failed": "Échec du nettoyage de l’historique",
+  "overlay.msg.retention-settings-unreadable":
+    "Impossible de lire la durée de conservation — l’historique continue de grossir.",
+  "overlay.msg.retention-delete-failed":
+    "Impossible de supprimer les anciennes entrées — l’historique continue de grossir.",
   "overlay.text.all-tags": "Tous les tags",
   "overlay.text.couldn-t-load-more": "Impossible de charger d’autres entrées",
   "overlay.text.fetching-the-next-page":
@@ -3652,6 +3673,9 @@ const ja: Dict = {
   "overlay.msg.try-another-tag-or": "別のタグを選択、またはフィルタをクリア",
   "overlay.msg.voice-transcription-failed": "音声文字起こしに失敗",
   "overlay.msg.retention-failed": "履歴のクリーンアップに失敗しました",
+  "overlay.msg.retention-settings-unreadable":
+    "保存期間を読み取れませんでした。履歴は増え続けます。",
+  "overlay.msg.retention-delete-failed": "古い項目を削除できませんでした。履歴は増え続けます。",
   "overlay.text.all-tags": "すべてのタグ",
   "overlay.text.couldn-t-load-more": "これ以上読み込めません",
   "overlay.text.fetching-the-next-page": "該当項目の次のページを取得中",

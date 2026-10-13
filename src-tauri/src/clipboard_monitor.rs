@@ -772,18 +772,24 @@ fn retention_due_next(now: std::time::Instant, due: &mut std::time::Instant) -> 
     true
 }
 
+/// Stable codes the window turns into one of seven locales. A code, never the raw error: the
+/// driver message can name tables and paths, and none of that may reach a system notification.
+/// The human-readable error stays in the log line above each call.
+const RETENTION_SETTINGS_UNREADABLE: &str = "settings_unreadable";
+const RETENTION_DELETE_FAILED: &str = "delete_failed";
+
 /// Returns the number of entries removed, or `None` when nothing matched.
 ///
-/// `on_failure` receives the error whenever a sweep could not run. The caller passes an emitter
-/// so the failure reaches the webview: `stderr` is not a usable channel for this app, because
-/// launchd starts it without a log destination, so a retention failure was otherwise invisible
-/// while history grew without bound.
+/// `on_failure` receives a stable code whenever a sweep could not run. The caller passes an
+/// emitter so the failure reaches the webview: `stderr` is not a usable channel for this app,
+/// because launchd starts it without a log destination, so a retention failure was otherwise
+/// invisible while history grew without bound.
 fn retention_sweep(db: &Database, on_failure: impl Fn(&str)) -> Option<u64> {
     let days = match db.get_app_settings() {
         Ok(settings) => settings.retention_days,
         Err(err) => {
             eprintln!("[clipboard] retention: settings unreadable, {err}");
-            on_failure(&err.to_string());
+            on_failure(RETENTION_SETTINGS_UNREADABLE);
             return None;
         }
     };
@@ -795,7 +801,7 @@ fn retention_sweep(db: &Database, on_failure: impl Fn(&str)) -> Option<u64> {
         }
         Err(err) => {
             eprintln!("[clipboard] retention: delete failed, {err}");
-            on_failure(&err.to_string());
+            on_failure(RETENTION_DELETE_FAILED);
             None
         }
     }
@@ -1199,10 +1205,12 @@ mod tests {
         std::fs::remove_dir_all(&dir).unwrap();
     }
 
-    /// A sweep that cannot delete must report its error instead of returning the same `None` a
-    /// no-op sweep returns — otherwise a dead retention loop looks like a healthy one.
+    /// A sweep that cannot delete must report its code instead of returning the same `None` a
+    /// no-op sweep returns — otherwise a dead retention loop looks like a healthy one. The code
+    /// is what the window localises: a driver message would name tables and paths, and none of
+    /// that may reach a system notification.
     #[test]
-    fn retention_sweep_reports_delete_failure() {
+    fn retention_sweep_reports_delete_failure_as_a_code() {
         let (db, dir) = temp_db("failure");
         db.conn
             .lock()
@@ -1213,8 +1221,26 @@ mod tests {
         let failures = std::cell::RefCell::new(Vec::new());
         assert_eq!(sweep(&db, &failures), None);
         let failures = failures.borrow();
-        assert_eq!(failures.len(), 1);
-        assert!(!failures[0].is_empty());
+        assert_eq!(failures.as_slice(), [RETENTION_DELETE_FAILED]);
+
+        std::fs::remove_dir_all(&dir).unwrap();
+    }
+
+    /// Unreadable settings are a different fault from a failed delete and must not borrow its
+    /// message: the window shows the settings code, and the user can act on it.
+    #[test]
+    fn retention_sweep_reports_unreadable_settings_as_a_code() {
+        let (db, dir) = temp_db("no-settings");
+        db.conn
+            .lock()
+            .unwrap()
+            .execute_batch("DROP TABLE settings;")
+            .unwrap();
+
+        let failures = std::cell::RefCell::new(Vec::new());
+        assert_eq!(sweep(&db, &failures), None);
+        let failures = failures.borrow();
+        assert_eq!(failures.as_slice(), [RETENTION_SETTINGS_UNREADABLE]);
 
         std::fs::remove_dir_all(&dir).unwrap();
     }

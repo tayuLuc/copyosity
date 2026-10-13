@@ -17,18 +17,25 @@ export async function checkForUpdate(): Promise<Update | null> {
   return await check();
 }
 
-/** Post a native OS notification (requesting permission once if needed). */
+/**
+ * Post a native OS notification (requesting permission once if needed). Best-effort and never
+ * throws, but never silent either: a caller that treats a call as delivered must be able to find
+ * out in Settings → Updates why nothing appeared.
+ */
 export async function notify(title: string, body: string): Promise<void> {
   try {
     let granted = await isPermissionGranted();
     if (!granted) {
       granted = (await requestPermission()) === "granted";
     }
-    if (granted) {
-      sendNotification({ title, body });
+    if (!granted) {
+      appendUpdateLog(`notify: blocked — notifications are not allowed for ${title}`);
+      return;
     }
-  } catch {
+    await sendNotification({ title, body });
+  } catch (e) {
     // Notifications are best-effort; never block the app on them.
+    appendUpdateLog(`notify: ERROR — ${title}: ${errorToString(e)}`);
   }
 }
 

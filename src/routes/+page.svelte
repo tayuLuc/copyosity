@@ -22,6 +22,7 @@
     invokeErrorMessage,
   } from "$lib/exclusion-label";
   import { autoUpdateOnLaunch, notify } from "$lib/updater";
+  import { claimRetentionNotice, retentionDetailKey } from "$lib/retention-notice";
   import ClipboardCard from "$lib/components/ClipboardCard.svelte";
   import QuickLookPanel from "$lib/components/QuickLookPanel.svelte";
   import KeyboardHints, { type KeyboardHint } from "$lib/components/KeyboardHints.svelte";
@@ -880,13 +881,13 @@
     });
 
     // Retention is the only thing bounding history growth, and it runs on the monitor thread:
-    // report a failed sweep instead of leaving it in the backend's stderr. A failing sweep
-    // repeats every interval, so each distinct error is reported once.
-    const reportedRetentionFailures = new Set<string>();
+    // report a failed sweep instead of leaving it in the backend's stderr. The payload is a
+    // stable code, so the body is a translated phrase; the sweep repeats every interval, so a
+    // code is announced at most once an hour — the window lives as long as the process.
+    const retentionNotifiedAt = new Map<string, number>();
     const unlistenRetentionFailed = listen<string>("retention-failed", (e) => {
-      if (reportedRetentionFailures.has(e.payload)) return;
-      reportedRetentionFailures.add(e.payload);
-      void notify(tr("overlay.msg.retention-failed"), e.payload);
+      if (!claimRetentionNotice(retentionNotifiedAt, e.payload, Date.now())) return;
+      void notify(tr("overlay.msg.retention-failed"), tr(retentionDetailKey(e.payload)));
     });
 
     const handleKeydown = (e: KeyboardEvent) => {
