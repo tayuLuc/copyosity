@@ -879,6 +879,16 @@
       void notify(tr("overlay.msg.voice-transcription-failed"), detail);
     });
 
+    // Retention is the only thing bounding history growth, and it runs on the monitor thread:
+    // report a failed sweep instead of leaving it in the backend's stderr. A failing sweep
+    // repeats every interval, so each distinct error is reported once.
+    const reportedRetentionFailures = new Set<string>();
+    const unlistenRetentionFailed = listen<string>("retention-failed", (e) => {
+      if (reportedRetentionFailures.has(e.payload)) return;
+      reportedRetentionFailures.add(e.payload);
+      void notify(tr("overlay.msg.retention-failed"), e.payload);
+    });
+
     const handleKeydown = (e: KeyboardEvent) => {
       if (!visible) return;
 
@@ -1085,6 +1095,7 @@
       unlistenOpenSettings.then((fn) => fn());
       unlistenSizesReset.then((fn) => fn());
       unlistenVoiceError.then((fn) => fn());
+      unlistenRetentionFailed.then((fn) => fn());
       window.removeEventListener("keydown", handleKeydown, true);
     };
   });
