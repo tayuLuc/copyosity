@@ -16,4 +16,4 @@ No seed data required.
 
 ## Related
 
-- Command palette has its own resize grip and min size (480×220) — separate from the overlay panel.
+- Command palette has its own resize grip and min size (500×220) — separate from the overlay panel.

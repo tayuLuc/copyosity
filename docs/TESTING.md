@@ -16,7 +16,7 @@ Legend: ✅ automated · 👁 manual only (native / OS-integration).
 
 ## 0. Dev stand & build gate
 
-- **Auto:** `make check` → backend **164** tests + frontend **198** tests, plus
+- **Auto:** `make check` → backend **203** tests + frontend **351** tests, plus
   `cargo clippy -D warnings`, `svelte-check`, `oxlint`, `stylelint`, `oxfmt`.
   Frontend tests must run under `LC_ALL=en_US.UTF-8` (some assert `toLocaleString`).
 - **Manual boot:** `npm run tauri dev`. Expect in the log:

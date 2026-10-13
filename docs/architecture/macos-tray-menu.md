@@ -251,8 +251,8 @@ manual 5 clicks in `make dev` before shipping.
 | [`clipboard_macos/mod.rs`](../../src-tauri/src/clipboard_macos/mod.rs) | `note_tray_menu_paste_target` (tray Down); full capture in quick menu |
 | [`Cargo.toml`](../../src-tauri/Cargo.toml)                             | `tray-icon` patch, `NSStatusItem` features                            |
 | [`tauri.conf.json`](../../src-tauri/tauri.conf.json)                   | `"windows": []`                                                       |
-| [`verify-tray-startup.sh`](../../scripts/verify-tray-startup.sh)       | Debug binary, 3 clicks                                                |
-| [`verify-tray-dev.sh`](../../scripts/verify-tray-dev.sh)               | `tauri dev` + Vite, 3 clicks                                          |
+| [`verify-tray-startup.sh`](../../scripts/verify-tray-startup.sh)       | Debug binary, 5 clicks                                                |
+| [`verify-tray-dev.sh`](../../scripts/verify-tray-dev.sh)               | `tauri dev` + Vite, 5 clicks                                          |
 
 ---
 

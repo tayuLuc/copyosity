@@ -59,7 +59,7 @@ the signed updater tarballs and `latest.json` from this repository. Details:
 - Updater invariants: tarballs must have **0 AppleDouble (`._*`)** entries;
   install runs with `TMPDIR` on the app's own volume (EXDEV). Full details +
   prereqs in **CLAUDE.md → "Releasing the app"**.
-- The landing page (`main:/docs/index.html`, served at vakovalskii.github.io/copyosity)
+- The landing page (`main:/docs/index.html`, served at tayuLuc.github.io/copyosity)
   is version- and download-link-synced by `release.sh`. If you edit it by hand,
   run `make fix-frontend` before pushing — `make check` runs `oxfmt --check` on it
   and CI goes red otherwise, even with `git push --no-verify`.
