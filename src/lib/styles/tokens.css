@@ -241,9 +241,6 @@
     rgb(var(--rgb-app-bg-bottom))
   );
   --surface-menu: var(--surface-select-option);
-  /* The dark value is a black scrim: it only reads as a rail on a dark page and greys
-     the whole sidebar out over white. Light takes the tint ramp instead — the same fill
-     + --border-muted pairing .form-section uses. The dark scrim is kept in the theme block. */
   --surface-sidebar: var(--surface-2);
   --surface-bar: rgb(var(--rgb-settings-bg) / 92%);
   --surface-scrim: rgb(var(--rgb-black) / 45%);
@@ -394,9 +391,6 @@
   --rgb-danger: 217 45 32;
   --rgb-danger-soft: 217 45 32;
   --rgb-success: 22 132 74;
-  /* The ON fill carries a white checkmark, so it stays light: the mark needs 3:1 against
-     it, and the fill needs 3:1 against the page. Mirrors --color-success-control below;
-     the 40% border and 18% ring derive from this channel and must match it. */
   --rgb-success-control: 13 148 92;
   --rgb-warning: 181 71 8;
   --rgb-warning-bright: 161 92 7;
@@ -518,7 +512,6 @@
   --rgb-text-primary: 237 241 248;
   --rgb-text-placeholder: 237 240 248;
 
-  /* Sidebar — dark keeps the black scrim, which is what separates the rail here. */
   --surface-sidebar: rgb(var(--rgb-black) / 22%);
 
   /* ── Dark text ─────────────────────────────────────── */
