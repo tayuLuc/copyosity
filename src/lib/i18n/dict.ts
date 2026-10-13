@@ -471,6 +471,11 @@ const en: Dict = {
     "When off, the global hold-to-record shortcut is not registered.",
   "settings.text.hold-to-record-release":
     "Hold to record, release to transcribe and paste at the cursor.",
+  "settings.text.press-again-to-transcribe":
+    "Press once to record, press again to transcribe and paste at the cursor.",
+  "settings.text.toggle-to-record": "Toggle to record",
+  "settings.text.press-once-press-again":
+    "One press starts the recording, the next press stops it.",
   "settings.text.on-hub-off-your.1": "On → hub ",
   "settings.text.on-hub-off-your.2": "; off → your local Whisper server.",
   "settings.text.enable-the-ai-hub.1": "Enable the ",
@@ -1059,6 +1064,11 @@ const ru: Dict = {
     "Если выключено, глобальная горячая клавиша записи по удержанию не регистрируется.",
   "settings.text.hold-to-record-release":
     "Удерживай — запись, отпусти — транскрипция и вставка у курсора.",
+  "settings.text.press-again-to-transcribe":
+    "Нажми один раз — запись, ещё раз — транскрипция и вставка у курсора.",
+  "settings.text.toggle-to-record": "Переключатель вместо удержания",
+  "settings.text.press-once-press-again":
+    "Одно нажатие начинает запись, следующее — останавливает.",
   "settings.text.on-hub-off-your.1": "Вкл. → хаб ",
   "settings.text.on-hub-off-your.2": "; выкл. → твой локальный сервер Whisper.",
   "settings.text.enable-the-ai-hub.1": "Включи ",
@@ -1647,6 +1657,11 @@ const es: Dict = {
     "Si está apagado, no se registra el atajo global de mantener pulsado para grabar.",
   "settings.text.hold-to-record-release":
     "Mantén pulsado para grabar y suelta para transcribir y pegar en el cursor.",
+  "settings.text.press-again-to-transcribe":
+    "Pulsa una vez para grabar y otra vez para transcribir y pegar en el cursor.",
+  "settings.text.toggle-to-record": "Alternar para grabar",
+  "settings.text.press-once-press-again":
+    "Una pulsación inicia la grabación y la siguiente la detiene.",
   "settings.text.on-hub-off-your.1": "Activado → hub ",
   "settings.text.on-hub-off-your.2": "; apagado → tu servidor Whisper local.",
   "settings.text.enable-the-ai-hub.1": "Activa el ",
@@ -2208,6 +2223,9 @@ const zh: Dict = {
     "打开命令 / 智能体面板。智能体可以搜索网页、操作你的应用、使用所选模型，并查看当前窗口的截图。仅在启用 AI Hub 时注册。",
   "settings.text.when-off-the-global": "关闭时，不会注册全局按住录音快捷键。",
   "settings.text.hold-to-record-release": "按住录音，松开即转写并粘贴到光标处。",
+  "settings.text.press-again-to-transcribe": "按一次开始录音，再按一次即转写并粘贴到光标处。",
+  "settings.text.toggle-to-record": "切换式录音",
+  "settings.text.press-once-press-again": "按一次开始录音，再按一次停止。",
   "settings.text.on-hub-off-your.1": "开启 → AI Hub ",
   "settings.text.on-hub-off-your.2": "；关闭 → 你的本地 Whisper 服务器。",
   "settings.text.enable-the-ai-hub.1": "启用 ",
@@ -2793,6 +2811,11 @@ const de: Dict = {
     "Ohne diesen Schalter ist das globale Tastenkürzel zum Aufnehmen nicht registriert.",
   "settings.text.hold-to-record-release":
     "Tastenkürzel zum Aufnehmen gedrückt halten; beim Loslassen wird transkribiert und am Cursor eingefügt.",
+  "settings.text.press-again-to-transcribe":
+    "Einmal drücken zum Aufnehmen, erneut drücken zum Transkribieren und Einfügen am Cursor.",
+  "settings.text.toggle-to-record": "Zum Aufnehmen umschalten",
+  "settings.text.press-once-press-again":
+    "Ein Druck startet die Aufnahme, der nächste beendet sie.",
   "settings.text.on-hub-off-your.1": "Ein → Hub ",
   "settings.text.on-hub-off-your.2": "; aus → dein lokaler Whisper-Server.",
   "settings.text.enable-the-ai-hub.1": "Aktiviere den ",
@@ -3391,6 +3414,11 @@ const fr: Dict = {
     "Si désactivé, le raccourci global de maintien pour enregistrer n’est pas enregistré.",
   "settings.text.hold-to-record-release":
     "Maintenez pour enregistrer, relâchez pour transcrire et coller au curseur.",
+  "settings.text.press-again-to-transcribe":
+    "Appuyez une fois pour enregistrer, appuyez de nouveau pour transcrire et coller au curseur.",
+  "settings.text.toggle-to-record": "Basculer pour enregistrer",
+  "settings.text.press-once-press-again":
+    "Une pression lance l’enregistrement, la suivante l’arrête.",
   "settings.text.on-hub-off-your.1": "Activé → hub ",
   "settings.text.on-hub-off-your.2": ". Désactivé → votre serveur Whisper local.",
   "settings.text.enable-the-ai-hub.1": "Activez le ",
@@ -3972,6 +4000,10 @@ const ja: Dict = {
     "オフにすると、グローバルの長押し録音ショートカットは登録されません。",
   "settings.text.hold-to-record-release":
     "長押しで録音、離すと文字起こししてカーソル位置に貼り付けます。",
+  "settings.text.press-again-to-transcribe":
+    "一度押すと録音、もう一度押すと文字起こししてカーソル位置に貼り付けます。",
+  "settings.text.toggle-to-record": "切り替えで録音",
+  "settings.text.press-once-press-again": "一度の押しで録音を開始し、次の押しで停止します。",
   "settings.text.on-hub-off-your.1": "ON → ハブ ",
   "settings.text.on-hub-off-your.2": ";OFF → お使いのローカル Whisper サーバー。",
   "settings.text.enable-the-ai-hub.1": "ハブ経由で文字起こしするには ",

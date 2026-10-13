@@ -85,6 +85,7 @@ export interface AppSettings {
   voice_dictionary: string;
   voice_selected_text: boolean;
   board_vertical: boolean;
+  voice_toggle_record: boolean;
   voice_transcription_enabled: boolean;
   ai_tagging_enabled: boolean;
   overlay_shortcut_hints_enabled: boolean;

@@ -1455,6 +1455,19 @@ fn handle_voice_event(app: &tauri::AppHandle, state: ShortcutState) {
             ShortcutState::Released => "RELEASED",
         }
     );
+    let toggle = app
+        .try_state::<std::sync::Arc<db::Database>>()
+        .and_then(|db| db.get_app_settings().ok())
+        .is_some_and(|s| s.voice_toggle_record);
+    // Toggle mode: releasing the key that started the recording must not stop it,
+    // and the next press stops it. A stopping press therefore takes the release
+    // path, because the start path would reset VOICE_* and re-capture the target app.
+    let recording = recording_mutex().lock().unwrap().is_some();
+    let state = match (state, toggle) {
+        (ShortcutState::Released, true) => return,
+        (ShortcutState::Pressed, true) if recording => ShortcutState::Released,
+        (state, _) => state,
+    };
     match state {
         ShortcutState::Pressed => {
             // Capture the app that is frontmost right now, before we touch any

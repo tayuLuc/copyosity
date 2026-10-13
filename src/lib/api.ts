@@ -138,6 +138,7 @@ export async function updateAppSettings(opts: {
   voice_dictionary?: string | null;
   voice_selected_text?: boolean | null;
   board_vertical?: boolean | null;
+  voice_toggle_record?: boolean | null;
   voice_transcription_enabled?: boolean | null;
   ai_tagging_enabled?: boolean | null;
   overlay_shortcut_hints_enabled?: boolean | null;
@@ -165,6 +166,7 @@ export async function updateAppSettings(opts: {
     voiceDictionary: opts.voice_dictionary ?? null,
     voiceSelectedText: opts.voice_selected_text ?? null,
     boardVertical: opts.board_vertical ?? null,
+    voiceToggleRecord: opts.voice_toggle_record ?? null,
     voiceTranscriptionEnabled: opts.voice_transcription_enabled ?? null,
     aiTaggingEnabled: opts.ai_tagging_enabled ?? null,
     overlayShortcutHintsEnabled: opts.overlay_shortcut_hints_enabled ?? null,

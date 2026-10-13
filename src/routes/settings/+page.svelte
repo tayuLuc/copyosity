@@ -112,6 +112,7 @@
     voice_dictionary: "",
     voice_selected_text: false,
     board_vertical: false,
+    voice_toggle_record: false,
     voice_transcription_enabled: false,
     ai_tagging_enabled: false,
     overlay_shortcut_hints_enabled: true,
@@ -748,6 +749,7 @@
       | "overlay_shortcut_hints_enabled"
       | "board_vertical"
       | "theme"
+      | "voice_toggle_record"
     >
   >;
 
@@ -813,6 +815,10 @@
     // persistImmediate rolls `settings` back on a failed write — put the appearance
     // back too, otherwise every window keeps a palette that was never saved.
     if (settings.theme !== choice) setTheme(previous);
+  }
+
+  function handleVoiceToggleRecordToggle(enabled: boolean) {
+    void persistImmediate({ voice_toggle_record: enabled });
   }
 
   async function handleRestoreOverlayBoardSizes() {
@@ -1318,11 +1324,31 @@
             bind:value={settings.voice_shortcut}
             placeholder="option+space"
             examples={["option+space", "cmd+shift+r", "ctrl+alt+space"]}
-            detail={$t("settings.text.hold-to-record-release")}
+            detail={settings.voice_toggle_record
+              ? $t("settings.text.press-again-to-transcribe")
+              : $t("settings.text.hold-to-record-release")}
             notice={voiceShortcutNotice || undefined}
             noticeTone={voiceShortcutNoticeTone}
             onSave={saveVoiceShortcut}
           />
+
+          <div class="inset-list">
+            <label class="form-checkbox">
+              <span class="form-checkbox-leading">
+                <input
+                  type="checkbox"
+                  checked={settings.voice_toggle_record}
+                  onchange={(e) =>
+                    handleVoiceToggleRecordToggle((e.currentTarget as HTMLInputElement).checked)}
+                />
+                <span class="form-checkbox-box" aria-hidden="true"></span>
+              </span>
+              <span class="form-checkbox-label ui-selectable-text">
+                <span class="form-pref-label">{$t("settings.text.toggle-to-record")}</span>
+                <span class="form-pref-hint">{$t("settings.text.press-once-press-again")}</span>
+              </span>
+            </label>
+          </div>
 
           <div class="form-subsection-rule" role="separator"></div>
 
