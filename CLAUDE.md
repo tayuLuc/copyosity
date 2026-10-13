@@ -52,6 +52,9 @@ flat `"screen.kind.slug"` keys, English as the fallback of last resort.
   accelerator literals such as `"cmd+shift+space"`, and CSS/storage keys.
 - Source-scanning tests must not build a `Set` or use `.includes` on a local collection: `oxlint --fix`
   (part of `make fix-frontend`) rewrites those and silently changes the assertion. Use `assert.match`.
+- The three macOS permission prompts are the one exception: `src-tauri/lproj/<locale>.lproj/InfoPlist.strings`,
+  copied into the bundle by `bundle.macOS.files` in `src-tauri/tauri.conf.json`. macOS reads them before
+  the app runs, so they are static — they cannot follow `setLocale` and do not belong in `dict.ts`.
 
 ## Releasing the app (macOS)
 

@@ -1,0 +1,3 @@
+"NSMicrophoneUsageDescription" = "Copyosity utilise le micro pour enregistrer la voix et la transcrire.";
+"NSAppleEventsUsageDescription" = "Copyosity automatise Notes, Rappels et Calendrier pour enregistrer et lire vos éléments.";
+"NSCalendarsUsageDescription" = "Copyosity lit vos prochains événements de calendrier pour les utiliser comme contexte.";

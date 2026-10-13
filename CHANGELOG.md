@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Settings → NeuralDeep palette hotkey** — saving the command-palette shortcut from Settings failed with an IPC ACL error (`get_palette_shortcut` / `set_palette_shortcut` were missing from the settings window capability).
 - **Agent chat failed turns** — a failed send no longer leaves an orphaned user bubble in the transcript; the composer text is restored, and a disabled or misconfigured hub shows an upfront message instead of failing mid-request.
 - **Agent session history** — sessions are saved only after the assistant has replied (user-only threads are not stored).
+- **Localized permission prompts** — the macOS microphone, Apple Events and Calendar prompts were English-only; the bundle now carries `InfoPlist.strings` for all seven locales, so macOS shows the prompt in the user's language.
 
 ## [1.0.0] - 2026-07-15
 

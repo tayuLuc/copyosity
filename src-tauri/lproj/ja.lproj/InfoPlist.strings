@@ -1,0 +1,3 @@
+"NSMicrophoneUsageDescription" = "Copyosity はマイクを使って音声を録音し、文字起こしします。";
+"NSAppleEventsUsageDescription" = "Copyosity はメモ、リマインダー、カレンダーを自動で操作し、項目を保存したり読み取ったりします。";
+"NSCalendarsUsageDescription" = "Copyosity は今後のカレンダー予定を読み取り、コンテキストとして使用します。";

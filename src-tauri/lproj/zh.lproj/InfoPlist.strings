@@ -1,0 +1,3 @@
+"NSMicrophoneUsageDescription" = "Copyosity 使用麦克风来录制语音并进行转写。";
+"NSAppleEventsUsageDescription" = "Copyosity 会自动操作“备忘录”、“提醒事项”和“日历”，以保存和读取你的项目。";
+"NSCalendarsUsageDescription" = "Copyosity 会读取你即将到来的日历事件，用作上下文。";
