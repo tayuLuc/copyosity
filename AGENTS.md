@@ -26,7 +26,7 @@ After macOS tray, overlay, or activation-policy changes, also run `make verify-t
 - Frontend: `svelte-check`, Oxlint, Oxfmt, Stylelint.
 - Backend: `cargo check`, Clippy (`-D warnings --all-targets`), rustfmt, `cargo test`.
 - Git hooks: `lefthook.yml` (see comments there for glob/install caveats). Pre-commit auto-fixes staged files; pre-push re-fixes the full push, then runs typecheck + tests (~9s) as a safety net before CI. Install via `npm install` / `lefthook install`; local overrides in gitignored `lefthook-local.yml`.
-- Workflow YAML: `.github/workflows/lint.yml` runs MegaLinter with `ACTION_ACTIONLINT`, `YAML_YAMLLINT` and `ACTION_ZIZMOR`, all three blocking. Invariants the last one enforces: every action pinned by full commit SHA; every checkout with `persist-credentials: false`; `permissions: contents: read` at workflow level, escalated per job only where the job writes; no cache saved by a job that publishes runtime artifacts (`lookup-only: true` on build caches, `package-manager-cache: false` on `actions/setup-node`). Rotate a pin by resolving the new tag to its SHA, never by widening it back to a tag.
+- Workflow YAML: `.github/workflows/lint.yml` runs MegaLinter with `ACTION_ACTIONLINT`, `ACTION_ZIZMOR`, `YAML_YAMLLINT` and `BASH_SHELLCHECK`, all four blocking. Invariants zizmor enforces: every action pinned by full commit SHA; every checkout with `persist-credentials: false`; `permissions: contents: read` at workflow level, escalated per job only where the job writes; no cache saved by a job that publishes runtime artifacts (`lookup-only: true` on build caches, `package-manager-cache: false` on `actions/setup-node`). Rotate a pin by resolving the new tag to its SHA, never by widening it back to a tag.
 
 ## Branching
 
