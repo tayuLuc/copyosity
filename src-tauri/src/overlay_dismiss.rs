@@ -7,6 +7,8 @@
 //!   the overlay is a transient picker, so leaving the app hides it (see `install_app_switch_dismiss`).
 //! - The initial paste target stays frontmost when the panel opens (non-activating NSPanel), so
 //!   showing the overlay fires no activation event and does not dismiss itself.
+//! - Escape cancels the voice recording (`install_voice_escape_cancel`), also through an
+//!   observe-only key monitor: the key is never consumed, so it still reaches other apps.
 
 /// Grace after panel show during which outside-click dismiss is ignored.
 #[cfg(any(target_os = "macos", test))]
@@ -69,9 +71,13 @@ mod imp {
     static SPACE_GUARD_INSTALLED: AtomicBool = AtomicBool::new(false);
     static CMD_UP_GUARD_INSTALLED: AtomicBool = AtomicBool::new(false);
     static APP_SWITCH_GUARD_INSTALLED: AtomicBool = AtomicBool::new(false);
+    static VOICE_ESCAPE_INSTALLED: AtomicBool = AtomicBool::new(false);
 
     /// macOS virtual key code for the Up arrow.
     const KEY_CODE_UP_ARROW: u16 = 126;
+
+    /// macOS virtual key code for Escape.
+    const KEY_CODE_ESCAPE: u16 = 53;
 
     /// Install a persistent global key monitor: pressing Cmd+↑ while the overlay
     /// is visible hides it. Global monitors observe events sent to *other* apps
@@ -103,6 +109,33 @@ mod imp {
             std::mem::forget(monitor);
         } else {
             eprintln!("[overlay] Cmd+Up global key monitor unavailable (needs Accessibility)");
+        }
+        std::mem::forget(block);
+    }
+
+    /// Install a persistent global key monitor: Escape cancels the voice recording.
+    /// Same observe-only mechanism as Cmd+↑ — the event reaches the app the user is
+    /// typing in and still closes its windows, so Escape must not be registered as a
+    /// global shortcut (Carbon consumes registered hotkeys system-wide, and touching
+    /// the hotkey table while the record hotkey is held loses its release).
+    pub fn install_voice_escape_cancel(app: AppHandle) {
+        if VOICE_ESCAPE_INSTALLED.swap(true, Ordering::AcqRel) {
+            return;
+        }
+        let block = RcBlock::new(move |event: NonNull<NSEvent>| {
+            let event = unsafe { event.as_ref() };
+            if event.keyCode() != KEY_CODE_ESCAPE {
+                return;
+            }
+            crate::cancel_voice_recording(&app);
+        });
+        if let Some(monitor) =
+            NSEvent::addGlobalMonitorForEventsMatchingMask_handler(NSEventMask::KeyDown, &block)
+        {
+            // Intentionally leaked for app lifetime.
+            std::mem::forget(monitor);
+        } else {
+            eprintln!("[voice] Escape global key monitor unavailable (needs Accessibility)");
         }
         std::mem::forget(block);
     }
@@ -306,6 +339,9 @@ pub fn install_cmd_up_dismiss(_app: tauri::AppHandle) {}
 
 #[cfg(not(target_os = "macos"))]
 pub fn install_app_switch_dismiss(_app: tauri::AppHandle) {}
+
+#[cfg(not(target_os = "macos"))]
+pub fn install_voice_escape_cancel(_app: tauri::AppHandle) {}
 
 #[cfg(test)]
 mod tests {

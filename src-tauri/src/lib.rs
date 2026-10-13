@@ -136,49 +136,19 @@ fn transcribe_with_settings(
 /// Set while the user cancelled the current recording so the worker can drop the samples.
 static VOICE_CANCELLED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
-static VOICE_CANCEL_SHORTCUT: std::sync::OnceLock<std::sync::Mutex<Option<Shortcut>>> =
-    std::sync::OnceLock::new();
-
-fn voice_cancel_mutex() -> &'static std::sync::Mutex<Option<Shortcut>> {
-    VOICE_CANCEL_SHORTCUT.get_or_init(|| std::sync::Mutex::new(None))
-}
-
-/// Escape cancels the recording or the transcription in flight. Registered only while the
-/// capsule is up, so it is released again as soon as the capsule is hidden.
-fn register_voice_cancel(app: &tauri::AppHandle) {
-    let escape = Shortcut::new(None, Code::Escape);
-    let handle = app.clone();
-    if app
-        .global_shortcut()
-        .on_shortcut(escape, move |_app, _shortcut, event| {
-            if event.state != ShortcutState::Pressed {
-                return;
-            }
-            VOICE_CANCELLED.store(true, std::sync::atomic::Ordering::Relaxed);
-            let _ = recording_mutex().lock().unwrap().take();
-            unregister_voice_cancel(&handle);
-            let hide_app = handle.clone();
-            let _ = handle.run_on_main_thread(move || {
-                hide_voice_overlay(&hide_app);
-            });
-        })
-        .is_err()
-    {
-        return;
-    }
-    if let Ok(mut current) = voice_cancel_mutex().lock() {
-        if let Some(old) = current.replace(escape) {
-            let _ = app.global_shortcut().unregister(old);
-        }
-    }
-}
-
-fn unregister_voice_cancel(app: &tauri::AppHandle) {
-    if let Ok(mut current) = voice_cancel_mutex().lock() {
-        if let Some(old) = current.take() {
-            let _ = app.global_shortcut().unregister(old);
-        }
-    }
+/// Escape cancels the recording or the transcription in flight: the session is dropped so no
+/// transcript is produced, and the capsule hides. Driven by an observe-only key monitor (see
+/// `overlay_dismiss::install_voice_escape_cancel`), never by a global shortcut — Carbon
+/// consumes a registered hotkey, and registering one while the record hotkey is held also
+/// swallows that hotkey's release.
+#[cfg(target_os = "macos")]
+pub(crate) fn cancel_voice_recording(app: &tauri::AppHandle) {
+    VOICE_CANCELLED.store(true, std::sync::atomic::Ordering::Relaxed);
+    let _ = recording_mutex().lock().unwrap().take();
+    let hide_app = app.clone();
+    let _ = app.run_on_main_thread(move || {
+        hide_voice_overlay(&hide_app);
+    });
 }
 
 static CURRENT_VOICE_SHORTCUT: std::sync::OnceLock<std::sync::Mutex<Option<Shortcut>>> =
@@ -676,6 +646,7 @@ pub fn run() {
                 overlay_dismiss::install_overlay_dismiss_guards();
                 overlay_dismiss::install_cmd_up_dismiss(app.handle().clone());
                 overlay_dismiss::install_app_switch_dismiss(app.handle().clone());
+                overlay_dismiss::install_voice_escape_cancel(app.handle().clone());
                 clipboard_macos::install_last_frontmost_observer();
                 eprintln!("[tray] startup: hidden main + deferred tray popup ready");
             }
@@ -1483,7 +1454,6 @@ fn handle_voice_event(app: &tauri::AppHandle, state: ShortcutState) {
                             session.sample_rate
                         );
                         VOICE_CANCELLED.store(false, std::sync::atomic::Ordering::Relaxed);
-                        register_voice_cancel(app);
                         show_voice_overlay(app);
                         let level_arc = session.level.clone();
                         let emit_handle = app.clone();
@@ -1522,7 +1492,6 @@ fn handle_voice_event(app: &tauri::AppHandle, state: ShortcutState) {
                     // worker thread, so hop to the main thread — calling NSPanel.hide() off
                     // the main thread crashes the app after every transcription.
                     let hide = || {
-                        unregister_voice_cancel(&app);
                         let hide_app = app.clone();
                         let _ = app.run_on_main_thread(move || {
                             hide_voice_overlay(&hide_app);
