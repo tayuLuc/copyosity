@@ -1,10 +1,11 @@
 name: Lint Actions
 
 # MegaLinter over the one class of files `make check` never reaches: the workflow
-# YAML itself. `ENABLE_LINTERS` picks three of its 133 linters.
+# YAML itself. `ENABLE_LINTERS` picks four of its 136 linters.
 #
-# All three block: actionlint for Actions syntax and the shell inside `run:` steps,
-# yamllint for YAML style, zizmor for the security posture of the workflows.
+# All four block: actionlint for Actions syntax and the shell inside `run:` steps,
+# yamllint for YAML style, zizmor for the security posture of the workflows,
+# shellcheck for the repository's shell scripts.
 
 on:
   push:
